@@ -5,8 +5,8 @@
   "minVersionCode": 1,
   "force": false,
   "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.0/DayLeaf-android-v1.0.0.apk",
-  "size": 0,
-  "sha256": "",
-  "notes": "首个版本",
+  "size": 144150,
+  "sha256": "c060a1e8e88c12ec07472bc68e93c2123f2607780194654534e7fe80791aaeb1",
+  "notes": "首个版本：表格式日程与记事、提醒闹钟、重复日程、纪念日、粘贴识别、全局搜索、深色模式。",
   "publishedAt": "2026-10-25"
 }

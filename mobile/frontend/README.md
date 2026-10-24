@@ -1,11 +1,8 @@
-# Android client
+# 安卓客户端
 
-A minimal native WebView shell that hosts a single self-contained `index.html`
-containing all of DayLeaf's UI and logic. It deliberately depends only on the Android
-framework — no AndroidX, no AppCompat, no Kotlin — to keep the APK small and the
-startup fast.
+一个极简的原生 WebView 壳，承载单个自包含的 `index.html`（DayLeaf 的全部 UI 与逻辑）。刻意只依赖安卓框架——不引入 AndroidX、AppCompat、Kotlin——把 APK 压到最小、启动最快。
 
-## Structure
+## 目录结构
 
 ```
 frontend/
@@ -17,48 +14,47 @@ frontend/
     └── src/main/
         ├── AndroidManifest.xml
         ├── java/com/dayleaf/app/
-        │   ├── MainActivity.java          WebView host + silent update check on launch
-        │   ├── WebAppInterface.java       JS bridge (notify / vibrate / check update / version)
-        │   ├── UpdateManager.java         multi-source check + download + in-place install
-        │   ├── UpdateInfo.java            update manifest model
-        │   └── InstallApkProvider.java    minimal content:// provider for the installer
-        ├── res/                            layout / theme / icon
-        └── assets/www/index.html           the app itself
+        │   ├── MainActivity.java          WebView 壳 + 启动静默检测更新
+        │   ├── WebAppInterface.java       JS 桥（通知 / 震动 / 检查更新 / 版本号）
+        │   ├── UpdateManager.java         多源检测 + 下载 + 原地覆盖安装
+        │   ├── UpdateInfo.java            更新清单模型
+        │   └── InstallApkProvider.java    极简 content:// 文件提供者
+        ├── res/                           布局 / 主题 / 图标
+        └── assets/www/index.html          应用本体
 ```
 
-## Build
+## 构建
 
-With Android Studio: **Open** this directory, let Gradle sync, then **Run**.
+Android Studio：直接 **Open** 本目录，等 Gradle 同步后点 **Run**。
 
-From the command line:
+命令行：
 
 ```bash
 cd mobile/frontend
-./gradlew assembleDebug      # debug APK — installs directly, for testing
-./gradlew assembleRelease    # release APK — requires signing (below)
-# output: app/build/outputs/apk/{debug,release}/
+./gradlew assembleDebug      # 调试包，可直接安装测试
+./gradlew assembleRelease    # 发布包，需先配签名（见下）
+# 产物：app/build/outputs/apk/{debug,release}/
 ```
 
-## Signing
+## 签名
 
-In-place upgrades (no uninstall, data kept) require the same `applicationId` **and**
-the same signature. Generate a dedicated key and back it up long-term:
+原地升级（不卸载、数据保留）的前提是同一 `applicationId` + 同一签名。生成一把专用密钥并长期备份：
 
 ```bash
 keytool -genkey -v -keystore dayleaf-release.jks -alias dayleaf \
   -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-Provide the key to Gradle, either in `~/.gradle/gradle.properties`:
+把签名信息写进 `~/.gradle/gradle.properties`：
 
 ```properties
-DAYLEAF_KEYSTORE=/absolute/path/dayleaf-release.jks
-DAYLEAF_STORE_PASSWORD=your-store-password
+DAYLEAF_KEYSTORE=/绝对路径/dayleaf-release.jks
+DAYLEAF_STORE_PASSWORD=你的store密码
 DAYLEAF_KEY_ALIAS=dayleaf
-DAYLEAF_KEY_PASSWORD=your-key-password
+DAYLEAF_KEY_PASSWORD=你的key密码
 ```
 
-or on the command line:
+或在命令行临时传入：
 
 ```bash
 ./gradlew assembleRelease \
@@ -66,23 +62,17 @@ or on the command line:
   -PDAYLEAF_KEY_ALIAS=... -PDAYLEAF_KEY_PASSWORD=...
 ```
 
-## Why data survives an upgrade
+## 数据为什么能保留
 
-App state lives in the WebView's `localStorage` (key `dayleaf.prototype.v2`), stored
-inside the app's private data directory. An in-place install with the same package name
-and signature leaves that directory untouched, so data is preserved. The shell enables
-`setDomStorageEnabled(true)`; uninstalling first would delete it.
+应用状态存在 WebView 的 `localStorage`（键 `dayleaf.prototype.v2`），位于应用的私有数据目录。同包名 + 同签名的原地覆盖安装不会清空该目录，数据得以保留。壳已开启 `setDomStorageEnabled(true)`；先卸载再装才会丢数据。
 
-## Auto-update
+## 自动更新
 
-- Checks silently at startup — no dialog unless a new version is actually found.
-- Reads the manifest from multiple sources and takes the highest `versionCode`;
-  unreachable sources are skipped.
-- Updates are non-forced; there is also a manual "Check for updates" entry under
-  Settings → About & updates.
-- Downloads the APK, then hands it to the system installer (Android 8.0+ prompts to
-  allow "install unknown apps").
+- 启动后静默检测，不弹窗，只有发现新版本才提示。
+- 多备用源取最高 `versionCode`，某个源不可用自动跳过。
+- 非强制更新，可「以后再说」；设置 → 关于与更新 → 检查更新可手动触发。
+- 下载 APK 后交给系统安装器覆盖安装（Android 8.0+ 会引导开启「安装未知应用」）。
 
-## Author
+## 作者
 
-- **StarLeaf·Roxy** (星河一叶Roxy) — <ck_xuv@vip.qq.com>
+- **StarLeaf·Roxy**（星河一叶Roxy）
