@@ -8,22 +8,35 @@ package com.dayleaf.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
     private UpdateManager updateManager;
     private boolean startupChecked = false;
+    private boolean hasModal = false;      // 当前是否有弹窗（由 JS 通过桥同步）
+    private long lastBackTime = 0;         // 上次按返回键的时间，用于「再按一次退出」
+
+    /** 由 WebAppInterface 回调，标记当前是否有弹窗 */
+    public void setHasModal(boolean has) {
+        this.hasModal = has;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 手机（最小宽度 < 600dp）锁竖屏；平板放行横竖屏旋转
+        if (getResources().getConfiguration().smallestScreenWidthDp < 600) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         setContentView(R.layout.activity_main);
 
         webView = findViewById(R.id.webview);
@@ -77,11 +90,19 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
+        // 有弹窗：优先关弹窗（交给 JS 关闭最上层），不退出
+        if (hasModal && webView != null) {
+            webView.evaluateJavascript("window.__closeTopModal && window.__closeTopModal()", null);
+            return;
         }
+        // 无弹窗：首次返回仅提示，2 秒内再按才真正退出
+        long now = System.currentTimeMillis();
+        if (now - lastBackTime > 2000) {
+            lastBackTime = now;
+            Toast.makeText(this, "再按一次返回键退出", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override

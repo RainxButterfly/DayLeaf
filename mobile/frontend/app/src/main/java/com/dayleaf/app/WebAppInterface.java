@@ -75,6 +75,18 @@ public class WebAppInterface {
         } catch (Exception e) { /* ignore */ }
     }
 
+    /** JS 通知当前是否有弹窗，用于返回键/返回手势「先关弹窗，再退出」 */
+    @JavascriptInterface
+    public void setHasModal(final boolean has) {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                if (activity instanceof MainActivity) {
+                    ((MainActivity) activity).setHasModal(has);
+                }
+            }
+        });
+    }
+
     private void postNotification(String title, String body, String tag) {
         NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
