@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 深色模式背景：与开场动画顶部渐变起点一致，避免启动白屏/闪屏跳色 -->
+    <color name="dayleaf_bg">#0B0E15</color>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 纯框架 Material 主题，不引入 AppCompat，体积更小 -->
+    <style name="Theme.DayLeaf" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/dayleaf_bg</item>
+        <item name="android:statusBarColor">@color/dayleaf_bg</item>
+        <item name="android:navigationBarColor">@color/dayleaf_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- Android 12+ 系统闪屏（低版本自动忽略）：背景跟随主题色，避免浅色闪屏 -->
+        <item name="android:windowSplashScreenBackground">@color/dayleaf_bg</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/dayleaf_bg</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
+    </style>
+</resources>

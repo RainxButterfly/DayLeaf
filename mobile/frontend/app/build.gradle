@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.dayleaf.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.dayleaf.app"
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    // 可选签名：把 DAYLEAF_KEYSTORE / DAYLEAF_STORE_PASSWORD /
+    // DAYLEAF_KEY_ALIAS / DAYLEAF_KEY_PASSWORD 写进 ~/.gradle/gradle.properties
+    // 或通过环境变量 ORG_GRADLE_PROJECT_DAYLEAF_* 传入（GitHub Actions 用）。
+    // 未配置时 release 不签名（只能 assembleDebug 测试）。
+    signingConfigs {
+        release {
+            if (project.hasProperty('DAYLEAF_KEYSTORE')) {
+                storeFile file(project.property('DAYLEAF_KEYSTORE'))
+                storePassword project.property('DAYLEAF_STORE_PASSWORD')
+                keyAlias project.property('DAYLEAF_KEY_ALIAS')
+                keyPassword project.property('DAYLEAF_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig project.hasProperty('DAYLEAF_KEYSTORE') ? signingConfigs.release : null
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}

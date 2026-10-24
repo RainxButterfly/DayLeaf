@@ -1,0 +1,12 @@
+{
+  "channel": "android",
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "minVersionCode": 1,
+  "force": false,
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.0/DayLeaf-android-v1.0.0.apk",
+  "size": 0,
+  "sha256": "",
+  "notes": "首个版本",
+  "publishedAt": "2026-10-25"
+}

@@ -1,0 +1,27 @@
+# ---- Gradle ----
+.gradle/
+build/
+**/build/
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ---- Android ----
+local.properties
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ---- 签名文件（绝不上传，升级数据不丢的关键）----
+*.jks
+*.keystore
+keystore.properties
+
+# ---- 系统 ----
+.DS_Store
+Thumbs.db

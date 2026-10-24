@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 简易叶子图标（向量，后续可替换成正式图标） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#4C6FFF"
+        android:pathData="M54,16 C32,28 24,52 27,72 C42,80 62,74 73,60 C80,50 80,35 71,26 C65,20 59,17 54,16 Z" />
+    <path
+        android:fillColor="#7C5CFF"
+        android:pathData="M54,22 C53,40 56,58 69,62 C74,50 72,36 66,28 C62,23 58,21 54,22 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M54,22 L56,58" />
+</vector>
