@@ -582,14 +582,14 @@ html.dark .t-imp{color:#F5C56B}
 .gutter{position:relative}
 .hl{
   position:absolute;right:6px;transform:translateY(-50%);
-  font-size:10.5px;font-weight:500;color:var(--ink2);
+  font-size:11px;font-weight:600;color:var(--ink2);
   font-variant-numeric:tabular-nums;
   letter-spacing:-.1px;pointer-events:none;
-  /* 整点线会从数字中间穿过，白色描边把线「垫」下去，数字才立得住 */
-  text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;
+  /* 整点线会从数字中间穿过，用底色描边把线「垫」下去；颜色跟随主题，避免深色下发白模糊 */
+  text-shadow:0 0 3px var(--surface),0 0 3px var(--surface),0 0 2px var(--surface);
 }
 @media (max-width:959px){
-  .hl{font-size:10px;right:5px;letter-spacing:-.2px}
+  .hl{font-size:11px;right:5px;letter-spacing:-.2px}
 }
 .gutter .hl:first-child{transform:none}
 .gcol{
@@ -2552,6 +2552,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
   /* 搜索框关闭按钮：手机上显示「取消」，字号/热区更大更易点 */
   .search-esc{ font-size:12px;padding:5px 11px }
+
+  /* ---- 性能：移动端禁用毛玻璃。backdrop-filter 在 WebView 上很耗性能，
+       滚动时背后内容每帧变化都要重算 blur，是卡顿主因 ---- */
+  .tabbar{ -webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface) }
+  .grid-head{ -webkit-backdrop-filter:none;backdrop-filter:none }
+  .icon-btn{ -webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface) }
 }
 
 /* 桌面端不显示移动端专属的提示条与表头“+” */
