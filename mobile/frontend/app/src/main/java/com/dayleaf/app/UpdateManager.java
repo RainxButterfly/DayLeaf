@@ -30,10 +30,11 @@ import java.net.URL;
 
 public class UpdateManager {
 
-    /** 更新清单的多个备用源。 */
+    /** 更新清单的多个备用源（国内优先走 jsDelivr，raw/statically 兜底）。 */
     private static final String[] UPDATE_SOURCES = {
-        "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/main/mobile/backend/update.json",
         "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/mobile/backend/update.json",
+        "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/mobile/backend/update.json",
+        "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/main/mobile/backend/update.json",
         "https://cdn.statically.io/gh/RainxButterfly/DayLeaf/main/mobile/backend/update.json"
     };
 
@@ -90,7 +91,7 @@ public class UpdateManager {
         t.setDaemon(true);
         t.start();
         try {
-            t.join(6000);
+            t.join(12000);
         } catch (InterruptedException e) { /* ignore */ }
         return out[0];
     }
@@ -100,7 +101,7 @@ public class UpdateManager {
         UpdateInfo best = null;
         for (String src : UPDATE_SOURCES) {
             try {
-                UpdateInfo info = parse(httpGet(src, 5000));
+                UpdateInfo info = parse(httpGet(src, 3000));
                 if (info != null && info.url != null && info.url.length() > 0) {
                     if (best == null || info.versionCode > best.versionCode) best = info;
                 }

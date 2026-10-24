@@ -5,8 +5,8 @@
   "minVersionCode": 1,
   "force": false,
   "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.1/DayLeaf-android-v1.0.1.apk",
-  "size": 452573,
-  "sha256": "16d45a76afea1299e408ebe0dfffd0976cc3c6d6e41cdfdef7bd184941fd548f",
+  "size": 452592,
+  "sha256": "7a1fafadbbbf79ffecab94f44a035bf0497062bc47bd08fd0814ac0ac470fe66",
   "notes": "新图标与 LOGO、手机锁竖屏、返回手势优化、拖拽与翻页流畅度大幅提升、修复时间行溢出与输入法收起卡顿。",
   "publishedAt": "2026-10-25"
 }
