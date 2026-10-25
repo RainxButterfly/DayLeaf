@@ -1,12 +1,12 @@
 {
   "channel": "android",
-  "versionCode": 4,
-  "versionName": "1.0.3",
+  "versionCode": 5,
+  "versionName": "1.0.4",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.3/DayLeaf-android-v1.0.3.apk",
-  "size": 456067,
-  "sha256": "4ca8edcafe3b3353e15f800b584112b98659fd967044182b002bd7180401d1b5",
-  "notes": "修复「检查更新」在部分网络下失败或提示已是最新版的问题：更新源改用版本标签解析、多源并行查询，发版后即可检测到；同时修正更新包大小显示（原先 445KB 会显示为 0 MB）。",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.4/DayLeaf-android-v1.0.4.apk",
+  "size": 457846,
+  "sha256": "7c66aa18fb5e5c6254293f901246a34ccf033004b3379d06fb3ac286a6aed8f4",
+  "notes": "背景图改为完整显示裁剪结果（不再被二次裁切），取景框默认按屏幕比例、裁完立即生效；修复长按向下拖动无法新建日程；切换表格/记事页不再重建整页，切换即时完成。",
   "publishedAt": "2026-10-25"
 }

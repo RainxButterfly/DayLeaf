@@ -221,11 +221,23 @@ h1,h2,h3,p{margin:0}
 ::-webkit-scrollbar-thumb:hover{background:rgba(17,20,28,.28)}
 ::-webkit-scrollbar-track{background:transparent}
 
-/* 个性化背景层（图片 + 白色柔光罩） */
+/* 个性化背景层（模糊铺底 + 清晰主图 + 白色柔光罩）
+   以前只有一层 cover，铺满屏幕的同时会把图片四周裁掉约一成，
+   用户裁好的画面放上去就变样了。现在清晰层用 contain 完整显示，
+   空出来的四周由同图放大模糊的底衬住，既不裁画面也不留空边。 */
+#bgBlur{
+  position:fixed; inset:-6%; z-index:0; pointer-events:none;
+  background-position:50% 50%; background-size:cover; background-repeat:no-repeat;
+  opacity:0; filter:blur(22px) saturate(1.08);
+  transition:opacity .35s ease;
+  will-change:opacity;
+}
 #bgImage{
-  position:fixed; inset:-12%; z-index:0; pointer-events:none;
-  background-position:50% 50%; background-size:cover;
-  opacity:0; transition:opacity .4s ease, filter .25s ease, transform .25s ease;
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-position:50% 50%; background-size:contain; background-repeat:no-repeat;
+  opacity:0; transform-origin:50% 50%;
+  transition:opacity .35s ease;
+  will-change:opacity,transform;
 }
 #bgVeil{
   position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0;
@@ -2180,8 +2192,8 @@ html.dark .st-note.warn{color:#F0B95A}
   background:linear-gradient(160deg,#EAEEF8,#F6F7FB 45%,#EDF0F7);
 }
 .bg-prev-img{
-  position:absolute;inset:-12%;
-  background-size:cover;background-position:50% 50%;background-repeat:no-repeat;
+  position:absolute;inset:0;
+  background-size:contain;background-position:50% 50%;background-repeat:no-repeat;
   opacity:0;
 }
 .bg-prev-veil{
@@ -2617,7 +2629,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 })();
 </script>
 
-<!-- 个性化背景层 -->
+<!-- 个性化背景层：底层是模糊铺底（填满边缘），上层是裁剪后的清晰图（完整显示，不被二次裁切） -->
+<div id="bgBlur"></div>
 <div id="bgImage"></div>
 <div id="bgVeil"></div>
 
@@ -2882,7 +2895,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.3',
+    version: '1.0.4',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3139,6 +3152,18 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   let gridInited = false;                       // 表格是否已完成首次滚动定位
   let quoteBooted = false;                      // 首屏语录是否已抽过（避免重复抽）
 
+  /* ---- 视图脏标记 ----
+     以前每次切页都无条件重建整页 DOM（表格是 7 列 × 24 小时的节点树，
+     在手机上要几百毫秒），这就是切页卡一秒的原因。
+     现在只有数据真的变了才重建；没变就直接显示已有的 DOM，切换瞬间完成。 */
+  const viewDirty = { home: true, grid: true, notes: true };
+  let lastRenderDay = '';                       // 跨天要强制重绘（「今天」高亮会变）
+  function markViewsDirty() {
+    viewDirty.home = true;
+    viewDirty.grid = true;
+    viewDirty.notes = true;
+  }
+
   /* ---- 弹窗栈：返回键/返回手势按打开顺序关闭最上层，而非直接退出 ---- */
   let modalStack = [];
   function pushModal(closeFn) {
@@ -3235,6 +3260,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   let saveTimer = null;
   let quotaWarned = false;
   function saveState() {
+    /* 数据变了，三个页面都得重建一次（在真正切过去时重建，不是现在） */
+    markViewsDirty();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       try {
@@ -3654,6 +3681,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
   /** 渲染主页面 */
   function renderHome() {
+    viewDirty.home = false;
     const now = new Date();
     const todayStr = toYMD(now);
 
@@ -4099,6 +4127,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
    * 7.6 渲染：表格页
    * ------------------------------------------------------------------------ */
   function renderGrid() {
+    viewDirty.grid = false;
     const geo = buildGeo();
     const todayStr = toYMD(new Date());
     const lineBg = hourLinesCss(geo);
@@ -4248,6 +4277,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
    * 7.7 渲染：记事页
    * ------------------------------------------------------------------------ */
   function renderCalendar() {
+    viewDirty.notes = false;
     const y = calCursor.getFullYear();
     const m = calCursor.getMonth();
     $('#calTitle').textContent = y + ' 年 ' + (m + 1) + ' 月';
@@ -7591,7 +7621,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     img.style.backgroundImage = 'url("' + bg.data + '")';
     img.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
     img.style.transform = 'scale(' + bg.scale + ')';
-    img.style.filter = 'blur(' + bg.blur + 'px)';
+    img.style.filter = bg.blur > 0 ? 'blur(' + bg.blur + 'px)' : 'none';
     img.style.opacity = String(bg.opacity);
   }
 
@@ -7600,20 +7630,32 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   function applyBg() {
     const bg = state.bg;
     const layer = $('#bgImage');
+    const back = $('#bgBlur');
+    if (!layer) return;
+
     if (bg.data) {
       /* 只有换图才重设 backgroundImage；拖滑块时只改 opacity / blur / scale / position，
          避免每帧重新解析几百 KB 的 dataURL */
       if (_lastBgSrc !== bg.data) {
-        layer.style.backgroundImage = 'url(' + bg.data + ')';
+        const url = 'url("' + bg.data + '")';
+        layer.style.backgroundImage = url;
+        if (back) back.style.backgroundImage = url;
         _lastBgSrc = bg.data;
       }
       layer.style.opacity = String(bg.opacity);
-      layer.style.filter = 'blur(' + bg.blur + 'px)';
-      layer.style.transform = 'scale(' + bg.scale + ')';
       layer.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
+      layer.style.transform = 'scale(' + bg.scale + ')';
+      layer.style.filter = bg.blur > 0 ? 'blur(' + bg.blur + 'px)' : 'none';
+      if (back) {
+        back.style.opacity = String(Math.min(1, bg.opacity * 0.9 + 0.15));
+      }
       document.body.classList.add('has-bg');
     } else {
-      if (_lastBgSrc !== '') { layer.style.backgroundImage = 'none'; _lastBgSrc = ''; }
+      if (_lastBgSrc !== '') {
+        layer.style.backgroundImage = 'none';
+        if (back) back.style.backgroundImage = 'none';
+        _lastBgSrc = '';
+      }
       document.body.classList.remove('has-bg');
     }
     /* 预览与背景层永远同源，任何参数变化都走这里 */
@@ -7721,6 +7763,28 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
   const clampNum = function (v, min, max) { return Math.max(min, Math.min(max, v)); };
 
+  /** 屏幕宽高比：取景框默认按这个比例，裁出来正好铺满一屏 */
+  function screenAspect() {
+    const w = window.innerWidth || 360;
+    const h = window.innerHeight || 720;
+    return h > w ? w / h : h / w;
+  }
+
+  /** 取景器里的可选比例（第一项「铺满屏幕」是默认值） */
+  function ratioList() {
+    return [{ key: 'screen', label: '铺满屏幕', v: screenAspect() }].concat(CROP_RATIOS);
+  }
+
+  /** 按给定比例算出居中、最大的取景框 */
+  function fitBoxToRatio(v, sw, sh) {
+    let w = sw;
+    let h = sh;
+    if (v) {
+      if (w / h > v) w = h * v; else h = w / v;
+    }
+    return { x: (sw - w) / 2, y: (sh - h) / 2, w: w, h: h };
+  }
+
   /** 裁剪会话状态 */
   let crop = null;
 
@@ -7729,6 +7793,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     if (!state.bg.data) { toast('请先选择一张背景图片'); return; }
 
     const root = $('#cropper');
+    const ratios = ratioList();
     root.innerHTML =
       '<div class="crop-back" data-crop-close></div>' +
       '<div class="crop-panel" role="dialog" aria-modal="true">' +
@@ -7745,12 +7810,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '</div>' +
 
         '<div class="crop-ratios" id="cropRatios">' +
-          CROP_RATIOS.map(function (r) {
-            return '<button data-ratio="' + r.key + '" class="' + (r.key === 'free' ? 'on' : '') + '">' + r.label + '</button>';
+          ratios.map(function (r) {
+            return '<button data-ratio="' + r.key + '" class="' + (r.key === 'screen' ? 'on' : '') + '">' + r.label + '</button>';
           }).join('') +
         '</div>' +
 
-        '<div class="crop-tip">拖动白框取景，四角圆点可缩放。裁剪会以原图重新取景，应用后「缩放 / 位置」会重置。</div>' +
+        '<div class="crop-tip">拖动白框取景，四角圆点可缩放。默认「铺满屏幕」就是手机上看到的效果，裁完立即生效。</div>' +
 
         '<div class="mb-foot">' +
           '<button class="btn ghost" data-crop-close>取消</button>' +
@@ -7762,8 +7827,17 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     const img = $('#cropImg');
     img.onload = function () {
-      /* 等一帧，确保面板已完成布局再读取尺寸 */
-      requestAnimationFrame(function () { initCropBox(img); });
+      /* 面板刚插入 DOM 时尺寸可能还没算出来，单靠一帧 rAF 容易落空，
+         这里轮询到舞台和图片都有实际尺寸再初始化（一般第一轮就成功）。 */
+      let tries = 0;
+      (function tryInit() {
+        const st = $('#cropStage');
+        if (st && st.clientWidth > 0 && st.clientHeight > 0 && img.naturalWidth > 0) {
+          initCropBox(img);
+          return;
+        }
+        if (tries++ < 30) setTimeout(tryInit, 16);
+      })();
     };
     img.src = state.bg.data;
 
@@ -7775,7 +7849,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     /* 比例切换 */
     $$('#cropRatios button').forEach(function (b) {
       b.addEventListener('click', function () {
-        const item = CROP_RATIOS.filter(function (r) { return r.key === b.dataset.ratio; })[0];
+        const item = ratios.filter(function (r) { return r.key === b.dataset.ratio; })[0];
         $$('#cropRatios button').forEach(function (x) { x.classList.toggle('on', x === b); });
         if (crop) setCropRatio(item.v);
       });
@@ -7785,7 +7859,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   }
 
   /**
-   * 初始化裁剪框：以「居中 cover」为基准，默认取画面中间 80%。
+   * 初始化裁剪框：图片以 cover 铺满舞台，取景框默认按屏幕比例放到最大。
    * @param {HTMLImageElement} img
    */
   function initCropBox(img) {
@@ -7801,12 +7875,13 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     const dw = iw * k;
     const dh = ih * k;
 
+    const ar = screenAspect();
     crop = {
       img: img,
       stage: { w: sw, h: sh },
       base: { k: k, dw: dw, dh: dh, dx: (sw - dw) / 2, dy: (sh - dh) / 2 },
-      ratio: 0,
-      box: { x: sw * 0.1, y: sh * 0.1, w: sw * 0.8, h: sh * 0.8 }
+      ratio: ar,
+      box: fitBoxToRatio(ar, sw, sh)
     };
 
     lockCropBoxInStage();
@@ -8361,7 +8436,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     const pick = pool[idx];
     state.quotes.picked = { id: pick.id, date: toYMD(new Date()) };
     pickQuoteBg();
+    /* 只换了一条语录，卡片由下面的 renderQuoteCard 局部刷新即可，
+       不必把三个页面都标脏（否则每次切回主页都要整页重建） */
+    const dirtyHome = viewDirty.home;
+    const dirtyGrid = viewDirty.grid;
+    const dirtyNotes = viewDirty.notes;
     saveState();
+    viewDirty.home = dirtyHome;
+    viewDirty.grid = dirtyGrid;
+    viewDirty.notes = dirtyNotes;
     renderQuoteCard(pick);
     return pick;
   }
@@ -9095,13 +9178,24 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
        再挂个悬浮按钮既挡格子、拖日程时还会被当成无效区，纯冗余 */
     $('#fab').classList.toggle('show', name === 'home' || name === 'notes');
 
+    /* 跨天则强制重绘（「今天」的高亮、日期文案可能已经不对） */
+    const today = toYMD(new Date());
+    if (today !== lastRenderDay) {
+      lastRenderDay = today;
+      markViewsDirty();
+    }
+
+    /* 只有数据变过才重建，否则直接显示缓存好的 DOM */
+    const need = viewDirty[name];
+    viewDirty[name] = false;
+
     if (name === 'home') {
-      renderHome();
+      if (need) renderHome();
       /* 「回到主页」频率：每次切回来换一条 */
       if (quoteBooted && state.quotes.freq === 'view') rollQuote();
     }
     if (name === 'grid') {
-      renderGrid();
+      if (need) renderGrid();
       if (!gridInited) {
         gridInited = true;
         const h = defaultGridHour();
@@ -9109,8 +9203,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       }
     }
     if (name === 'notes') {
-      renderCalendar();
-      renderEditor();
+      if (need) { renderCalendar(); renderEditor(); }
     }
   }
 
@@ -9313,7 +9406,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const body = $('#gridBody');
       const wrap = $('#gridWrap');
       const ARM_DELAY = 220;      // 按住多久进入拖拽
-      const MOVE_TOL = 6;         // 超过这个位移就当成在动
+      const MOVE_TOL = 10;        // 超过这个位移就当成在动（手指抖动一般 3~8px，给足余量）
       const DRAG_SLOT = 15;       // 拖拽吸附粒度（分钟）
 
       let cur = null;
@@ -9399,10 +9492,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (e.cancelable) e.preventDefault();
       }, { passive: false });
 
-      /* 拖拽期间要挡住页面滚动，否则一拖就跟着走 */
-      wrap.addEventListener('touchmove', function (e) {
+      /* 拖拽期间挡住页面滚动：挂在 document 的捕获阶段。
+         挂在 wrap 上时，手指一滑出表格范围就漏掉，浏览器随后接管成滚动，
+         同时发出 pointercancel，这次拖拽就白做了。 */
+      document.addEventListener('touchmove', function (e) {
         if (cur && cur.armed && e.cancelable) e.preventDefault();
-      }, { passive: false });
+      }, { passive: false, capture: true });
 
       function finish(commit) {
         const c = cur;
@@ -9426,7 +9521,11 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         finish(true);
       });
 
-      body.addEventListener('pointercancel', function () { finish(false); });
+      /* 浏览器万一还是接管了手势（pointercancel），只要用户确实在拖，就照样建出来，
+         别让「拖了半天松手什么都没有」这种情况发生 */
+      body.addEventListener('pointercancel', function () {
+        finish(!!(cur && cur.armed && cur.moved));
+      });
 
       /* 点卡片进详情；点空白单元格直接建 1 小时（单击即可创建） */
       body.addEventListener('click', function (e) {
@@ -9457,7 +9556,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const wrap = $('#gridWrap');
 
       const HOLD_MS = 300;
-      const MOVE_TOL = 8;
+      const MOVE_TOL = 10;
       const SNAP = 15;
       const EDGE = 52;
       const EDGE_WAIT = 600;
@@ -9746,15 +9845,17 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         updateScroll(e.clientY);
       }, { passive: false });
 
-      /* 拖动期间挡住页面滚动 */
-      wrap.addEventListener('touchmove', function (e) {
+      /* 拖动期间挡住页面滚动（document 捕获阶段，手指滑出表格也拦得住） */
+      document.addEventListener('touchmove', function (e) {
         if (st && st.armed && e.cancelable) e.preventDefault();
-      }, { passive: false });
+      }, { passive: false, capture: true });
 
       document.addEventListener('pointerup', function (e) {
         if (!st || e.pointerId !== st.pointerId) return;
         finish(true);
       });
+      /* 规则与「新建」不同：改时间是有副作用的操作，手势被系统取消时宁可丢弃，
+         也不要静默把别人的日程挪到别处 */
       document.addEventListener('pointercancel', function () { if (st) finish(false); });
 
       /* 刚拖完那一下不要当成「点开详情」 */
