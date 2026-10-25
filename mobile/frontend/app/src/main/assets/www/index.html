@@ -577,7 +577,7 @@ html.dark .t-imp{color:#F5C56B}
 .grid-body{
   display:grid; grid-template-columns:var(--gutter) repeat(7,1fr);
   align-items:start; position:relative;
-  background-image:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px var(--hourH));
+  /* 时间线由 .gutter / .gcol 各自的精确背景绘制；这里不再重复铺一层渐变，省一次大范围重绘 */
 }
 .gutter{position:relative}
 .hl{
@@ -594,6 +594,7 @@ html.dark .t-imp{color:#F5C56B}
 .gutter .hl:first-child{transform:none}
 .gcol{
   position:relative; border-left:1px solid var(--line); cursor:cell;
+  contain:paint;   /* 每列独立绘制层，滚动时避免整表重绘 */
 }
 .grid-body .gcol:last-child{border-right:1px solid var(--line)}
 .gcol.is-today{background:rgba(76,111,255,.035)}
@@ -9553,25 +9554,34 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (!st || !st.armed || !st.ghost) return;
         const hit = hitTest(st.cx, st.cy);
         st.target = hit;
-        paintSlot(hit);
-        const tail = toHM(Math.min(GRID_END, (hit ? hit.start : toMin(st.ev.s)) + st.dur));
 
+        /* 只有落点（列 + 时间）真正变了才更新 DOM，避免每帧改文字 / 重建占位 */
+        const key = hit ? (hit.date + '|' + hit.start) : 'none';
+        if (key !== st._lastKey) {
+          st._lastKey = key;
+          paintSlot(hit);
+          const tail = toHM(Math.min(GRID_END, (hit ? hit.start : toMin(st.ev.s)) + st.dur));
+          st.ghost.querySelector('span').textContent = (hit ? toHM(hit.start) : st.ev.s) + '–' + tail;
+          if (hit) {
+            const d = fromYMD(hit.date);
+            st.tip.className = 'move-tip';
+            st.tip.textContent = WEEKDAY[d.getDay()] + ' ' + (d.getMonth() + 1) + '/' + d.getDate() +
+              ' · ' + toHM(hit.start) + '–' + tail;
+          } else {
+            st.tip.className = 'move-tip is-bad';
+            st.tip.textContent = '松手取消';
+          }
+          st._tipW = 0;   // 文本变了，宽度缓存失效
+        }
+
+        /* 浮起卡片只改 transform（走 GPU，不触发回流） */
         st.ghost.style.transform =
           'translate(' + (st.cx - st.x0) + 'px,' + (st.cy - st.y0) + 'px) scale(1.04)';
-        st.ghost.querySelector('span').textContent = (hit ? toHM(hit.start) : st.ev.s) + '–' + tail;
 
-        if (hit) {
-          const d = fromYMD(hit.date);
-          st.tip.className = 'move-tip';
-          st.tip.textContent = WEEKDAY[d.getDay()] + ' ' + (d.getMonth() + 1) + '/' + d.getDate() +
-            ' · ' + toHM(hit.start) + '–' + tail;
-        } else {
-          st.tip.className = 'move-tip is-bad';
-          st.tip.textContent = '松手取消';
-        }
-        const tw = st.tip.offsetWidth || 120;
+        /* 气泡宽度缓存：避免每帧读 offsetWidth 强制回流 */
+        if (!st._tipW) st._tipW = st.tip.offsetWidth || 120;
         st.tip.style.transform = 'translate(' +
-          Math.max(8, Math.min(window.innerWidth - tw - 8, st.cx - tw / 2)) + 'px,' +
+          Math.max(8, Math.min(window.innerWidth - st._tipW - 8, st.cx - st._tipW / 2)) + 'px,' +
           Math.max(6, st.cy - 44) + 'px)';
       }
 
