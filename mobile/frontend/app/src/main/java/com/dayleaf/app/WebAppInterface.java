@@ -87,6 +87,18 @@ public class WebAppInterface {
         });
     }
 
+    /** 导出备份/日历文件：交给原生「另存为」保存（WebView 里 <a download> 不生效）。 */
+    @JavascriptInterface
+    public void saveTextFile(final String filename, final String content) {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                if (activity instanceof MainActivity) {
+                    ((MainActivity) activity).saveTextFile(filename, content);
+                }
+            }
+        });
+    }
+
     private void postNotification(String title, String body, String tag) {
         NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;

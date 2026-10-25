@@ -2547,7 +2547,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   .ne-body{ min-height:150px;font-size:15px;line-height:1.7 }
   .ne-tagbox{ padding-top:14px;gap:11px }
   .ne-swatches{ display:flex;gap:10px;flex-wrap:wrap;margin-top:2px }
-  .ne-swatches button{ width:30px;height:30px;border-radius:50%;border:2px solid rgba(17,20,28,.08);box-shadow:0 1px 3px rgba(16,20,30,.12) }
+  .ne-swatches button{ width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(16,20,30,.2) }
   .ne-swatches button:active{ transform:scale(.9) }
   .ne-empty{ padding:56px 16px;font-size:13.5px }
 
@@ -2881,7 +2881,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.1',
+    version: '1.0.2',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3208,6 +3208,17 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (!isFinite(cd) || cd < 1) cd = 1;
       if (cd > 3650) cd = 3650;
       state.clean.days = cd;
+
+      /* 旧版本把大图存在 localStorage：迁移到 IndexedDB 并清掉内存里的，
+         避免继续把几百 KB 塞进每次保存；启动后由 loadAssets 读回。 */
+      if (state.bg && state.bg.data && state.bg.data.length > 2000) {
+        AssetDB.put('bg', state.bg.data);
+        state.bg.data = '';
+      }
+      if (state.home && state.home.img && state.home.img.length > 2000) {
+        AssetDB.put('hero', state.home.img);
+        state.home.img = '';
+      }
       return true;
     } catch (err) {
       console.warn('[DayLeaf] 读取本地数据失败，已回退到空数据', err);
@@ -3226,7 +3237,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       try {
-        localStorage.setItem(APP.storageKey, JSON.stringify(state));
+        /* 大图（背景 / 主卡）走 IndexedDB，localStorage 只留元数据。
+           否则每次任何改动都要序列化几百 KB 的 dataURL + 同步写盘，必然卡。 */
+        const meta = Object.assign({}, state);
+        meta.bg = Object.assign({}, state.bg, { data: '' });
+        meta.home = Object.assign({}, state.home, { img: '' });
+        localStorage.setItem(APP.storageKey, JSON.stringify(meta));
       } catch (err) {
         console.warn('[DayLeaf] 保存失败（可能是图片过大）', err);
         if (!quotaWarned) {
@@ -3680,6 +3696,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const MARK = '<svg class="hero-mark" viewBox="0 0 24 24"><path d="M4.6 19.4c-.6-8.3 5.2-14.6 15.2-15.2.4 9.9-5.9 15.8-14.2 15.2"/><path d="M4.6 19.4 13.4 10.6"/><path d="M9.2 14.8c2.2-1.6 4.6-2.6 7.4-3.2"/></svg>';
 
   /** 渲染倒计时主卡 */
+  let heroSig = '';   // 上次渲染的主卡状态签名
   function renderHero() {
     const hero = $('#hero');
     const now = new Date();
@@ -3693,6 +3710,32 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const endTs = stampOf(e.d, e.e);
       return endTs <= nowTs && (nowTs - endTs) <= OVER_WINDOW;
     }).sort(function (a, b) { return stampOf(b.d, b.e) - stampOf(a.d, a.e); })[0];
+
+    /* 状态签名：状态没变就只刷新倒计时数字，避免每秒重建整个主卡（有背景图时尤其卡） */
+    const isRunning = up ? (up.s <= nowTs) : false;
+    const SEC_WIN = 2 * 60 * 1000;
+    const sig = over ? ('over|' + over.id + '|' + over.d)
+      : up ? ('up|' + up.ev.id + '|' + (isRunning ? 'r' : 'u'))
+      : 'empty';
+    if (sig === heroSig && hero.dataset.hs === '1') {
+      if (up && !over) {
+        const left2 = isRunning ? (up.e - nowTs) : (up.s - nowTs);
+        const isSec2 = left2 > 0 && left2 < SEC_WIN;
+        const parts2 = isSec2 ? gapSeconds(left2) : gapParts(left2);
+        const tail2 = isRunning ? '后结束' : '后开始';
+        const countEl = hero.querySelector('.hero-count');
+        if (countEl) {
+          countEl.className = 'hero-count' + (isSec2 ? ' is-sec' : '');
+          countEl.innerHTML = parts2.map(function (p) {
+            return '<b>' + esc(p[0]) + '</b><i>' + esc(p[1]) + '</i>';
+          }).join('') + '<span class="hero-after">' + tail2 + '</span>';
+        }
+        hero.className = 'hero' + (isSec2 ? ' is-sec' : '');
+      }
+      return;
+    }
+    heroSig = sig;
+    hero.dataset.hs = '1';
 
     if (over) {
       /* 只在这一次跨过零点的瞬间提示一次，之后安静放着 */
@@ -4308,7 +4351,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="ne-tagrow"><span class="lbl">快速选色</span></div>' +
         '<div class="ne-swatches" id="neSwatches">' +
           ['#4C6FFF', '#7C5CFF', '#16A34A', '#F59E0B', '#F43F5E', '#06B6D4', '#EC4899', '#64748B'].map(function (c) {
-            return '<button type="button" data-c="' + c + '" aria-label="标记色 ' + c + '"></button>';
+            return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="标记色 ' + c + '"></button>';
           }).join('') +
         '</div>' +
         '<div class="ne-tagrow"><span class="lbl">关联日期</span></div>' +
@@ -6286,6 +6329,20 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       return (window.DayLeafNative && window.DayLeafNative.checkUpdate) ? window.DayLeafNative : null;
     } catch (e) { return null; }
   }
+  /** 保存文本文件：App 里走原生「另存为」，网页里退回 blob 下载（WebView 不认 <a download>） */
+  function saveTextFile(filename, content, mime) {
+    const nat = nativeBridge();
+    if (nat && nat.saveTextFile) {
+      try { nat.saveTextFile(filename, content); return; } catch (e) { /* 退回下载 */ }
+    }
+    const blob = new Blob([content], { type: mime || 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  }
   function notifySupported() {
     return typeof window.Notification !== 'undefined' || !!nativeBridge();
   }
@@ -6555,13 +6612,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     });
     L.push('END:VCALENDAR');
 
-    const blob = new Blob([L.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'dayleaf-reminders-' + toYMD(new Date()) + '.ics';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    saveTextFile('dayleaf-reminders-' + toYMD(new Date()) + '.ics', L.join('\r\n'), 'text/calendar;charset=utf-8');
     toast('已导出 ' + items.length + ' 条带提醒的日程（.ics）');
   }
 
@@ -6869,6 +6920,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (!file) return;
       readImageAsData(file, 1600, 0.88, function (data) {
         state.bg.data = data;
+        AssetDB.put('bg', data);
         if (state.bg.opacity < 0.2) state.bg.opacity = 0.45;
         const cropBtn = document.getElementById('fBgCrop');
         if (cropBtn) cropBtn.disabled = false;
@@ -6884,6 +6936,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     $('#fBgClear').addEventListener('click', function () {
       state.bg.data = '';
+      AssetDB.del('bg');
       applyBg();
       saveState();
     });
@@ -6891,13 +6944,16 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     /* ---- 滑块：实时预览 ---- */
     function bindRange(id, labelId, fmt, apply) {
       const el = $('#' + id);
+      if (!el) return;
+      /* 拖动中只做视觉预览，不写 localStorage：背景图是几百 KB 的 dataURL，
+         每帧序列化 + 同步写盘正是滑块卡顿的主因。松手（change）才落盘。 */
       el.addEventListener('input', function () {
         const v = Number(el.value);
         $('#' + labelId).textContent = fmt(v);
         apply(v);
         applyBg();
-        saveState();
       });
+      el.addEventListener('change', function () { saveState(); });
     }
     bindRange('fOp', 'vOp', function (v) { return v + '%'; }, function (v) { state.bg.opacity = v / 100; });
     bindRange('fBl', 'vBl', function (v) { return v + 'px'; }, function (v) { state.bg.blur = v; });
@@ -6939,6 +6995,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     function bindHomeRange(id, labelId, fmt, apply) {
       const el = $('#' + id);
       if (!el) return;
+      /* 同背景滑块：拖动中不落盘，松手才保存 */
       el.addEventListener('input', function () {
         const v = Number(el.value);
         $('#' + labelId).textContent = fmt(v);
@@ -6946,8 +7003,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         applyHomeLook();
         syncHeroPreview();
         if (id === 'fCardA') applyQuoteStyle();
-        saveState();
       });
+      el.addEventListener('change', function () { saveState(); });
     }
 
     bindHomeRange('fHx', 'vHx', function (v) { return v + '%'; }, function (v) { state.home.imgX = v; });
@@ -6970,6 +7027,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           cv.height = Math.round(img.height * k);
           cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
           state.home.img = cv.toDataURL('image/jpeg', 0.85);
+          AssetDB.put('hero', state.home.img);
           applyHomeLook();
           syncHeroPreview();
           saveState();
@@ -6995,6 +7053,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     $('#fHeroClear').addEventListener('click', function () {
       state.home.img = '';
+      AssetDB.del('hero');
       applyHomeLook();
       syncHeroPreview();
       saveState();
@@ -7464,13 +7523,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         ui: state.ui,
         clean: state.clean
       };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'dayleaf-' + toYMD(new Date()) + '.json';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+      saveTextFile('dayleaf-' + toYMD(new Date()) + '.json', JSON.stringify(data, null, 2), 'application/json');
       toast('已导出数据');
     });
 
@@ -7542,18 +7595,24 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   }
 
   /** 把 state.bg 应用到背景层 */
+  let _lastBgSrc = null;
   function applyBg() {
     const bg = state.bg;
     const layer = $('#bgImage');
     if (bg.data) {
-      layer.style.backgroundImage = 'url(' + bg.data + ')';
+      /* 只有换图才重设 backgroundImage；拖滑块时只改 opacity / blur / scale / position，
+         避免每帧重新解析几百 KB 的 dataURL */
+      if (_lastBgSrc !== bg.data) {
+        layer.style.backgroundImage = 'url(' + bg.data + ')';
+        _lastBgSrc = bg.data;
+      }
       layer.style.opacity = String(bg.opacity);
       layer.style.filter = 'blur(' + bg.blur + 'px)';
       layer.style.transform = 'scale(' + bg.scale + ')';
       layer.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
       document.body.classList.add('has-bg');
     } else {
-      layer.style.backgroundImage = 'none';
+      if (_lastBgSrc !== '') { layer.style.backgroundImage = 'none'; _lastBgSrc = ''; }
       document.body.classList.remove('has-bg');
     }
     /* 预览与背景层永远同源，任何参数变化都走这里 */
@@ -7602,6 +7661,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
    * 主卡的「不透明度」只降底色层，文字永远保持原样，所以透出来看背景图时依然可读；
    * 底色淡到 62% 以下时自动把字改成深色，避免白字落在浅色页面上看不见。
    */
+  let _lastHeroSrc = null;
   function applyHomeLook() {
     const h = state.home || {};
     const alpha = Number(h.alpha);
@@ -7612,14 +7672,20 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     if (layer) {
       if (h.img) {
-        /* 铺一层深色渐变压在照片上，白字在任何图片上都能读清 */
-        layer.style.backgroundImage =
-          'linear-gradient(180deg,rgba(10,14,42,.30),rgba(10,14,42,.64)),url("' + h.img + '")';
-        layer.style.backgroundSize = 'auto, cover';
+        /* 同背景层：图片没变就不重设，拖动位置滑块时只改 background-position */
+        if (_lastHeroSrc !== h.img) {
+          layer.style.backgroundImage =
+            'linear-gradient(180deg,rgba(10,14,42,.30),rgba(10,14,42,.64)),url("' + h.img + '")';
+          layer.style.backgroundSize = 'auto, cover';
+          _lastHeroSrc = h.img;
+        }
         layer.style.backgroundPosition = '50% 50%, ' + h.imgX + '% ' + h.imgY + '%';
       } else {
-        layer.style.backgroundImage = '';
-        layer.style.backgroundSize = '';
+        if (_lastHeroSrc !== '') {
+          layer.style.backgroundImage = '';
+          layer.style.backgroundSize = '';
+          _lastHeroSrc = '';
+        }
         layer.style.backgroundPosition = '';
       }
       layer.style.opacity = String(alpha);
@@ -7900,6 +7966,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     ctx.drawImage(crop.img, sx, sy, sw, sh, 0, 0, outW, outH);
 
     state.bg.data = cv.toDataURL('image/jpeg', 0.86);
+    AssetDB.put('bg', state.bg.data);
     /* 裁剪已完成取景，缩放与位置回到默认 */
     state.bg.scale = 1;
     state.bg.x = 50;
@@ -8494,6 +8561,9 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           registerCustomFont(key.slice(5), map[key]);
         }
       });
+      /* 背景图 / 主卡图从 IndexedDB 读回（localStorage 里只剩空串） */
+      if (map['bg'] && !state.bg.data) { state.bg.data = map['bg']; applyBg(); }
+      if (map['hero'] && !state.home.img) { state.home.img = map['hero']; applyHomeLook(); }
       if (!curQuoteBgId) pickQuoteBg();
       applyQuoteFont();
       refreshQuoteCard();

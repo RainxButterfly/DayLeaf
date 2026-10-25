@@ -1,12 +1,12 @@
 {
   "channel": "android",
-  "versionCode": 2,
-  "versionName": "1.0.1",
+  "versionCode": 3,
+  "versionName": "1.0.2",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.1/DayLeaf-android-v1.0.1.apk",
-  "size": 452592,
-  "sha256": "7a1fafadbbbf79ffecab94f44a035bf0497062bc47bd08fd0814ac0ac470fe66",
-  "notes": "新图标与 LOGO、手机锁竖屏、返回手势优化、拖拽与翻页流畅度大幅提升、修复时间行溢出与输入法收起卡顿。",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.2/DayLeaf-android-v1.0.2.apk",
+  "size": 454983,
+  "sha256": "5991eca83e9a609d84d9da9d0cb6a5d09e90288105dc942b8785fc947a074b88",
+  "notes": "补全选图/导入/导出（文件选择器与另存为）、修复记事快速选色不显示颜色、大幅优化卡顿（大图移 IndexedDB、主卡不再每秒重建、滑块松手才保存）。",
   "publishedAt": "2026-10-25"
 }
