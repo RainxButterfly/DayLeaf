@@ -1,0 +1,12 @@
+{
+  "channel": "windows",
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "minVersionCode": 1,
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/desktop-v1.0.0/DayLeaf-windows-1.0.0.zip",
+  "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
+  "size": 624411,
+  "sha256": "927bdaf5e8e8f42dc923ac5b091842e9c0f58a6bfcbd2be64de4d7d95fa141bb",
+  "notes": "Windows 端首个版本：与安卓端共用同一份界面与数据格式，导入安卓导出的 JSON 即可继续使用。",
+  "publishedAt": "2026-10-25"
+}

@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>DayLeaf</AssemblyName>
+    <RootNamespace>DayLeaf</RootNamespace>
+    <ApplicationIcon>res\app.ico</ApplicationIcon>
+    <ApplicationManifest>res\app.manifest</ApplicationManifest>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+
+    <!-- 与安卓端一致的品牌信息 -->
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyTitle>叶历 DayLeaf</AssemblyTitle>
+    <Product>叶历 DayLeaf</Product>
+    <Company>星河一叶Roxy</Company>
+    <Copyright>© 2026 星河一叶Roxy</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WebView2 直接引用本地 DLL：官方包的 MSBuild 目标要求更新版 SDK，本机只有 3.0 -->
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>lib\Microsoft.Web.WebView2.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.WinForms">
+      <HintPath>lib\Microsoft.Web.WebView2.WinForms.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="lib\WebView2Loader.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>WebView2Loader.dll</Link>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 界面就是移动端那份 index.html，构建时由 build.ps1 同步进来 -->
+    <EmbeddedResource Include="res\www\index.html" LogicalName="www.index.html" Condition="Exists('res\www\index.html')" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,529 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Web.Script.Serialization;
+using System.Windows.Forms;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.WinForms;
+
+namespace DayLeaf
+{
+    /// <summary>
+    /// 主窗口：承载与安卓端同一份 index.html，补齐桌面端需要的原生能力。
+    /// </summary>
+    internal sealed class MainForm : Form
+    {
+        private const string VirtualHost = "dayleaf.app";
+        private const string StartUrl = "https://dayleaf.app/index.html";
+
+        private readonly WebView2 _web = new WebView2();
+        private bool _dark;
+        private readonly bool _selfTest;
+        private bool _selfTestDone;
+
+        public MainForm()
+        {
+            AppPaths.Ensure();
+            _dark = AppPaths.IsDarkNow();
+            _selfTest = Array.IndexOf(Environment.GetCommandLineArgs(), "--selftest") >= 0;
+
+            SuspendLayout();
+            Text = "叶历 DayLeaf";
+            StartPosition = FormStartPosition.CenterScreen;
+
+            // 界面在 960px 以上才切换成桌面布局，而窗口尺寸是物理像素，
+            // 系统开了缩放（125%/150%）时 CSS 宽度会按比例缩水，所以这里按 DPI 放大。
+            float scale = SystemScale();
+            int screenW = ScreenWidth();
+            int screenH = ScreenHeight();
+            int wantW = (int)Math.Round(1240 * scale);
+            int wantH = (int)Math.Round(830 * scale);
+            Size = new Size(
+                Math.Min(wantW, (int)(screenW * 0.94)),
+                Math.Min(wantH, (int)(screenH * 0.92)));
+            MinimumSize = new Size(
+                (int)Math.Round(980 * scale),
+                (int)Math.Round(650 * scale));
+
+            BackColor = AppPaths.BgColor(_dark);
+            try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); }
+            catch (Exception) { /* 用默认图标 */ }
+
+            _web.Dock = DockStyle.Fill;
+            _web.DefaultBackgroundColor = AppPaths.BgColor(_dark);
+            Controls.Add(_web);
+            ResumeLayout(false);
+
+            RestoreWindowBounds();
+
+            Load += OnLoadAsync;
+            FormClosing += OnFormClosing;
+            Shown += delegate { ApplyTheme(_dark); };
+        }
+
+        /* ------------------------------------------------------------------
+         * 启动
+         * ---------------------------------------------------------------- */
+
+        private async void OnLoadAsync(object sender, EventArgs e)
+        {
+            try
+            {
+                string indexPath = HtmlBundle.EnsureExtracted();
+                string wwwDir = Path.GetDirectoryName(indexPath);
+
+                CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, AppPaths.WebViewData);
+                await _web.EnsureCoreWebView2Async(env);
+
+                CoreWebView2 core = _web.CoreWebView2;
+                CoreWebView2Settings s = core.Settings;
+                s.IsStatusBarEnabled = false;
+                s.AreDevToolsEnabled = false;
+                s.AreDefaultContextMenusEnabled = true;   // 输入框仍要右键复制粘贴
+                s.IsZoomControlEnabled = false;
+                s.IsPinchZoomEnabled = false;
+                s.IsSwipeNavigationEnabled = false;
+                s.IsPasswordAutosaveEnabled = false;
+                s.IsGeneralAutofillEnabled = false;
+                try { s.AreBrowserAcceleratorKeysEnabled = false; }
+                catch (Exception) { /* 旧运行时没有这个开关 */ }
+
+                // 固定虚拟域名：localStorage / IndexedDB 有稳定来源，和安卓端行为一致
+                core.SetVirtualHostNameToFolderMapping(VirtualHost, wwwDir, CoreWebView2HostResourceAccessKind.Allow);
+
+                core.WebMessageReceived += OnWebMessage;
+                core.NewWindowRequested += OnNewWindow;
+                core.NavigationStarting += OnNavigationStarting;
+                core.ProcessFailed += OnProcessFailed;
+                core.NavigationCompleted += OnNavigationCompleted;
+
+                await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildBridgeScript());
+
+                ApplyTheme(_dark);
+                core.Navigate(StartUrl);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "界面初始化失败：" + ex.Message +
+                    "\n\n请确认系统已安装 WebView2 运行时（Windows 10/11 通常自带）。",
+                    "叶历 DayLeaf", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>注入 window.DayLeafNative，让网页里的调用原样可用。</summary>
+        private static string BuildBridgeScript()
+        {
+            string version = DesktopUpdate.CurrentVersion().Replace("\\", "").Replace("'", "");
+            var sb = new StringBuilder();
+            sb.Append("(function(){ if (window.DayLeafNative) return;");
+            sb.Append("var post=function(o){try{window.chrome.webview.postMessage(JSON.stringify(o));}catch(e){}};");
+            sb.Append("window.DayLeafNative={");
+            sb.Append("checkUpdate:function(){post({cmd:'checkUpdate'});},");
+            sb.Append("setThemeMode:function(m){post({cmd:'theme',arg:String(m||'light')});},");
+            sb.Append("saveTextFile:function(n,c){post({cmd:'save',name:String(n||'dayleaf.txt'),content:String(c==null?'':c)});},");
+            sb.Append("getVersionName:function(){return '").Append(version).Append("';},");
+            // 桌面端没有这几个能力，留空实现保证网页调用不报错
+            sb.Append("notify:function(){},ensureNotifyPermission:function(){},vibrate:function(){},setHasModal:function(){}");
+            sb.Append("};})();");
+            return sb.ToString();
+        }
+
+        /* ------------------------------------------------------------------
+         * 网页 → 原生
+         * ---------------------------------------------------------------- */
+
+        private void OnWebMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            string raw;
+            try { raw = e.TryGetWebMessageAsString(); }
+            catch (Exception) { return; }
+            if (string.IsNullOrEmpty(raw)) return;
+
+            Dictionary<string, object> msg;
+            try { msg = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(raw); }
+            catch (Exception) { return; }
+            if (msg == null) return;
+
+            string cmd = msg.ContainsKey("cmd") ? Convert.ToString(msg["cmd"]) : "";
+
+            if (cmd == "theme")
+            {
+                string mode = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "light";
+                AppPaths.WriteTheme(mode);
+                ApplyTheme(AppPaths.IsDark(mode));
+            }
+            else if (cmd == "checkUpdate")
+            {
+                RunUpdateCheck();
+            }
+            else if (cmd == "save")
+            {
+                string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "dayleaf.txt";
+                string content = msg.ContainsKey("content") ? Convert.ToString(msg["content"]) : "";
+                SaveTextFile(name, content);
+            }
+        }
+
+        /// <summary>导出 JSON / ics：走系统「另存为」。</summary>
+        private void SaveTextFile(string name, string content)
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                string ext = Path.GetExtension(name);
+                if (string.IsNullOrEmpty(ext)) ext = ".txt";
+                dlg.FileName = name;
+                dlg.Filter = BuildFilter(ext);
+                dlg.AddExtension = true;
+                dlg.OverwritePrompt = true;
+                dlg.Title = "保存导出文件";
+
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    // UTF-8 无 BOM：记事本与各家日历都能正常识别
+                    File.WriteAllText(dlg.FileName, content ?? "", new UTF8Encoding(false));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, "保存失败：" + ex.Message, "叶历 DayLeaf",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private static string BuildFilter(string ext)
+        {
+            switch (ext.ToLowerInvariant())
+            {
+                case ".json": return "JSON 备份 (*.json)|*.json|所有文件 (*.*)|*.*";
+                case ".ics": return "日历文件 (*.ics)|*.ics|所有文件 (*.*)|*.*";
+                case ".txt": return "文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*";
+                default: return "所有文件 (*.*)|*.*";
+            }
+        }
+
+        private void RunUpdateCheck()
+        {
+            DesktopUpdate.Check(delegate(DesktopUpdate.Result r)
+            {
+                if (IsDisposed) return;
+                try
+                {
+                    BeginInvoke((Action)delegate { ShowUpdateResult(r); });
+                }
+                catch (Exception) { /* 窗口已关 */ }
+            });
+        }
+
+        private void ShowUpdateResult(DesktopUpdate.Result r)
+        {
+            if (r == null || r.Latest == null)
+            {
+                MessageBox.Show(this, "检查失败，请检查网络后重试", "检查更新",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!r.HasNewer)
+            {
+                MessageBox.Show(this, "已是最新版本 v" + r.Current, "检查更新",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string text = "发现新版本 v" + r.Latest.VersionName + "（当前 v" + r.Current + "）";
+            if (!string.IsNullOrEmpty(r.Latest.Notes)) text += "\n\n" + r.Latest.Notes;
+            if (r.Latest.Size > 0) text += "\n\n大小约 " + HumanSize(r.Latest.Size);
+
+            DialogResult ok = MessageBox.Show(this, text + "\n\n是否前往下载页面？", "发现新版本",
+                MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+            if (ok == DialogResult.OK) OpenExternal(r.Latest.Url);
+        }
+
+        private static string HumanSize(long bytes)
+        {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return Math.Max(1, (long)Math.Round(bytes / 1024.0)) + " KB";
+            return (bytes / 1048576.0).ToString("0.0") + " MB";
+        }
+
+        /* ------------------------------------------------------------------
+         * 导航与外链
+         * ---------------------------------------------------------------- */
+
+        private void OnNavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
+        {
+            string uri = e.Uri ?? "";
+            if (uri.StartsWith("https://" + VirtualHost, StringComparison.OrdinalIgnoreCase)) return;
+            if (uri == "about:blank" || uri.StartsWith("data:", StringComparison.OrdinalIgnoreCase)) return;
+
+            // 其余一律交给系统浏览器，应用内不跑外部页面
+            e.Cancel = true;
+            OpenExternal(uri);
+        }
+
+        private void OnNewWindow(object sender, CoreWebView2NewWindowRequestedEventArgs e)
+        {
+            e.Handled = true;
+            OpenExternal(e.Uri);
+        }
+
+        private void OnProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
+        {
+            if (e.ProcessFailedKind == CoreWebView2ProcessFailedKind.BrowserProcessExited)
+            {
+                MessageBox.Show(this, "界面进程已退出，请重新打开应用。", "叶历 DayLeaf",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        /// <summary>
+        /// --selftest：加载完界面后把关键状态写进 selftest.log 再退出。
+        /// 用来在打包后确认「壳 + 网页 + 本地存储」这条链路是通的。
+        /// </summary>
+        private async void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            if (!_selfTest || _selfTestDone) return;
+            _selfTestDone = true;
+
+            string log = "navigation_ok=" + e.IsSuccess;
+            log += "\r\ndpi=" + DeviceDpi + " form=" + Width + "x" + Height + " web=" + _web.Width + "x" + _web.Height
+                 + " scale=" + SystemScale().ToString("0.###") + " screen=" + ScreenWidth() + "x" + ScreenHeight();
+            try
+            {
+                // 等开场动画收场，再取界面状态与截图
+                await System.Threading.Tasks.Task.Delay(2400);
+
+                const string probe =
+                    "(function(){var o={};o.title=document.title;" +
+                    "o.views=document.querySelectorAll('.view').length;" +
+                    "o.navs=document.querySelectorAll('[data-nav]').length;" +
+                    "o.grid=!!document.getElementById('gridBody');" +
+                    "o.viewport=window.innerWidth+'x'+window.innerHeight;" +
+                    "o.dpr=window.devicePixelRatio;" +
+                    "o.bridge=!!(window.DayLeafNative&&window.DayLeafNative.checkUpdate);" +
+                    "try{localStorage.setItem('__probe','1');o.ls=localStorage.getItem('__probe')==='1';localStorage.removeItem('__probe');}catch(e){o.ls=false;}" +
+                    "o.bodyText=(document.body.innerText||'').replace(/\\s+/g,' ').slice(0,80);" +
+                    "return JSON.stringify(o);})()";
+
+                string raw = await _web.CoreWebView2.ExecuteScriptAsync(probe);
+                log += "\r\n" + raw;
+
+                using (var png = File.Create(Path.Combine(AppPaths.Root, "selftest.png")))
+                {
+                    await _web.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, png);
+                }
+                log += "\r\nscreenshot=selftest.png";
+
+                // 再抓一张表格页（桌面端的主屏）
+                await _web.CoreWebView2.ExecuteScriptAsync(
+                    "document.querySelector('[data-nav=\"grid\"]').click()");
+                await System.Threading.Tasks.Task.Delay(900);
+                using (var png2 = File.Create(Path.Combine(AppPaths.Root, "selftest-grid.png")))
+                {
+                    await _web.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, png2);
+                }
+                log += "\r\nscreenshot=selftest-grid.png";
+            }
+            catch (Exception ex)
+            {
+                log += "\r\nprobe_error=" + ex.Message;
+            }
+
+            try
+            {
+                File.WriteAllText(Path.Combine(AppPaths.Root, "selftest.log"), log, new UTF8Encoding(false));
+            }
+            catch (Exception) { /* ignore */ }
+
+            BeginInvoke((Action)Close);
+        }
+
+        private static void OpenExternal(string uri)
+        {
+            if (string.IsNullOrEmpty(uri)) return;
+            bool ok = uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                      || uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                      || uri.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
+            if (!ok) return;
+
+            try
+            {
+                var psi = new ProcessStartInfo(uri);
+                psi.UseShellExecute = true;
+                Process.Start(psi);
+            }
+            catch (Exception) { /* 没有默认程序就不处理 */ }
+        }
+
+        /* ------------------------------------------------------------------
+         * 主题
+         * ---------------------------------------------------------------- */
+
+        private void ApplyTheme(bool dark)
+        {
+            _dark = dark;
+            Color bg = AppPaths.BgColor(dark);
+            BackColor = bg;
+            try { _web.DefaultBackgroundColor = bg; }
+            catch (Exception) { /* 还没初始化完成 */ }
+
+            if (IsHandleCreated) SetDarkTitleBar(Handle, dark);
+        }
+
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("user32.dll")]
+        private static extern uint GetDpiForSystem();
+
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int index);
+
+        /// <summary>屏幕物理像素宽（WinForms 的 Screen 在缩放下给的是逻辑值，不能用）。</summary>
+        private static int ScreenWidth()
+        {
+            try
+            {
+                int w = GetSystemMetrics(0);
+                if (w > 0) return w;
+            }
+            catch (Exception) { /* ignore */ }
+            return Screen.PrimaryScreen.Bounds.Width;
+        }
+
+        private static int ScreenHeight()
+        {
+            try
+            {
+                int h = GetSystemMetrics(1);
+                if (h > 0) return h;
+            }
+            catch (Exception) { /* ignore */ }
+            return Screen.PrimaryScreen.Bounds.Height;
+        }
+
+        /// <summary>系统缩放比例（96 DPI 记为 1.0）。</summary>
+        private static float SystemScale()
+        {
+            try
+            {
+                uint dpi = GetDpiForSystem();
+                if (dpi >= 96) return dpi / 96f;
+            }
+            catch (Exception) { /* Win7 等没有这个接口，退回 GDI 读数 */ }
+
+            try
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    float s = g.DpiX / 96f;
+                    return s > 0.5f ? s : 1f;
+                }
+            }
+            catch (Exception)
+            {
+                return 1f;
+            }
+        }
+
+        /// <summary>让标题栏跟随深色（20 = 20H1+，19 = 更早的预览版）。</summary>
+        private static void SetDarkTitleBar(IntPtr hwnd, bool dark)
+        {
+            try
+            {
+                int value = dark ? 1 : 0;
+                if (DwmSetWindowAttribute(hwnd, 20, ref value, sizeof(int)) != 0)
+                {
+                    DwmSetWindowAttribute(hwnd, 19, ref value, sizeof(int));
+                }
+            }
+            catch (Exception) { /* 系统不支持就保持默认 */ }
+        }
+
+        /* ------------------------------------------------------------------
+         * 窗口位置记忆
+         * ---------------------------------------------------------------- */
+
+        private sealed class WindowPlacement
+        {
+            public int X { get; set; }
+            public int Y { get; set; }
+            public int W { get; set; }
+            public int H { get; set; }
+            public bool Max { get; set; }
+            public bool Valid { get; set; }
+        }
+
+        private void RestoreWindowBounds()
+        {
+            WindowPlacement st = LoadWindowState();
+            if (st == null || !st.Valid) return;
+
+            var rect = new Rectangle(st.X, st.Y, st.W, st.H);
+            bool visible = false;
+            foreach (Screen sc in Screen.AllScreens)
+            {
+                if (sc.WorkingArea.IntersectsWith(rect)) { visible = true; break; }
+            }
+            if (!visible) return;   // 换了显示器就别把窗口放到看不见的地方
+
+            StartPosition = FormStartPosition.Manual;
+            Bounds = rect;
+            if (st.Max) WindowState = FormWindowState.Maximized;
+        }
+
+        private static WindowPlacement LoadWindowState()
+        {
+            try
+            {
+                if (!File.Exists(AppPaths.WindowFile)) return null;
+                string json = File.ReadAllText(AppPaths.WindowFile);
+                var ser = new JavaScriptSerializer();
+                return ser.Deserialize<WindowPlacement>(json);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private void OnFormClosing(object sender, FormClosingEventArgs e)
+        {
+            try
+            {
+                Rectangle r = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
+                var st = new WindowPlacement
+                {
+                    X = r.X, Y = r.Y, W = r.Width, H = r.Height,
+                    Max = WindowState == FormWindowState.Maximized,
+                    Valid = true
+                };
+                var ser = new JavaScriptSerializer();
+                File.WriteAllText(AppPaths.WindowFile, ser.Serialize(st));
+            }
+            catch (Exception) { /* 存不下就算了，不影响关闭 */ }
+        }
+
+        /// <summary>另一个实例被启动时，把本窗口提到前面。</summary>
+        public void ActivateFromOther()
+        {
+            if (IsDisposed) return;
+            if (InvokeRequired)
+            {
+                try { BeginInvoke((Action)ActivateFromOther); } catch (Exception) { }
+                return;
+            }
+            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+            Show();
+            Activate();
+            BringToFront();
+        }
+    }
+}

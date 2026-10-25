@@ -25,3 +25,13 @@ keystore.properties
 # ---- 系统 ----
 .DS_Store
 Thumbs.db
+
+# ---- Windows 桌面端 ----
+# WebView2 依赖由 build.ps1 自动下载，不入库
+desktop/frontend/lib/
+desktop/frontend/bin/
+desktop/frontend/obj/
+# 界面 HTML 构建时从移动端同步，避免两份不一致
+desktop/frontend/res/www/
+desktop/frontend/dist/
+*.zip
