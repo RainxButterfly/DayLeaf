@@ -194,6 +194,16 @@ public class UpdateManager {
         return sb.toString();
     }
 
+    /** 把字节数换成便于阅读的大小；几百 KB 的包不能被整除成「0 MB」。 */
+    private static String humanSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) {
+            long kb = Math.round(bytes / 1024.0);
+            return (kb < 1 ? 1 : kb) + " KB";
+        }
+        return String.format(java.util.Locale.US, "%.1f MB", bytes / 1048576.0);
+    }
+
     /* ---------------- 弹窗 ---------------- */
 
     private void showUpdateDialog(final UpdateInfo info) {
@@ -201,7 +211,7 @@ public class UpdateManager {
         msg.append("发现新版本 v").append(info.versionName)
            .append("（当前 v").append(currentVersionName()).append("）");
         if (info.notes != null && info.notes.length() > 0) msg.append("\n\n").append(info.notes);
-        if (info.size > 0) msg.append("\n\n大小约 ").append(info.size / 1024 / 1024).append(" MB");
+        if (info.size > 0) msg.append("\n\n大小约 ").append(humanSize(info.size));
 
         AlertDialog.Builder b = new AlertDialog.Builder(activity);
         b.setTitle(info.force ? "需要更新" : "发现新版本");
