@@ -30,12 +30,18 @@ import java.net.URL;
 
 public class UpdateManager {
 
-    /** 更新清单的多个备用源（国内优先走 jsDelivr，raw/statically 兜底）。 */
+    /**
+     * 更新清单的多个备用源。
+     *
+     * 用 @latest 而不是 @main：CDN 对分支地址的缓存长达十几小时，发版后客户端要等很久
+     * 才看得到新版本；而 @latest 解析到最新 tag，每次发版都是新的缓存键，可以立即生效。
+     * 最后一条 @main 是兜底——即使滞后也没关系，客户端会取所有源里版本号最高的一个。
+     */
     private static final String[] UPDATE_SOURCES = {
-        "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/mobile/backend/update.json",
-        "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/mobile/backend/update.json",
+        "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/mobile/backend/update.json",
+        "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/mobile/backend/update.json",
         "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/main/mobile/backend/update.json",
-        "https://cdn.statically.io/gh/RainxButterfly/DayLeaf/main/mobile/backend/update.json"
+        "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/mobile/backend/update.json"
     };
 
     private final Activity activity;
@@ -82,7 +88,7 @@ public class UpdateManager {
         }).start();
     }
 
-    /** 用一条独立线程做检测，最多等 6 秒；超时就当没结果，绝不卡住界面。 */
+    /** 整体最多等 14 秒（正常网络下 1 秒内就有结果）；超时就当没结果，绝不卡住界面。 */
     private UpdateInfo fetchBestWithDeadline() {
         final UpdateInfo[] out = new UpdateInfo[1];
         Thread t = new Thread(new Runnable() {
@@ -91,33 +97,50 @@ public class UpdateManager {
         t.setDaemon(true);
         t.start();
         try {
-            t.join(12000);
+            t.join(14000);
         } catch (InterruptedException e) { /* ignore */ }
         return out[0];
     }
 
     /**
-     * CDN 会把 @main 分支的清单缓存十几个小时，导致刚发版客户端还看到旧版本。
-     * 给 jsDelivr 这类分支型地址加一个时间戳参数，使每次请求都是新 URL，
-     * 直接穿透缓存取到最新清单。文件只有几百字节，这点代价可以忽略。
+     * 并行请求所有源，取 versionCode 最大的一个；全失败返回 null。
+     *
+     * 并行而不是依次尝试：只要有一个源通就能出结果，不会被前面卡住的源拖住，
+     * 出国外的 raw 源被墙时也不会连累整体耗时。
      */
-    private static String bustCache(String url) {
-        if (url.indexOf("jsdelivr.net") < 0 && url.indexOf("statically.io") < 0) return url;
-        String sep = (url.indexOf('?') >= 0) ? "&" : "?";
-        return url + sep + "_=" + System.currentTimeMillis();
-    }
-
-    /** 依次尝试每个源，解析 JSON，返回 versionCode 最大的一个；全失败返回 null。 */
     private UpdateInfo fetchBest() {
-        UpdateInfo best = null;
-        for (String src : UPDATE_SOURCES) {
-            try {
-                UpdateInfo info = parse(httpGet(bustCache(src), 3000));
-                if (info != null && info.url != null && info.url.length() > 0) {
-                    if (best == null || info.versionCode > best.versionCode) best = info;
+        final java.util.List<UpdateInfo> got =
+                java.util.Collections.synchronizedList(new java.util.ArrayList<UpdateInfo>());
+        final java.util.concurrent.CountDownLatch latch =
+                new java.util.concurrent.CountDownLatch(UPDATE_SOURCES.length);
+
+        for (final String src : UPDATE_SOURCES) {
+            Thread t = new Thread(new Runnable() {
+                @Override public void run() {
+                    try {
+                        UpdateInfo info = parse(httpGet(src, 2500));
+                        if (info != null && info.url != null && info.url.length() > 0) {
+                            got.add(info);
+                        }
+                    } catch (Exception e) {
+                        // 该源不可用（网络/解析失败），忽略
+                    } finally {
+                        latch.countDown();
+                    }
                 }
-            } catch (Exception e) {
-                // 该源不可用（网络/解析失败），忽略并尝试下一个
+            });
+            t.setDaemon(true);
+            t.start();
+        }
+
+        try {
+            latch.await(6000, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) { /* ignore */ }
+
+        UpdateInfo best = null;
+        synchronized (got) {
+            for (UpdateInfo info : got) {
+                if (best == null || info.versionCode > best.versionCode) best = info;
             }
         }
         return best;
