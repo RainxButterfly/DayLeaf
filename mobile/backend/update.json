@@ -1,12 +1,12 @@
 {
   "channel": "android",
-  "versionCode": 9,
-  "versionName": "1.0.8",
+  "versionCode": 10,
+  "versionName": "1.0.9",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.8/DayLeaf-android-v1.0.8.apk",
-  "size": 460118,
-  "sha256": "b334b152e57422aa909a9fb546a6d8e632781d77fb0dc1b0a5f52d86785d6002",
-  "notes": "修复个别设备在 CDN 边缘缓存旧清单时误报「已是最新版本」：更新源增加一条镜像，手动检查时若版本不比当前新会带时间戳重试一次，强制回源。",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.9/DayLeaf-android-v1.0.9.apk",
+  "size": 462527,
+  "sha256": "89f92f473aa38de0a6c5f0e0c4dbcfcddf9364a930e591dc795325bd398ea229",
+  "notes": "新增「睡眠时段」：设置后可把表格折叠到清醒时间段，默认关闭（即始终显示完整 24 小时）；修复点击日程被误判成拖动、位置被挪动且打不开编辑的问题。",
   "publishedAt": "2026-10-25"
 }

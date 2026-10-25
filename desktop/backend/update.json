@@ -1,12 +1,12 @@
 {
   "channel": "windows",
-  "versionCode": 9,
-  "versionName": "1.0.8",
+  "versionCode": 10,
+  "versionName": "1.0.9",
   "minVersionCode": 1,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.8/DayLeaf-Setup-1.0.8.exe",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.9/DayLeaf-Setup-1.0.9.exe",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
-  "size": 716522,
-  "sha256": "20ff578ee9b7c74da2bb740576e0ea3d8f6009992d9bfded302d2bf893d725c5",
-  "notes": "与安卓端同版本发布：更新源增加一条镜像，降低个别网络下误报「已是最新版本」的概率。",
+  "size": 718559,
+  "sha256": "bce9913837bf9b54915e95b6eca0b522c294d03f2c45bc1a66bf1e282bd7551f",
+  "notes": "与安卓端同版本发布：新增「睡眠时段」折叠；修复点击日程被误判成拖动。",
   "publishedAt": "2026-10-25"
 }
