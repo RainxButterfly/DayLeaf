@@ -4,11 +4,11 @@
   "versionName": "1.0.12",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.12/desktop/backend/DayLeaf-Setup.exe"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.12/desktop/backend/DayLeaf-Setup.bin"
   ],
   "size": 730852,
   "sha256": "763728c67de34dabde01e781afe93afe79b5fa33b26cf1fee831aab54febdd73",
