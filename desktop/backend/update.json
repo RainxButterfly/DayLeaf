@@ -1,12 +1,13 @@
 {
   "channel": "windows",
-  "versionCode": 11,
-  "versionName": "1.0.10",
+  "versionCode": 12,
+  "versionName": "1.0.11",
   "minVersionCode": 1,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.10/DayLeaf-Setup-1.0.10.exe",
+  "force": false,
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.11/DayLeaf-Setup-1.0.11.exe",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
-  "size": 720801,
-  "sha256": "15a94bdef173b350af78a8dee6b18143da1d3d7b98cad4c8062cdce6da005bfb",
-  "notes": "更新提示改为软件内原生弹窗：右下角「立即下载」在应用内直接下载并拉起安装程序，左下角「稍后下载」关闭弹窗；修复通知点击无反应；修复长按下拉无法新建日程。",
+  "size": 723786,
+  "sha256": "a981b5eae5bea4da7a658ff47855f6c29003c34a1386f590337805fda4a647f4",
+  "notes": "修复部分机型（vivo，WebView 84–86）开场层被压成顶栏、点「设置」无反应；背景图片改为自由取景（拖动/双指缩放，铺满或完整显示）；记事页「完成」按钮移到脚栏、选色改为圆形色块；更新可直接跨版本升到最新。",
   "publishedAt": "2026-10-25"
 }

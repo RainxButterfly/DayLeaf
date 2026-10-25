@@ -123,7 +123,12 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setUseWideViewPort(true);
-        s.setLoadWithOverviewMode(true);
+        // 关掉 overview 缩放与手势缩放：页面自带 viewport 与自适应布局，
+        // 再让内核按内容宽度缩放，部分机型（vivo 等）会把整页缩小或错位。
+        s.setLoadWithOverviewMode(false);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
+        s.setDisplayZoomControls(false);
         s.setLoadsImagesAutomatically(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         if (Build.VERSION.SDK_INT >= 21) {

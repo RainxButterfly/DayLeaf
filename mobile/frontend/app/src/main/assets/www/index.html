@@ -246,21 +246,21 @@ h1,h2,h3,p{margin:0}
    用户裁好的画面放上去就变样了。现在清晰层用 contain 完整显示，
    空出来的四周由同图放大模糊的底衬住，既不裁画面也不留空边。 */
 #bgBlur{
-  position:fixed; inset:-6%; z-index:0; pointer-events:none;
+  position:fixed; top:-6%;right:-6%;bottom:-6%;left:-6%; z-index:0; pointer-events:none;
   background-position:50% 50%; background-size:cover; background-repeat:no-repeat;
   opacity:0; filter:blur(22px) saturate(1.08);
   transition:opacity .35s ease;
   will-change:opacity;
 }
 #bgImage{
-  position:fixed; inset:0; z-index:0; pointer-events:none;
+  position:fixed; top:0;right:0;bottom:0;left:0; z-index:0; pointer-events:none;
   background-position:50% 50%; background-size:contain; background-repeat:no-repeat;
   opacity:0; transform-origin:50% 50%;
   transition:opacity .35s ease;
   will-change:opacity,transform;
 }
 #bgVeil{
-  position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0;
+  position:fixed; top:0;right:0;bottom:0;left:0; z-index:0; pointer-events:none; opacity:0;
   background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.58) 45%,rgba(255,255,255,.80));
   transition:opacity .4s ease;
 }
@@ -392,7 +392,7 @@ main{flex:1;min-height:0;position:relative}
 .hero:not(.is-empty):active{transform:scale(.994)}
 /* 底色单独一层：这样调不透明度时只有底色变淡，文字依然清晰 */
 .hero-bg{
-  position:absolute; inset:0; z-index:0;
+  position:absolute; top:0;right:0;bottom:0;left:0; z-index:0;
   background-image:linear-gradient(140deg,#4C6FFF 0%,#5B5BE8 48%,#7C5CFF 100%);
   background-size:cover; background-position:50% 50%; background-repeat:no-repeat;
   opacity:1; transition:opacity .2s ease;
@@ -525,7 +525,7 @@ html.dark .t-imp{color:#F5C56B}
   cursor:pointer;transition:transform .14s ease, background .14s ease;
 }
 /* 24px 的方块手指不好点，用伪元素把热区扩到 38px */
-.t-st::after{content:"";position:absolute;inset:-7px;border-radius:12px}
+.t-st::after{content:"";position:absolute;top:-7px;right:-7px;bottom:-7px;left:-7px;border-radius:12px}
 .t-st:active{transform:scale(.9)}
 .st-todo .t-st{background:rgba(148,163,184,.16);color:#64748B}
 .st-done .t-st{background:rgba(22,163,74,.14);color:var(--done)}
@@ -852,7 +852,7 @@ html.dark ::placeholder{color:#6E7689}
 .ne-body::placeholder{color:#B4BAC8}
 .ne-tagbox{border-top:1px dashed var(--line2);padding-top:11px;display:flex;flex-direction:column;gap:9px}
 .ne-tagrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.ne-tagrow .lbl{font-size:11px;color:var(--muted);margin-right:2px}
+.ne-tagrow .lbl{font-size:11px;color:var(--muted);margin-right:2px;flex:0 0 52px;width:52px}
 .ne-tagrow input[type=text]{
   width:82px;height:28px;border-radius:8px;padding:0 8px;font-size:11.5px;
   border:1px solid var(--line2);background:var(--surface);outline:none;
@@ -873,8 +873,41 @@ html.dark ::placeholder{color:#6E7689}
 .ne-empty{padding:40px 10px;text-align:center;font-size:12.5px;color:var(--muted);line-height:1.7}
 .ne-hint{font-size:10.5px;color:var(--ink-soft);text-align:right}
 
+/* 快速选色：圆形色块，选中时留一圈底色 + 一枚对勾 */
+.ne-swatches{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ne-swatches button{
+  position:relative;width:26px;height:26px;padding:0;border-radius:50%;
+  border:2px solid rgba(255,255,255,.92);background-clip:padding-box;
+  box-shadow:0 1px 3px rgba(16,20,30,.2),inset 0 0 0 1px rgba(16,20,30,.06);
+  transition:transform .14s ease,box-shadow .14s ease;
+}
+.ne-swatches button:hover{transform:translateY(-1px) scale(1.06)}
+.ne-swatches button:active{transform:scale(.9)}
+.ne-swatches button.on{
+  box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--c),0 2px 6px rgba(16,20,30,.22);
+}
+.ne-swatches button.on::after{
+  content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  color:#fff;font-size:12px;font-weight:800;line-height:1;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+
+/* 底部收尾：左边自动保存提示，右边「完成」 */
+.ne-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:2px;padding-top:12px;border-top:1px solid var(--line);
+}
+.ne-saved{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--ink-soft);transition:color .2s;
+}
+.ne-saved::before{content:'';width:6px;height:6px;border-radius:50%;background:#16A34A}
+.ne-saved.flash{color:var(--accent)}
+.ne-saved.flash::before{background:var(--accent)}
+.btn.ne-done{flex:0 0 auto;height:36px;padding:0 22px;border-radius:11px;font-size:13px;font-weight:700}
+
 /* 移动端：编辑器变为底部抽屉 */
-#noteScrim{position:fixed;inset:0;z-index:58;background:rgba(12,15,22,.34);opacity:0;pointer-events:none;transition:opacity .26s}
+#noteScrim{position:fixed;top:0;right:0;bottom:0;left:0;z-index:58;background:rgba(12,15,22,.34);opacity:0;pointer-events:none;transition:opacity .26s}
 #noteScrim.show{opacity:1;pointer-events:auto}
 @media (max-width:959px){
   .note-editor{
@@ -894,9 +927,9 @@ html.dark ::placeholder{color:#6E7689}
 /* ==========================================================================
    15. 全局搜索
    ========================================================================== */
-.search-root{position:fixed;inset:0;z-index:96;display:none;align-items:flex-start;justify-content:center}
+.search-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:96;display:none;align-items:flex-start;justify-content:center}
 .search-root.open{display:flex}
-.search-root .search-scrim{position:absolute;inset:0;background:var(--overlay);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.search-root .search-scrim{position:absolute;top:0;right:0;bottom:0;left:0;background:var(--overlay);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .search-panel{
   position:relative;z-index:1;width:min(600px,100%);
   margin-top:min(16vh,140px);margin-left:16px;margin-right:16px;
@@ -944,9 +977,9 @@ html.dark ::placeholder{color:#6E7689}
 .sr-empty{padding:30px 20px;text-align:center;font-size:12.5px;color:var(--muted);line-height:1.7}
 .search-foot{padding:8px 14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted)}
 
-.modal-root{position:fixed;inset:0;z-index:90;display:none}
+.modal-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:90;display:none}
 .modal-root.open{display:block}
-.mb-back{position:absolute;inset:0;background:var(--overlay);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fade .22s ease}
+.mb-back{position:absolute;top:0;right:0;bottom:0;left:0;background:var(--overlay);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fade .22s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .mb-panel{
   position:absolute;left:0;right:0;bottom:0;
@@ -1119,9 +1152,9 @@ html.dark .dt-scroll button{background:var(--surface-2)}
 /* ==========================================================================
    12. 滚轮选择器（移动端底部 sheet，深色，参考设计稿）
    ========================================================================== */
-.wp-root{position:fixed;inset:0;z-index:1500}
+.wp-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1500}
 .wp-scrim{
-  position:absolute;inset:0;background:rgba(0,0,0,.52);
+  position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.52);
   opacity:0;transition:opacity .24s ease;
 }
 .wp-root.in .wp-scrim{opacity:1}
@@ -1242,7 +1275,7 @@ html.dark .dt-scroll button{background:var(--surface-2)}
   box-shadow:0 6px 16px -6px rgba(244,63,94,.6);
 }
 .btn.file{position:relative;overflow:hidden;cursor:pointer}
-.btn.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.btn.file input{position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer}
 .btn:disabled{opacity:.4;pointer-events:none}
 .bg-pick{display:flex;gap:10px}
 .bg-pick .btn{height:42px;font-size:13px;padding:0 8px}
@@ -1428,7 +1461,7 @@ html.dark .ev-imp{color:hsl(var(--h) 70% 72%)}
 html.dark .home-foot{opacity:.5}
 
 /* ---- 8.3.4 首次启动引导：遮罩挖洞 + 一句话说明 ---- */
-.guide-root{position:fixed;inset:0;z-index:210}
+.guide-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:210}
 .guide-root[hidden]{display:none}
 .guide-hole{
   position:fixed;border-radius:16px;pointer-events:none;
@@ -1464,31 +1497,36 @@ html.dark .home-foot{opacity:.5}
    8.3.6 开场层：加载时的一句话（逐字浮现 + 极光 + 微粒）
    ========================================================================== */
 .boot-splash{
-  position:fixed;inset:0;z-index:9998;overflow:hidden;
+  position:fixed;top:0;right:0;bottom:0;left:0;z-index:9998;overflow:hidden;
+  /* 宽高写死 + 底色单列：旧内核丢了 inset 或整条 background 简写时，
+     这一层仍然是不透明的整屏，不会退化成顶上一条、露出下面的主页 */
+  width:100%;height:100%;margin:0;
+  background-color:#F3F5FC;
   display:grid;place-items:center;
-  background:
+  background-image:
     radial-gradient(120% 90% at 50% 8%, rgba(76,111,255,.16), transparent 62%),
     radial-gradient(100% 80% at 50% 100%, rgba(124,92,255,.14), transparent 60%),
     linear-gradient(168deg,#F3F5FC 0%,#F8F9FD 46%,#EDF1FA 100%);
-  transition:opacity .58s cubic-bezier(.4,0,.2,1),
-             transform .58s cubic-bezier(.4,0,.2,1),
-             filter .58s ease;
+  transition:opacity .46s cubic-bezier(.4,0,.2,1),
+             transform .46s cubic-bezier(.4,0,.2,1);
 }
 html.dark .boot-splash{
-  background:
+  background-color:#0B0E15;
+  background-image:
     radial-gradient(120% 90% at 50% 8%, rgba(76,111,255,.26), transparent 62%),
     radial-gradient(100% 80% at 50% 100%, rgba(124,92,255,.22), transparent 60%),
     linear-gradient(168deg,#0B0E15 0%,#10141D 46%,#0A0D14 100%);
 }
 .boot-splash[hidden]{display:none}
 
-/* 收场：整层轻微放大 + 虚化淡出，像镜头推走 */
+/* 收场：整层轻微放大淡出。
+   不再用 filter:blur —— 旧内核对带 filter 的整屏合成层会把整幅画面一起糊掉 */
 .boot-splash.is-out{
-  opacity:0;transform:scale(1.06);filter:blur(8px);pointer-events:none;
+  opacity:0;transform:scale(1.06);pointer-events:none;
 }
 
 /* 极光：三团色斑缓慢漂移，纯 CSS，不占主线程 */
-.bs-aurora{position:absolute;inset:-18%;pointer-events:none;filter:blur(48px);opacity:.85}
+.bs-aurora{position:absolute;top:-18%;right:-18%;bottom:-18%;left:-18%;pointer-events:none;filter:blur(48px);opacity:.85}
 .bs-aurora i{
   position:absolute;display:block;border-radius:50%;mix-blend-mode:screen;
   will-change:transform;
@@ -1514,12 +1552,12 @@ html.dark .boot-splash{
 
 /* 微粒：canvas 画，收场时一起淡掉 */
 .bs-canvas{
-  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;pointer-events:none;
   transition:opacity .5s ease;
 }
 /* 一层极淡的噪点，避免大色块发平 */
 .bs-grain{
-  position:absolute;inset:0;pointer-events:none;opacity:.5;
+  position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;opacity:.5;
   background-image:radial-gradient(rgba(17,20,28,.055) 1px,transparent 1px);
   background-size:3px 3px;
 }
@@ -1615,7 +1653,7 @@ html.dark .bs-bar{background:rgba(255,255,255,.12)}
 
 /* ---- 8.3.5 闹钟响铃层 ---- */
 .alarm-root{
-  position:fixed; inset:0; z-index:200;
+  position:fixed; top:0;right:0;bottom:0;left:0; z-index:200;
   display:grid; place-items:center;
   background:rgba(8,10,16,.62);
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
@@ -1820,67 +1858,72 @@ html.dark .st-note.warn{color:#F0B95A}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 
-/* ---- 8.7 背景裁剪器 ---- */
-.cropper-root{position:fixed;inset:0;z-index:110;display:none}
-.cropper-root.open{display:block}
-.crop-back{
-  position:absolute;inset:0;background:rgba(10,12,18,.6);
+/* ---- 8.7 取景器（全局背景 / 主卡背景 / 语录图片共用） ---- */
+.framer-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:110;display:none}
+.framer-root.open{display:block}
+.framer-back{
+  position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(10,12,18,.6);
   -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
   animation:fade .2s ease;
 }
-.crop-panel{
+.framer-panel{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:min(440px,92vw);max-height:94vh;overflow-y:auto;
   background:var(--surface);border-radius:22px;padding:16px;
   box-shadow:0 30px 80px -24px rgba(10,14,24,.6);
   animation:pop .2s ease;
 }
-.crop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.crop-head h3{font-size:16.5px;font-weight:750;letter-spacing:-.2px}
+.framer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.framer-head h3{font-size:16.5px;font-weight:750;letter-spacing:-.2px}
 
-.crop-stage{
-  position:relative;width:100%;height:min(46vh,380px);
-  border-radius:14px;overflow:hidden;
-  background:#0E1016;
-  touch-action:none; user-select:none;
-  cursor:crosshair;
+/* 舞台就是「最终看到的那块区域」：比例与真实位置一致，
+   图片在里面拖动/缩放，所见即所得 */
+.framer-stage{
+  position:relative;margin:0 auto;border-radius:14px;overflow:hidden;
+  background:#0E1016;touch-action:none;user-select:none;
+  cursor:grab;
 }
-.crop-stage img{
-  position:absolute;left:0;top:0;width:100%;height:100%;
-  object-fit:cover;pointer-events:none;
+.framer-stage.dragging{cursor:grabbing}
+/* 页面背景的真实效果：清晰层四周由同图放大模糊补边，取景时也照这个显示 */
+.framer-blur{
+  position:absolute;top:-6%;right:-6%;bottom:-6%;left:-6%;
+  background-position:50% 50%;background-size:cover;background-repeat:no-repeat;
+  filter:blur(18px) saturate(1.08);opacity:.6;
+}
+.framer-img{
+  position:absolute;top:0;right:0;bottom:0;left:0;
+  background-repeat:no-repeat;background-position:50% 50%;background-size:cover;
+  pointer-events:none;will-change:transform;
   -webkit-user-drag:none;user-select:none;
 }
-.crop-box{
-  position:absolute;box-sizing:border-box;
-  border:1.5px solid rgba(255,255,255,.95);
-  box-shadow:0 0 0 9999px rgba(8,10,16,.56);
-  cursor:move;touch-action:none;
+.framer-frame{
+  position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9);
 }
-.crop-box .grid{
-  position:absolute;inset:0;pointer-events:none;
+.framer-frame .grid{
+  position:absolute;top:0;right:0;bottom:0;left:0;
   background-image:
-    repeating-linear-gradient(to right,rgba(255,255,255,.22) 0 1px,transparent 1px 33.333%),
-    repeating-linear-gradient(to bottom,rgba(255,255,255,.22) 0 1px,transparent 1px 33.333%);
+    repeating-linear-gradient(to right,rgba(255,255,255,.16) 0 1px,transparent 1px 33.333%),
+    repeating-linear-gradient(to bottom,rgba(255,255,255,.16) 0 1px,transparent 1px 33.333%);
 }
-.crop-box .h{
-  position:absolute;width:18px;height:18px;border-radius:50%;
-  background:#fff;border:2px solid #4C6FFF;
-  box-shadow:0 2px 6px rgba(8,10,16,.45);
-  touch-action:none;
+.fr-hint{
+  position:absolute;left:0;right:0;bottom:7px;text-align:center;
+  font-size:10.5px;color:rgba(255,255,255,.66);pointer-events:none;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
 }
-.crop-box .h[data-corner=nw]{left:-9px;top:-9px;cursor:nwse-resize}
-.crop-box .h[data-corner=ne]{right:-9px;top:-9px;cursor:nesw-resize}
-.crop-box .h[data-corner=sw]{left:-9px;bottom:-9px;cursor:nesw-resize}
-.crop-box .h[data-corner=se]{right:-9px;bottom:-9px;cursor:nwse-resize}
-
-.crop-ratios{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
-.crop-ratios button{
-  flex:1 1 auto;height:31px;padding:0 10px;border-radius:9px;font-size:11.5px;
-  background:rgba(17,20,28,.045);border:1px solid transparent;color:var(--ink2);
-  white-space:nowrap;font-variant-numeric:tabular-nums;transition:.15s;
+.framer-modes{display:flex;gap:8px;margin-top:12px}
+.framer-modes button{
+  flex:1;height:36px;border-radius:11px;font-size:12.5px;
+  background:var(--surface-2);border:1px solid transparent;color:var(--ink2);
+  transition:.15s;
 }
-.crop-ratios button.on{background:var(--accent);color:#fff;font-weight:650}
-.crop-tip{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
+.framer-modes button.on{background:var(--accent);color:#fff;font-weight:650}
+.framer-zoom{display:flex;align-items:center;gap:10px;margin-top:12px}
+.framer-zoom>span{font-size:11.5px;color:var(--muted);flex:0 0 auto}
+.framer-zoom input[type=range]{flex:1;min-width:0}
+.framer-zoom b{font-size:11.5px;color:var(--accent);min-width:40px;text-align:right;font-variant-numeric:tabular-nums}
+.framer-zoom.is-off{opacity:.45}
+.framer-tip{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
 
 /* ---- 8.7 轻提示 ---- */#toast{
   position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom,0px));
@@ -1922,7 +1965,7 @@ html.dark .st-note.warn{color:#F0B95A}
   color:#fff;
 }
 .ev.has-img::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
+  content:"";position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(8,10,16,.22) 0%,rgba(8,10,16,.42) 55%,rgba(8,10,16,.66) 100%);
 }
 .ev.has-img .ev-t,
@@ -2054,7 +2097,7 @@ html.dark .st-note.warn{color:#F0B95A}
 }
 /* 语录背景单独一层，缩放 / 位置只作用于这一层，不影响文字布局 */
 .quote-card .qbg{
-  position:absolute;inset:0;z-index:0;pointer-events:none;
+  position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;pointer-events:none;
   background-size:cover;background-position:50% 50%;background-repeat:no-repeat;
   opacity:0;transition:opacity .25s ease;
   transform-origin:center center;
@@ -2120,6 +2163,9 @@ html.dark .st-note.warn{color:#F0B95A}
   white-space:nowrap;transition:.15s;
 }
 .chips button.on{background:var(--accent);border-color:transparent;color:#fff;font-weight:650}
+/* 铺满 / 完整：两个等宽按钮，跟在选图按钮下面 */
+.chips.fit-row{margin-top:10px}
+.chips.fit-row button{flex:1}
 
 .q-manage{display:none;flex-direction:column;gap:9px;margin-top:2px}
 .q-manage.on{display:flex}
@@ -2169,7 +2215,7 @@ html.dark .st-note.warn{color:#F0B95A}
   background:rgba(255,255,255,.10);
 }
 .quote-card.has-bg::after{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  content:"";position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:0;
   background:linear-gradient(180deg,rgba(8,10,16,.34) 0%,rgba(8,10,16,.52) 100%);
 }
 .quote-card.has-bg .q-text{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.5);z-index:1}
@@ -2195,7 +2241,7 @@ html.dark .st-note.warn{color:#F0B95A}
 }
 .qb-cell.on{border-color:var(--accent)}
 .qb-cell .mask{
-  position:absolute;inset:0;display:none;place-items:center;
+  position:absolute;top:0;right:0;bottom:0;left:0;display:none;place-items:center;
   background:rgba(8,10,16,.5);color:#fff;font-size:10px;letter-spacing:.5px;
 }
 .qb-cell:not(.on) .mask{display:grid}
@@ -2204,6 +2250,12 @@ html.dark .st-note.warn{color:#F0B95A}
   background:rgba(8,10,16,.55);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center;
 }
 .qb-cell .del:hover{background:rgba(244,63,94,.9)}
+.qb-cell .fr{
+  position:absolute;left:2px;bottom:2px;height:20px;padding:0 7px;border-radius:7px;
+  background:rgba(8,10,16,.55);color:#fff;font-size:10px;line-height:1;
+  display:grid;place-items:center;
+}
+.qb-cell .fr:hover{background:rgba(76,111,255,.94)}
 .qb-add{
   height:64px;border-radius:10px;border:1px dashed var(--line2);
   display:grid;place-items:center;font-size:11.5px;color:var(--muted);
@@ -2223,12 +2275,12 @@ html.dark .st-note.warn{color:#F0B95A}
   background:linear-gradient(160deg,#EAEEF8,#F6F7FB 45%,#EDF0F7);
 }
 .bg-prev-img{
-  position:absolute;inset:0;
+  position:absolute;top:0;right:0;bottom:0;left:0;
   background-size:contain;background-position:50% 50%;background-repeat:no-repeat;
   opacity:0;
 }
 .bg-prev-veil{
-  position:absolute;inset:0;opacity:0;transition:opacity .18s;
+  position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;transition:opacity .18s;
   background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.58) 45%,rgba(255,255,255,.80));
 }
 .bg-prev-ui{
@@ -2247,7 +2299,7 @@ html.dark .st-note.warn{color:#F0B95A}
   opacity:0;transition:opacity .18s;
 }
 .bg-prev-empty{
-  position:absolute;inset:0;display:grid;place-items:center;
+  position:absolute;top:0;right:0;bottom:0;left:0;display:grid;place-items:center;
   font-size:11.5px;color:var(--ink-soft);letter-spacing:.3px;
 }
 .bg-preview.has-img .bg-prev-veil,
@@ -2375,7 +2427,7 @@ body.no-bd-card .quote-card{border-color:transparent}
   --hp-a:1;
 }
 .hp-bg{
-  position:absolute;inset:0;
+  position:absolute;top:0;right:0;bottom:0;left:0;
   background-image:linear-gradient(140deg,#4C6FFF 0%,#5B5BE8 48%,#7C5CFF 100%);
   background-size:cover;background-position:50% 50%;background-repeat:no-repeat;
   opacity:var(--hp-a);transition:opacity .18s;
@@ -2586,13 +2638,19 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   .cal-wd{ font-size:11px;color:var(--muted);margin-bottom:6px }
   .ne-grip{ width:40px;height:5px;border-radius:99px;background:var(--line2);margin:0 auto 12px;flex:0 0 auto }
   .ne-head{ margin-bottom:14px;gap:10px }
-  .ne-done{ height:40px;padding:0 20px;border-radius:13px;font-size:14px;font-weight:700 }
   .ne-title{ font-size:18px;padding:10px 2px 12px }
   .ne-body{ min-height:150px;font-size:15px;line-height:1.7 }
   .ne-tagbox{ padding-top:14px;gap:11px }
-  .ne-swatches{ display:flex;gap:10px;flex-wrap:wrap;margin-top:2px }
-  .ne-swatches button{ width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(16,20,30,.2) }
-  .ne-swatches button:active{ transform:scale(.9) }
+  .ne-swatches{ gap:10px }
+  .ne-swatches button{ width:30px;height:30px }
+  .ne-tagrow .lbl{ flex-basis:56px;width:56px }
+  /* 长内容滚动时，完成按钮始终贴在抽屉底部 */
+  .ne-foot{
+    position:sticky;bottom:0;z-index:2;
+    background:var(--surface);
+    margin-top:4px;padding:10px 0 4px;
+  }
+  .btn.ne-done{height:44px;padding:0 26px;border-radius:13px;font-size:14.5px;font-weight:700}
   .ne-empty{ padding:56px 16px;font-size:13.5px }
 
   /* 搜索框关闭按钮：手机上显示「取消」，字号/热区更大更易点 */
@@ -2908,8 +2966,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     <div class="search-foot" id="searchFoot"></div>
   </div>
 </div>
-<!-- 背景裁剪器（独立层级，避免与设置弹窗互相关闭） -->
-<div class="cropper-root" id="cropper"></div>
+<!-- 图片取景器（独立层级，避免与设置弹窗互相关闭） -->
+<div class="framer-root" id="framer"></div>
 
 <script>
 /* ============================================================================
@@ -2926,7 +2984,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.10',
+    version: '1.0.11',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3138,21 +3196,26 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
      *   borderCard 内容卡（今日日程 / 本周概览 / 纪念日 / 语录）是否显示描边
      */
     home: {
-      img: '', imgX: 50, imgY: 50, alpha: 1, cardAlpha: 0.78,
+      img: '', imgX: 50, imgY: 50, fit: 'cover', alpha: 1, cardAlpha: 0.78,
       borderHero: true, borderCard: true
     },
     /**
      * 语录卡外观。
-     * @type {{fs:number,pad:number,padMode:string,padPx:number,bgScale:number,bgX:number,bgY:number}}
+     * @type {{fs:number,pad:number,padMode:string,padPx:number,bgScale:number,bgX:number,bgY:number,bgFit:string}}
      *   fs       字号倍率 0.85–1.4
      *   pad      上下内边距倍率（= 调卡片高度），0.6–10，即 60%–1000%
      *   padMode  'mul' 按倍率 | 'px' 按固定像素
      *   padPx    px 模式下的单边内边距，12–600 px
      *   bgScale  背景图缩放 1–2
+     *   bgFit    'cover' 铺满卡片（会裁掉边缘）| 'contain' 整张显示（自动适应，可能留边）
      */
-    quoteStyle: { fs: 1, pad: 1, padMode: 'mul', padPx: 120, bgScale: 1, bgX: 50, bgY: 50 },
-    /** 个性化背景 */
-    bg: { data: '', opacity: 0.45, blur: 0, scale: 1, x: 50, y: 50 },
+    quoteStyle: { fs: 1, pad: 1, padMode: 'mul', padPx: 120, bgScale: 1, bgX: 50, bgY: 50, bgFit: 'cover' },
+    /**
+     * 个性化背景。
+     * fit = 'contain' 整张图完整显示（默认，周围用模糊铺底补边）
+     *       'cover'   铺满整屏（会裁掉超出部分）
+     */
+    bg: { data: '', opacity: 0.45, blur: 0, scale: 1, x: 50, y: 50, fit: 'contain' },
     /**
      * 过期日程自动清理。
      * @type {{on:boolean, days:number, lastRun:string}}
@@ -3223,6 +3286,28 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     return true;
   };
 
+  /**
+   * 打开一层全屏浮层（弹窗 / 取景器 / 搜索）。
+   * 除了加 open，还量一次实际尺寸：旧内核不认 `inset` 时 fixed 层会塌成 0×0，
+   * 弹层整个跑到视口外，用户看到的就是「点了没反应」。塌了就补内联尺寸。
+   */
+  function openLayer(root) {
+    if (!root) return;
+    root.classList.add('open');
+    const w = window.innerWidth || 360;
+    const h = window.innerHeight || 640;
+    const r = root.getBoundingClientRect();
+    if (r.width < w * 0.9 || r.height < h * 0.9) {
+      root.style.position = 'fixed';
+      root.style.top = '0';
+      root.style.right = '0';
+      root.style.bottom = '0';
+      root.style.left = '0';
+      root.style.width = '100%';
+      root.style.height = '100%';
+    }
+  }
+
   /** 读取本地数据 */
   function loadState() {
     try {
@@ -3254,6 +3339,13 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       state.quoteBg = Object.assign({ items: [] }, obj.quoteBg || {});
       state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
       state.bg = Object.assign(state.bg, obj.bg || {});
+      /* 取景方式只有两种，手改坏了就回退到默认 */
+      if (state.bg.fit !== 'cover') state.bg.fit = 'contain';
+      if (state.home.fit !== 'contain') state.home.fit = 'cover';
+      if (state.quoteStyle.bgFit !== 'contain') state.quoteStyle.bgFit = 'cover';
+      (state.quoteBg.items || []).forEach(function (it) {
+        if (it.fit !== 'contain' && it.fit !== 'cover') delete it.fit;
+      });
       state.ui = Object.assign(state.ui, obj.ui || {});
       /* 微调步长夹到 1–120，手改坏了也不至于一步跳一天 */
       let st = Math.round(Number(state.ui.dtStep));
@@ -4461,7 +4553,6 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       '<div class="ne-grip" aria-hidden="true"></div>' +
       '<div class="ne-head">' +
         '<div class="ne-date">' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日<small>' + WEEKDAY[d.getDay()] + '</small></div>' +
-        '<button class="btn primary ne-done" id="neDone">完成</button>' +
         '<button class="icon-btn round" id="neClose" aria-label="关闭">' +
           '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>' +
         '</button>' +
@@ -4475,11 +4566,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           '<button class="mini-btn primary" id="neApply">应用</button>' +
           '<button class="mini-btn" id="neClear">清除</button>' +
         '</div>' +
-        '<div class="ne-tagrow"><span class="lbl">快速选色</span></div>' +
-        '<div class="ne-swatches" id="neSwatches">' +
-          ['#4C6FFF', '#7C5CFF', '#16A34A', '#F59E0B', '#F43F5E', '#06B6D4', '#EC4899', '#64748B'].map(function (c) {
-            return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="标记色 ' + c + '"></button>';
-          }).join('') +
+        '<div class="ne-tagrow"><span class="lbl">快速选色</span>' +
+          '<div class="ne-swatches" id="neSwatches">' +
+            ['#4C6FFF', '#7C5CFF', '#16A34A', '#F59E0B', '#F43F5E', '#06B6D4', '#EC4899', '#64748B'].map(function (c) {
+              const on = tag && String(tag).toUpperCase() === c.toUpperCase();
+              return '<button type="button" data-c="' + c + '" class="' + (on ? 'on' : '') +
+                '" style="--c:' + c + ';background:' + c + '" aria-label="标记色 ' + c + '"' +
+                (on ? ' aria-pressed="true"' : '') + '></button>';
+            }).join('') +
+          '</div>' +
         '</div>' +
         '<div class="ne-tagrow"><span class="lbl">关联日期</span></div>' +
         '<div class="same-list" id="neSame">' + sameHtml + '</div>' +
@@ -4497,6 +4592,10 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           '<div class="icon-pick" id="neIcons">' + iconsHtml + '</div>' +
           '<div class="ne-hint" style="text-align:left">开启后每年这天都会在主页面提醒</div>' +
         '</div>' +
+      '</div>' +
+      '<div class="ne-foot">' +
+        '<span class="ne-saved" id="neSaved">已自动保存</span>' +
+        '<button class="btn primary ne-done" id="neDone">完成</button>' +
       '</div>';
 
     /* ---- 事件绑定 ---- */
@@ -4540,6 +4639,17 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       saveState();
       clearTimeout(noteTimer);
       noteTimer = setTimeout(function () { renderCalendar(); }, 260);
+      /* 底栏明确告诉用户「已经存了」，不用再找保存按钮 */
+      const saved = $('#neSaved');
+      if (saved) {
+        saved.classList.add('flash');
+        saved.textContent = '已保存';
+        clearTimeout(saved._t);
+        saved._t = setTimeout(function () {
+          saved.classList.remove('flash');
+          saved.textContent = '已自动保存';
+        }, 900);
+      }
     }
     $('#neTitle').addEventListener('input', commitNote);
     $('#neBody').addEventListener('input', commitNote);
@@ -5043,7 +5153,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           '</div>' +
         '</div>' +
       '</div>';
-    root.classList.add('open');
+    openLayer(root);
 
     /* 计数跟勾选走 */
     const addBtn = $('#ocrAdd');
@@ -5435,7 +5545,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           '<button class="btn primary" id="fPasteRun" style="width:100%;height:34px;font-size:12px;margin-top:8px">识别并填入</button>' +
           '<div class="ocr-pick">' +
             '<label class="mini-btn" style="position:relative;overflow:hidden;cursor:pointer">选课表图片识别' +
-              '<input type="file" id="fOcrFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">' +
+              '<input type="file" id="fOcrFile" accept="image/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
             '</label>' +
             '<span>截图里的课程名 / 时间 / 地点 / 老师自动填表。首次使用需联网加载识别引擎（约 10MB），之后有缓存。</span>' +
           '</div>' +
@@ -5566,7 +5676,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '<span class="img-thumb" id="fImgThumb"></span>' +
             '<span class="img-acts">' +
               '<label class="mini-btn" style="position:relative;overflow:hidden;display:inline-grid;place-items:center">选择图片' +
-                '<input type="file" id="fImgFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">' +
+                '<input type="file" id="fImgFile" accept="image/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
               '</label>' +
               '<button class="mini-btn" id="fImgClear">清除</button>' +
             '</span>' +
@@ -5587,7 +5697,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '</div>' +
       '</div>';
 
-    root.classList.add('open');
+    openLayer(root);
     pushModal(closeModal);
 
     /* ---- 重复规则状态与联动 ---- */
@@ -6483,6 +6593,19 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   }
 
   /**
+   * 运行环境摘要：「安卓壳 · WebView 108」这样一行，出问题时让用户截图就能定位。
+   * 内核低于 87（不认识 inset 简写）时标出兼容布局已生效。
+   */
+  function envText() {
+    const ua = navigator.userAgent || '';
+    const m = ua.match(/Chrom(?:e|ium)\/(\d+)/);
+    const major = m ? Number(m[1]) : 0;
+    const shell = window.DayLeafNative ? '安卓壳' : (/Windows/i.test(ua) ? '电脑端' : '浏览器');
+    if (!major) return shell + ' · 内核未知';
+    return shell + ' · WebView ' + major + (major < 87 ? '（兼容布局已生效）' : '');
+  }
+
+  /**
    * 这条日程有没有开提醒。
    * 0 分钟是「到点提醒」而不是「关」，所以开关和分钟数得分开存：
    * 新数据看 rmOn；老数据（只有 rm>0 才叫开）也能正确还原。
@@ -6776,9 +6899,14 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="field"><label>背景图片</label>' +
           '<div class="bg-pick">' +
             '<label class="btn ghost file">选择图片<input type="file" id="fBgFile" accept="image/*"></label>' +
-            '<button class="btn ghost" id="fBgCrop"' + (bg.data ? '' : ' disabled') + '>裁剪取景</button>' +
+            '<button class="btn ghost" id="fBgCrop"' + (bg.data ? '' : ' disabled') + '>取景调整</button>' +
             '<button class="btn ghost" id="fBgClear">恢复默认</button>' +
-          '</div></div>' +
+          '</div>' +
+          '<div class="chips fit-row" id="fBgFit">' +
+            '<button data-fit="cover" class="' + (bg.fit === 'cover' ? 'on' : '') + '">铺满（裁切）</button>' +
+            '<button data-fit="contain" class="' + (bg.fit === 'contain' ? 'on' : '') + '">完整（留白）</button>' +
+          '</div>' +
+        '</div>' +
 
         /* 实时预览：与真实背景层用同一套 cover + position + scale + blur + opacity */
         '<div class="field"><label>效果预览</label>' +
@@ -6816,7 +6944,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           '</div>' +
           '<div class="bg-pick" style="margin-top:10px">' +
             '<label class="btn ghost file">选择图片<input type="file" id="fHeroFile" accept="image/*"></label>' +
+            '<button class="btn ghost" id="fHeroFrame"' + (hm.img ? '' : ' disabled') + '>取景调整</button>' +
             '<button class="btn ghost" id="fHeroClear">恢复渐变</button>' +
+          '</div>' +
+          '<div class="chips fit-row" id="fHeroFit">' +
+            '<button data-fit="cover" class="' + (hm.fit === 'cover' ? 'on' : '') + '">铺满（裁切）</button>' +
+            '<button data-fit="contain" class="' + (hm.fit === 'contain' ? 'on' : '') + '">完整（留白）</button>' +
           '</div>' +
         '</div>' +
 
@@ -6886,6 +7019,10 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '<p class="hint" style="margin:0">范围 60%–1000%。也可以直接填：' +
               '<b>3.5</b>（倍）/ <b>350%</b> / <b>260px</b>（上下各留这么多）。' +
               '超出范围会提示并回到 100%。高度拉到 500% 以上时，卡片会自动改成居中排版。</p>' +
+            '<div class="chips fit-row" id="fQBgFit">' +
+              '<button data-fit="cover" class="' + (quoteBgEff().fit === 'cover' ? 'on' : '') + '">铺满（裁切）</button>' +
+              '<button data-fit="contain" class="' + (quoteBgEff().fit === 'contain' ? 'on' : '') + '">完整（留白）</button>' +
+            '</div>' +
             '<div class="q-slide"><span>背景缩放</span>' +
               '<input type="range" id="fQBgS" min="100" max="200" value="' + pct(quoteBgEff().scale) + '">' +
               '<b id="vQBgS">' + pct(quoteBgEff().scale) + '%</b></div>' +
@@ -7043,12 +7180,13 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="about"><b>' + APP.name + ' · ' + APP.cnName + '</b> v' + APP.version + (nat ? '' : '（UI 原型）') + '<br>' +
           '作者 ' + APP.authorCn + '（' + APP.author + '）<br>' +
           '维护邮箱 <a href="mailto:' + APP.email + '?subject=DayLeaf%20反馈">' + APP.email + '</a><br>' +
+          '运行环境 ' + envText() + '<br>' +
           APP.license + ' License · 图片与字体只存在本机（IndexedDB），不会上传；导出备份不含这些文件</div>' +
 
         '<div class="mb-foot"><button class="btn primary" data-close>完成</button></div>' +
       '</div>';
 
-    root.classList.add('open');
+    openLayer(root);
     pushModal(closeModal);
 
     /* ---- 检查更新（App 内手动入口） ---- */
@@ -7058,7 +7196,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (nb && nb.checkUpdate) { try { nb.checkUpdate(); } catch (e) { /* ignore */ } }
     });
 
-    /* ---- 图片选择：先压到 1600px（给裁剪留余量），裁剪后再压到 1400px ---- */
+    /* ---- 图片选择：先压到 1600px，再进取景器调位置 ---- */
     $('#fBgFile').addEventListener('change', function () {
       const file = this.files && this.files[0];
       if (!file) return;
@@ -7069,14 +7207,27 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         const cropBtn = document.getElementById('fBgCrop');
         if (cropBtn) cropBtn.disabled = false;
         applyBg();
+        syncBgPreview();
         saveState();
-        toast('已设置背景，可点「裁剪取景」调整画面');
+        openFramer('bg');
       });
     });
 
-    /* ---- 裁剪：打开取景器 ---- */
+    /* ---- 取景：拖动 / 缩放，所见即所得 ---- */
     const cropBtn2 = $('#fBgCrop');
-    if (cropBtn2) cropBtn2.addEventListener('click', openCropper);
+    if (cropBtn2) cropBtn2.addEventListener('click', function () { openFramer('bg'); });
+
+    /* 铺满 / 完整：只改自适应方式，位置与缩放保留 */
+    const bgFit = $('#fBgFit');
+    if (bgFit) bgFit.addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-fit]');
+      if (!b) return;
+      state.bg.fit = b.dataset.fit === 'contain' ? 'contain' : 'cover';
+      applyBg();
+      syncBgPreview();
+      syncFitChips('fBgFit', state.bg.fit);
+      saveState();
+    });
 
     $('#fBgClear').addEventListener('click', function () {
       state.bg.data = '';
@@ -7116,24 +7267,6 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     });
 
     /* ---- 主页外观：主卡图片 / 位置 / 透明度 / 内容卡透明度 ---- */
-    function syncHeroPreview() {
-      const box = $('#heroPrev');
-      const layer = $('#heroPrevBg');
-      if (!box || !layer) return;
-      const h = state.home;
-      box.style.setProperty('--hp-a', String(h.alpha));
-      box.classList.toggle('is-faint', h.alpha < 0.62);
-      if (h.img) {
-        layer.style.backgroundImage =
-          'linear-gradient(180deg,rgba(10,14,42,.30),rgba(10,14,42,.64)),url("' + h.img + '")';
-        layer.style.backgroundSize = 'auto, cover';
-        layer.style.backgroundPosition = '50% 50%, ' + h.imgX + '% ' + h.imgY + '%';
-      } else {
-        layer.style.backgroundImage = '';
-        layer.style.backgroundSize = '';
-        layer.style.backgroundPosition = '';
-      }
-    }
 
     /* 通用的外观滑块：拖动即时生效，预览与真实主卡一起变 */
     function bindHomeRange(id, labelId, fmt, apply) {
@@ -7172,9 +7305,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
           state.home.img = cv.toDataURL('image/jpeg', 0.85);
           AssetDB.put('hero', state.home.img);
+          const frBtn = document.getElementById('fHeroFrame');
+          if (frBtn) frBtn.disabled = false;
           applyHomeLook();
           syncHeroPreview();
           saveState();
+          openFramer('hero');
         };
         img.src = e.target.result;
       };
@@ -7198,8 +7334,25 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     $('#fHeroClear').addEventListener('click', function () {
       state.home.img = '';
       AssetDB.del('hero');
+      const frBtn = document.getElementById('fHeroFrame');
+      if (frBtn) frBtn.disabled = true;
       applyHomeLook();
       syncHeroPreview();
+      saveState();
+    });
+
+    const heroFrameBtn = $('#fHeroFrame');
+    if (heroFrameBtn) heroFrameBtn.addEventListener('click', function () { openFramer('hero'); });
+
+    /* 主卡：铺满 / 完整 */
+    const heroFit = $('#fHeroFit');
+    if (heroFit) heroFit.addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-fit]');
+      if (!b) return;
+      state.home.fit = b.dataset.fit === 'contain' ? 'contain' : 'cover';
+      applyHomeLook();
+      syncHeroPreview();
+      syncFitChips('fHeroFit', state.home.fit);
       saveState();
     });
 
@@ -7266,6 +7419,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     bindQuoteRange('fQBgS', 'vQBgS', function (v) { return v + '%'; }, function (v) { setQuoteBgTweak('s', v / 100); });
     bindQuoteRange('fQBgX', 'vQBgX', function (v) { return v + '%'; }, function (v) { setQuoteBgTweak('x', v); });
     bindQuoteRange('fQBgY', 'vQBgY', function (v) { return v + '%'; }, function (v) { setQuoteBgTweak('y', v); });
+    const qbFit = $('#fQBgFit');
+    if (qbFit) qbFit.addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-fit]');
+      if (!b) return;
+      setQuoteBgTweak('fit', b.dataset.fit === 'contain' ? 'contain' : 'cover');
+      applyQuoteStyle();
+      syncFitChips('fQBgFit', quoteBgEff().fit);
+      saveState();
+    });
     syncHeroPreview();
 
     /* ---- 每日一句：频率 / 来源 / 语录库 / 图片库 / 字体 ---- */
@@ -7281,8 +7443,13 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (b.dataset.pane === 'quote') renderQuoteList();
     });
 
-    /* 图片库：点格子切开关，点叉删除 */
+    /* 图片库：点格子切开关，点叉删除，点「取景」单独调整 */
     $('#qbPaneImage').addEventListener('click', function (e) {
+      const frBtn = e.target.closest('[data-qbfr]');
+      if (frBtn) {
+        openFramer('quote', frBtn.dataset.qbfr);
+        return;
+      }
       const del = e.target.closest('[data-qbdel]');
       if (del) {
         const id = del.dataset.qbdel;
@@ -7325,7 +7492,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             name: (file.name || '').replace(/\.[^.]+$/, '').slice(0, 16) || '背景',
             on: true,
             /* 每张图自己的变换参数：默认沿用当前全局设置，之后可单独调 */
-            s: state.quoteStyle.bgScale, x: state.quoteStyle.bgX, y: state.quoteStyle.bgY
+            s: state.quoteStyle.bgScale, x: state.quoteStyle.bgX, y: state.quoteStyle.bgY,
+            fit: state.quoteStyle.bgFit || 'cover'
           });
           bgCache[id] = data;
           AssetDB.put('qb_' + id, data).then(function () { syncQuoteBg(); });
@@ -7790,6 +7958,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     }
     box.classList.add('has-img');
     img.style.backgroundImage = 'url("' + bg.data + '")';
+    img.style.backgroundSize = bg.fit === 'cover' ? 'cover' : 'contain';
     img.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
     img.style.transform = 'scale(' + bg.scale + ')';
     img.style.filter = bg.blur > 0 ? 'blur(' + bg.blur + 'px)' : 'none';
@@ -7814,6 +7983,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         _lastBgSrc = bg.data;
       }
       layer.style.opacity = String(bg.opacity);
+      layer.style.backgroundSize = bg.fit === 'cover' ? 'cover' : 'contain';
       layer.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
       layer.style.transform = 'scale(' + bg.scale + ')';
       layer.style.filter = bg.blur > 0 ? 'blur(' + bg.blur + 'px)' : 'none';
@@ -7897,9 +8067,9 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (_lastHeroSrc !== h.img) {
           layer.style.backgroundImage =
             'linear-gradient(180deg,rgba(10,14,42,.30),rgba(10,14,42,.64)),url("' + h.img + '")';
-          layer.style.backgroundSize = 'auto, cover';
           _lastHeroSrc = h.img;
         }
+        layer.style.backgroundSize = 'auto, ' + (h.fit === 'contain' ? 'contain' : 'cover');
         layer.style.backgroundPosition = '50% 50%, ' + h.imgX + '% ' + h.imgY + '%';
       } else {
         if (_lastHeroSrc !== '') {
@@ -7923,321 +8093,494 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     document.body.classList.toggle('no-bd-card', h.borderCard === false);
   }
 
+  /** 设置面板里的主卡实时预览（面板没打开时直接返回） */
+  function syncHeroPreview() {
+    const box = $('#heroPrev');
+    const layer = $('#heroPrevBg');
+    if (!box || !layer) return;
+    const h = state.home;
+    box.style.setProperty('--hp-a', String(h.alpha));
+    box.classList.toggle('is-faint', h.alpha < 0.62);
+    if (h.img) {
+      layer.style.backgroundImage =
+        'linear-gradient(180deg,rgba(10,14,42,.30),rgba(10,14,42,.64)),url("' + h.img + '")';
+      layer.style.backgroundSize = 'auto, ' + (h.fit === 'contain' ? 'contain' : 'cover');
+      layer.style.backgroundPosition = '50% 50%, ' + h.imgX + '% ' + h.imgY + '%';
+    } else {
+      layer.style.backgroundImage = '';
+      layer.style.backgroundSize = '';
+      layer.style.backgroundPosition = '';
+    }
+  }
+
   /* --------------------------------------------------------------------------
    * 7.9.1 背景裁剪器
    * 取景框在舞台上拖动/缩放，确认后按原图像素重绘到 canvas，
    * 输出 JPEG dataURL 回写 state.bg.data。
    * ------------------------------------------------------------------------ */
 
-  /** 可选裁剪比例：v = 宽/高，0 表示自由 */
-  const CROP_RATIOS = Object.freeze([
-    { key: 'free', label: '自由', v: 0 },
-    { key: '1:1',  label: '1:1',  v: 1 },
-    { key: '4:5',  label: '4:5',  v: 4 / 5 },
-    { key: '3:4',  label: '3:4',  v: 3 / 4 },
-    { key: '9:16', label: '9:16', v: 9 / 16 },
-    { key: '16:9', label: '16:9', v: 16 / 9 }
-  ]);
+  /* --------------------------------------------------------------------------
+   * 7.9.1 图片取景器（页面背景 / 主卡背景 / 语录配图共用）
+   * 只调三件事：铺满方式（cover / contain）、缩放、位置。
+   * 舞台的宽高比与真实区域一致，所见即所得；确认时不重画图片，直接写回 state。
+   * ------------------------------------------------------------------------ */
 
   const clampNum = function (v, min, max) { return Math.max(min, Math.min(max, v)); };
 
-  /** 屏幕宽高比：取景框默认按这个比例，裁出来正好铺满一屏 */
+  /** 整屏宽高比（取景舞台与真实背景层用同一个比例） */
   function screenAspect() {
     const w = window.innerWidth || 360;
     const h = window.innerHeight || 720;
-    return h > w ? w / h : h / w;
+    return w / h;
   }
 
-  /** 取景器里的可选比例（第一项「铺满屏幕」是默认值） */
-  function ratioList() {
-    return [{ key: 'screen', label: '铺满屏幕', v: screenAspect() }].concat(CROP_RATIOS);
-  }
-
-  /** 按给定比例算出居中、最大的取景框 */
-  function fitBoxToRatio(v, sw, sh) {
-    let w = sw;
-    let h = sh;
-    if (v) {
-      if (w / h > v) w = h * v; else h = w / v;
+  /** 量一个元素的宽高比；量不到（隐藏 / 未渲染）就用兜底值 */
+  function elAspect(sel, fallback) {
+    const el = $(sel);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 40 && r.height > 20) return r.width / r.height;
     }
-    return { x: (sw - w) / 2, y: (sh - h) / 2, w: w, h: h };
+    return fallback;
   }
 
-  /** 裁剪会话状态 */
-  let crop = null;
+  /**
+   * 取景目标：每个可调背景的区域在这里描述自己。
+   * @param {string} kind 'bg' | 'hero' | 'quote'
+   * @param {string} [id] 语录配图的 id（不传就用当前正在显示的那张）
+   */
+  function frameTarget(kind, id) {
+    const num = function (v, d) {
+      const n = Number(v);
+      return isFinite(n) ? n : d;
+    };
 
-  /** 打开裁剪器 */
-  function openCropper() {
-    if (!state.bg.data) { toast('请先选择一张背景图片'); return; }
+    if (kind === 'bg') {
+      return {
+        title: '调整页面背景',
+        tip: '「铺满」不留边，画面可能被裁掉一部分；「完整」能看到整张图，空出来的地方由页面底色补上。',
+        src: function () { return state.bg.data; },
+        aspect: function () { return screenAspect(); },
+        get: function () {
+          return {
+            fit: state.bg.fit === 'contain' ? 'contain' : 'cover',
+            scale: num(state.bg.scale, 1),
+            x: num(state.bg.x, 50),
+            y: num(state.bg.y, 50)
+          };
+        },
+        set: function (v) {
+          state.bg.fit = v.fit;
+          state.bg.scale = v.scale;
+          state.bg.x = v.x;
+          state.bg.y = v.y;
+        },
+        zoom: true,
+        blur: true,
+        after: function () {
+          applyBg();
+          syncBgPreview();
+          syncBgControls();
+          syncFitChips('fBgFit', state.bg.fit);
+        }
+      };
+    }
 
-    const root = $('#cropper');
-    const ratios = ratioList();
+    if (kind === 'hero') {
+      return {
+        title: '调整主卡背景',
+        tip: '主卡比例与首页上看到的一致。选「完整」时，空出来的上下（或左右）会露出主卡底色与描边。',
+        src: function () { return state.home.img; },
+        aspect: function () { return elAspect('#hero', 1.6); },
+        get: function () {
+          return {
+            fit: state.home.fit === 'contain' ? 'contain' : 'cover',
+            scale: 1,
+            x: num(state.home.imgX, 50),
+            y: num(state.home.imgY, 50)
+          };
+        },
+        set: function (v) {
+          state.home.fit = v.fit;
+          state.home.imgX = v.x;
+          state.home.imgY = v.y;
+        },
+        zoom: false,
+        after: function () {
+          applyHomeLook();
+          syncHeroPreview();
+          syncHeroControls();
+          syncFitChips('fHeroFit', state.home.fit);
+        }
+      };
+    }
+
+    /* quote：优先用传入的 id，其次用首页当前这张 */
+    const items = state.quoteBg.items || [];
+    const item = (id && items.filter(function (x) { return x.id === id; })[0]) ||
+      (!id ? curQuoteBgItem() : null);
+    const qid = item ? item.id : null;
+
+    return {
+      title: '调整语录配图' + (item && item.name ? ' · ' + item.name : ''),
+      tip: '语录卡的高度会随文字长短变化，这里的框按当前卡片的比例显示；改完只影响这一张图。',
+      src: function () { return qid ? (bgCache[qid] || '') : ''; },
+      aspect: function () { return elAspect('#quoteCard', 2.6); },
+      get: function () {
+        const st = state.quoteStyle;
+        return {
+          fit: ((item ? (item.fit || st.bgFit) : st.bgFit) === 'contain') ? 'contain' : 'cover',
+          scale: item && item.s != null ? num(item.s, 1) : num(st.bgScale, 1),
+          x: item && item.x != null ? num(item.x, 50) : num(st.bgX, 50),
+          y: item && item.y != null ? num(item.y, 50) : num(st.bgY, 50)
+        };
+      },
+      set: function (v) {
+        if (item) {
+          item.s = v.scale;
+          item.x = v.x;
+          item.y = v.y;
+          item.fit = v.fit;
+        } else {
+          state.quoteStyle.bgScale = v.scale;
+          state.quoteStyle.bgX = v.x;
+          state.quoteStyle.bgY = v.y;
+          state.quoteStyle.bgFit = v.fit;
+        }
+      },
+      zoom: true,
+      after: function () {
+        applyQuoteStyle();
+        if (qid && qid === curQuoteBgId) syncQuoteBgControls();
+      }
+    };
+  }
+
+  /** 当前取景会话 */
+  let fr = null;
+
+  /** 打开取景器 */
+  function openFramer(kind, id) {
+    const t = frameTarget(kind, id);
+    const src = t.src();
+    if (!src) {
+      toast(kind === 'bg' ? '请先选择一张背景图片' : '请先选择一张图片');
+      return;
+    }
+
+    const cur = t.get();
+    const root = $('#framer');
+    fr = {
+      t: t,
+      root: root,
+      image: src,
+      fit: cur.fit,
+      scale: clampNum(cur.scale, 1, 2),
+      x: clampNum(cur.x, 0, 100),
+      y: clampNum(cur.y, 0, 100),
+      ratio: 1,
+      stage: { w: 0, h: 0 },
+      draw: { w: 0, h: 0 },
+      nat: { w: 0, h: 0 },
+      ready: false
+    };
+
     root.innerHTML =
-      '<div class="crop-back" data-crop-close></div>' +
-      '<div class="crop-panel" role="dialog" aria-modal="true">' +
-        '<div class="crop-head"><h3>裁剪背景</h3>' +
-          '<button class="icon-btn sm" data-crop-close aria-label="关闭">✕</button></div>' +
-
-        '<div class="crop-stage" id="cropStage">' +
-          '<img id="cropImg" alt="待裁剪的背景图">' +
-          '<div class="crop-box" id="cropBox">' +
-            '<span class="grid"></span>' +
-            '<i class="h" data-corner="nw"></i><i class="h" data-corner="ne"></i>' +
-            '<i class="h" data-corner="sw"></i><i class="h" data-corner="se"></i>' +
-          '</div>' +
+      '<div class="framer-back" data-fr-close></div>' +
+      '<div class="framer-panel" role="dialog" aria-modal="true">' +
+        '<div class="framer-head"><h3>' + t.title + '</h3>' +
+          '<button class="icon-btn sm" data-fr-close aria-label="关闭">✕</button></div>' +
+        '<div class="framer-stage" id="frStage">' +
+          (t.blur ? '<div class="framer-blur" id="frBlur"></div>' : '') +
+          '<div class="framer-img" id="frImg"></div>' +
+          '<div class="framer-frame"><span class="grid"></span></div>' +
+          '<div class="fr-hint" id="frHint"></div>' +
         '</div>' +
-
-        '<div class="crop-ratios" id="cropRatios">' +
-          ratios.map(function (r) {
-            return '<button data-ratio="' + r.key + '" class="' + (r.key === 'screen' ? 'on' : '') + '">' + r.label + '</button>';
-          }).join('') +
+        '<div class="framer-modes" id="frModes">' +
+          '<button data-fit="cover">铺满裁切</button>' +
+          '<button data-fit="contain">完整显示</button>' +
         '</div>' +
-
-        '<div class="crop-tip">拖动白框取景，四角圆点可缩放。默认「铺满屏幕」就是手机上看到的效果，裁完立即生效。</div>' +
-
-        '<div class="mb-foot">' +
-          '<button class="btn ghost" data-crop-close>取消</button>' +
-          '<button class="btn primary" id="cropApply">应用裁剪</button>' +
+        (t.zoom
+          ? '<div class="framer-zoom"><span>缩放</span>' +
+            '<input type="range" id="frZoom" min="100" max="200" step="1">' +
+            '<b id="frZoomV"></b></div>'
+          : '') +
+        '<div class="framer-tip">' + t.tip + '</div>' +
+        '<div class="mb-foot" style="margin-top:14px">' +
+          '<button class="btn ghost" id="frReset">复位</button>' +
+          '<button class="btn primary" id="frApply">完成</button>' +
         '</div>' +
       '</div>';
 
-    root.classList.add('open');
+    openLayer(root);
+    pushModal(closeFramer);
 
-    const img = $('#cropImg');
-    img.onload = function () {
-      /* 面板刚插入 DOM 时尺寸可能还没算出来，单靠一帧 rAF 容易落空，
-         这里轮询到舞台和图片都有实际尺寸再初始化（一般第一轮就成功）。 */
-      let tries = 0;
-      (function tryInit() {
-        const st = $('#cropStage');
-        if (st && st.clientWidth > 0 && st.clientHeight > 0 && img.naturalWidth > 0) {
-          initCropBox(img);
-          return;
-        }
-        if (tries++ < 30) setTimeout(tryInit, 16);
-      })();
-    };
-    img.src = state.bg.data;
-
-    /* 关闭 */
-    $$('[data-crop-close]', root).forEach(function (el) {
-      el.addEventListener('click', closeCropper);
+    $$('[data-fr-close]', root).forEach(function (el) {
+      el.addEventListener('click', closeFramer);
     });
-
-    /* 比例切换 */
-    $$('#cropRatios button').forEach(function (b) {
-      b.addEventListener('click', function () {
-        const item = ratios.filter(function (r) { return r.key === b.dataset.ratio; })[0];
-        $$('#cropRatios button').forEach(function (x) { x.classList.toggle('on', x === b); });
-        if (crop) setCropRatio(item.v);
-      });
+    $('#frApply').addEventListener('click', applyFramer);
+    $('#frReset').addEventListener('click', function () {
+      if (!fr) return;
+      fr.fit = 'cover';
+      fr.scale = 1;
+      fr.x = 50;
+      fr.y = 50;
+      renderFramer();
     });
-
-    $('#cropApply').addEventListener('click', applyCrop);
-  }
-
-  /**
-   * 初始化裁剪框：图片以 cover 铺满舞台，取景框默认按屏幕比例放到最大。
-   * @param {HTMLImageElement} img
-   */
-  function initCropBox(img) {
-    const stage = $('#cropStage');
-    const sw = stage.clientWidth;
-    const sh = stage.clientHeight;
-    const iw = img.naturalWidth;
-    const ih = img.naturalHeight;
-    if (!sw || !sh || !iw || !ih) return;
-
-    /* object-fit: cover 的换算参数：缩放比 k、绘制尺寸、居中偏移 */
-    const k = Math.max(sw / iw, sh / ih);
-    const dw = iw * k;
-    const dh = ih * k;
-
-    const ar = screenAspect();
-    crop = {
-      img: img,
-      stage: { w: sw, h: sh },
-      base: { k: k, dw: dw, dh: dh, dx: (sw - dw) / 2, dy: (sh - dh) / 2 },
-      ratio: ar,
-      box: fitBoxToRatio(ar, sw, sh)
-    };
-
-    lockCropBoxInStage();
-    drawCrop();
-    bindCropDrag();
-  }
-
-  /** 把裁剪框渲染到 DOM */
-  function drawCrop() {
-    const el = $('#cropBox');
-    if (!el || !crop) return;
-    const b = crop.box;
-    el.style.left = b.x + 'px';
-    el.style.top = b.y + 'px';
-    el.style.width = b.w + 'px';
-    el.style.height = b.h + 'px';
-  }
-
-  /** 裁剪框整体夹在舞台内，并保证最小尺寸 */
-  function lockCropBoxInStage() {
-    const s = crop.stage;
-    const b = crop.box;
-    const MIN = 60;
-    b.w = clampNum(b.w, MIN, s.w);
-    b.h = clampNum(b.h, MIN, s.h);
-    b.x = clampNum(b.x, 0, s.w - b.w);
-    b.y = clampNum(b.y, 0, s.h - b.h);
-  }
-
-  /**
-   * 切换宽高比：以当前框中心为基准重新计算宽高。
-   * @param {number} v 宽/高，0 表示自由
-   */
-  function setCropRatio(v) {
-    if (!crop) return;
-    crop.ratio = v;
-
-    const s = crop.stage;
-    const cx = crop.box.x + crop.box.w / 2;
-    const cy = crop.box.y + crop.box.h / 2;
-    let w = crop.box.w;
-    let h = crop.box.h;
-
-    if (v) {
-      /* 取能装下当前面积的等比尺寸 */
-      if (w / h > v) h = w / v; else w = h * v;
-      if (w > s.w) { w = s.w; h = w / v; }
-      if (h > s.h) { h = s.h; w = h * v; }
+    $('#frModes').addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-fit]');
+      if (!b || !fr) return;
+      fr.fit = b.dataset.fit === 'contain' ? 'contain' : 'cover';
+      renderFramer();
+    });
+    const zoom = $('#frZoom');
+    if (zoom) {
+      zoom.addEventListener('input', function () { setFramerScale(Number(zoom.value) / 100); });
     }
 
-    crop.box = { x: cx - w / 2, y: cy - h / 2, w: w, h: h };
-    lockCropBoxInStage();
-    drawCrop();
+    bindFramerGestures();
+
+    const img = new Image();
+    img.onload = function () {
+      if (!fr) return;
+      fr.nat = { w: img.naturalWidth || 1, h: img.naturalHeight || 1 };
+      fr.ready = true;
+      layoutFramer();
+    };
+    img.onerror = function () {
+      if (!fr) return;
+      toast('图片读取失败，请重新选择');
+      closeFramer();
+    };
+    img.src = src;
+  }
+
+  /** 按目标比例算舞台尺寸（留出面板内边距，高度不超过半屏多点） */
+  function layoutFramer() {
+    if (!fr || !fr.ready) return;
+    const stage = $('#frStage');
+    const panel = stage && stage.parentNode;
+    if (!stage || !panel) return;
+
+    const pw = Math.max(120, panel.clientWidth - 32);
+    const maxH = Math.min((window.innerHeight || 640) * 0.46, 430);
+    const ratio = fr.t.aspect() || 1;
+
+    let w = pw;
+    let h = w / ratio;
+    if (h > maxH) { h = maxH; w = h * ratio; }
+    if (w < 80) { w = 80; h = w / ratio; if (h > maxH) { h = maxH; w = h * ratio; } }
+
+    w = Math.round(w);
+    h = Math.round(h);
+    fr.ratio = ratio;
+    fr.stage = { w: w, h: h };
+    stage.style.width = w + 'px';
+    stage.style.height = h + 'px';
+
+    const layer = $('#frImg');
+    if (layer) layer.style.backgroundImage = 'url("' + fr.image + '")';
+    const blur = $('#frBlur');
+    if (blur) blur.style.backgroundImage = 'url("' + fr.image + '")';
+
+    renderFramer();
+  }
+
+  /** 把当前 fit / 缩放 / 位置画到舞台，并同步到真实页面 */
+  function renderFramer() {
+    if (!fr) return;
+    const layer = $('#frImg');
+    if (!layer) return;
+
+    /* background-size 在舞台上的实际绘制尺寸：切「铺满 / 完整」后要重算，拖动换算靠它 */
+    const kx = fr.stage.w / fr.nat.w;
+    const ky = fr.stage.h / fr.nat.h;
+    const k = fr.fit === 'contain' ? Math.min(kx, ky) : Math.max(kx, ky);
+    fr.draw = { w: fr.nat.w * k, h: fr.nat.h * k };
+
+    layer.style.backgroundSize = fr.fit === 'contain' ? 'contain' : 'cover';
+    layer.style.backgroundPosition = fr.x + '% ' + fr.y + '%';
+    layer.style.transform = fr.t.zoom ? 'scale(' + fr.scale + ')' : 'none';
+
+    $$('#frModes button').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.fit === fr.fit);
+    });
+    const zoom = $('#frZoom');
+    if (zoom) zoom.value = String(Math.round(fr.scale * 100));
+    const zoomV = $('#frZoomV');
+    if (zoomV) zoomV.textContent = Math.round(fr.scale * 100) + '%';
+
+    const hint = $('#frHint');
+    if (hint) {
+      /* 语录卡这类扁框，提示压在图上会挡住大半画面，直接不显示 */
+      hint.style.display = fr.stage.h < 110 ? 'none' : '';
+      hint.textContent = fr.fit === 'contain' && fr.scale <= 1.001
+        ? '整张图已完整放进框内'
+        : ('拖动图片调整位置' + (fr.t.zoom ? ' · 双指或滚轮缩放' : ''));
+    }
+
+    fr.t.set({ fit: fr.fit, scale: fr.scale, x: fr.x, y: fr.y });
+    fr.t.after();
+  }
+
+  /** 缩放（只有支持缩放的区域生效） */
+  function setFramerScale(v) {
+    if (!fr || !fr.t.zoom) return;
+    fr.scale = Math.round(clampNum(v, 1, 2) * 100) / 100;
+    renderFramer();
   }
 
   /**
-   * 拖拽角点缩放（对角点固定）。
-   * @param {string} corner 'nw' | 'ne' | 'sw' | 'se'
-   * @param {Object} start  按下时的 box
-   * @param {number} dx     指针位移
-   * @param {number} dy
+   * 平移：dx/dy 是指针位移（屏幕像素）。
+   * background-position 的百分比走的是「图片比层大出来的那部分」，
+   * 层又被 scale 放大，所以实际换算要除以 over × scale。
    */
-  function resizeByCorner(corner, start, dx, dy) {
-    const MIN = 60;
-    const s = crop.stage;
-    const r = crop.ratio;
-    const isW = corner.indexOf('w') > -1;
-    const isN = corner.indexOf('n') > -1;
-
-    /* 固定不动的对角点 */
-    const ax = isW ? start.x + start.w : start.x;
-    const ay = isN ? start.y + start.h : start.y;
-
-    /* 指针的绝对位置 → 相对锚点的尺寸 */
-    const mx = isW ? start.x + dx : start.x + start.w + dx;
-    const my = isN ? start.y + dy : start.y + start.h + dy;
-
-    let w = Math.abs(mx - ax);
-    let h = Math.abs(my - ay);
-
-    if (r) { if (w / h > r) h = w / r; else w = h * r; }
-
-    /* 不超出舞台可用范围 */
-    const maxW = isW ? ax : s.w - ax;
-    const maxH = isN ? ay : s.h - ay;
-    if (w > maxW) { w = maxW; if (r) h = w / r; }
-    if (h > maxH) { h = maxH; if (r) w = h * r; }
-
-    /* 最小尺寸（等比时同步修正另一侧） */
-    if (w < MIN) { w = MIN; if (r) h = w / r; }
-    if (h < MIN) { h = MIN; if (r) w = h * r; }
-
-    crop.box = { x: isW ? ax - w : ax, y: isN ? ay - h : ay, w: w, h: h };
+  function panFramer(dx, dy) {
+    if (!fr) return;
+    const s = fr.scale;
+    const overX = fr.draw.w - fr.stage.w / s;
+    const overY = fr.draw.h - fr.stage.h / s;
+    if (overX > 1) fr.x = clampNum(fr.x - dx * 100 / (overX * s), 0, 100);
+    if (overY > 1) fr.y = clampNum(fr.y - dy * 100 / (overY * s), 0, 100);
+    renderFramer();
   }
 
-  /** 绑定拖动 / 缩放（Pointer Events，鼠标与触摸统一） */
-  function bindCropDrag() {
-    const stage = $('#cropStage');
-    const boxEl = $('#cropBox');
+  /** 拖动 / 双指缩放 / 滚轮缩放（Pointer Events，鼠标与触摸统一） */
+  function bindFramerGestures() {
+    const stage = $('#frStage');
+    if (!stage) return;
+    const pts = {};
     let drag = null;
 
-    stage.addEventListener('pointerdown', function (e) {
-      if (!crop) return;
-      const handle = e.target.closest ? e.target.closest('.h') : null;
-      const inside = e.target.closest ? e.target.closest('#cropBox') : null;
-      if (!handle && !inside) return;
+    const dist = function () {
+      const ids = Object.keys(pts);
+      if (ids.length < 2) return 0;
+      const a = pts[ids[0]];
+      const b = pts[ids[1]];
+      return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+    };
 
+    stage.addEventListener('pointerdown', function (e) {
+      if (!fr) return;
       e.preventDefault();
-      drag = {
-        mode: handle ? handle.dataset.corner : 'move',
-        x: e.clientX,
-        y: e.clientY,
-        box: Object.assign({}, crop.box)
-      };
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      const ids = Object.keys(pts);
+      if (ids.length === 1) {
+        drag = { x: e.clientX, y: e.clientY };
+        stage.classList.add('dragging');
+      } else if (ids.length === 2) {
+        drag = { pinch: true, dist: dist(), scale: fr.scale };
+      }
       try { stage.setPointerCapture(e.pointerId); } catch (err) { /* 忽略 */ }
     });
 
     stage.addEventListener('pointermove', function (e) {
-      if (!drag || !crop) return;
+      if (!fr || !pts[e.pointerId]) return;
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      const ids = Object.keys(pts);
+
+      if (ids.length >= 2) {
+        if (!drag || !drag.pinch) drag = { pinch: true, dist: dist(), scale: fr.scale };
+        if (fr.t.zoom && drag.dist > 0) setFramerScale(drag.scale * dist() / drag.dist);
+        return;
+      }
+      if (!drag || drag.pinch) return;
+
       const dx = e.clientX - drag.x;
       const dy = e.clientY - drag.y;
-
-      if (drag.mode === 'move') {
-        crop.box.x = clampNum(drag.box.x + dx, 0, crop.stage.w - drag.box.w);
-        crop.box.y = clampNum(drag.box.y + dy, 0, crop.stage.h - drag.box.h);
-      } else {
-        resizeByCorner(drag.mode, drag.box, dx, dy);
-      }
-      drawCrop();
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+      panFramer(dx, dy);
     });
 
-    const end = function () { drag = null; };
+    const end = function (e) {
+      delete pts[e.pointerId];
+      const ids = Object.keys(pts);
+      if (!ids.length) {
+        drag = null;
+        stage.classList.remove('dragging');
+      } else if (ids.length === 1) {
+        const p = pts[ids[0]];
+        drag = { x: p.x, y: p.y };
+      } else {
+        drag = { pinch: true, dist: dist(), scale: fr ? fr.scale : 1 };
+      }
+    };
     stage.addEventListener('pointerup', end);
     stage.addEventListener('pointercancel', end);
+
+    stage.addEventListener('wheel', function (e) {
+      if (!fr || !fr.t.zoom) return;
+      e.preventDefault();
+      setFramerScale(fr.scale * (1 - e.deltaY * 0.0016));
+    }, { passive: false });
   }
 
-  /** 把裁剪框区域按原图像素重绘并写回背景 */
-  function applyCrop() {
-    if (!crop) return;
-    const base = crop.base;
-    const b = crop.box;
-
-    /* 舞台像素 → 原图像素 */
-    const sx = (b.x - base.dx) / base.k;
-    const sy = (b.y - base.dy) / base.k;
-    const sw = b.w / base.k;
-    const sh = b.h / base.k;
-
-    const MAXW = 1400;
-    const outW = Math.max(1, Math.min(MAXW, Math.round(sw)));
-    const outH = Math.max(1, Math.round(outW * sh / sw));
-
-    const cv = document.createElement('canvas');
-    cv.width = outW;
-    cv.height = outH;
-    const ctx = cv.getContext('2d');
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(crop.img, sx, sy, sw, sh, 0, 0, outW, outH);
-
-    state.bg.data = cv.toDataURL('image/jpeg', 0.86);
-    AssetDB.put('bg', state.bg.data);
-    /* 裁剪已完成取景，缩放与位置回到默认 */
-    state.bg.scale = 1;
-    state.bg.x = 50;
-    state.bg.y = 50;
-
-    applyBg();
+  /** 确认：把取景参数落盘 */
+  function applyFramer() {
+    if (!fr) return;
+    const t = fr.t;
+    t.set({ fit: fr.fit, scale: fr.scale, x: fr.x, y: fr.y });
+    t.after();
     saveState();
-    syncBgControls();
-    closeCropper();
-    toast('已应用裁剪（' + outW + ' × ' + outH + '）');
+    toast('取景已保存');
+    closeFramer();
   }
 
-  function closeCropper() {
-    const root = $('#cropper');
-    root.classList.remove('open');
-    root.innerHTML = '';
-    crop = null;
+  /** 关闭取景器（不改动已实时应用的参数） */
+  function closeFramer() {
+    if (!fr) return;
+    const root = fr.root;
+    fr = null;
+    if (root) {
+      root.classList.remove('open');
+      root.innerHTML = '';
+    }
+    popModal(closeFramer);
+  }
+
+  /** 设置面板里的铺满 / 完整按钮 */
+  function syncFitChips(id, fit) {
+    const box = document.getElementById(id);
+    if (!box) return;
+    const cur = fit === 'contain' ? 'contain' : 'cover';
+    $$('button[data-fit]', box).forEach(function (b) {
+      b.classList.toggle('on', b.dataset.fit === cur);
+    });
+  }
+
+  /** 主卡取景后同步滑块位置 */
+  function syncHeroControls() {
+    const set = function (id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+    const h = state.home || {};
+    set('fHx', h.imgX != null ? h.imgX : 50);
+    set('fHy', h.imgY != null ? h.imgY : 50);
+    const l1 = document.getElementById('vHx');
+    const l2 = document.getElementById('vHy');
+    if (l1) l1.textContent = (h.imgX != null ? h.imgX : 50) + '%';
+    if (l2) l2.textContent = (h.imgY != null ? h.imgY : 50) + '%';
+  }
+
+  /** 语录配图取景后同步滑块位置 */
+  function syncQuoteBgControls() {
+    const t = quoteBgEff();
+    const set = function (id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+    set('fQBgS', Math.round(t.scale * 100));
+    set('fQBgX', t.x);
+    set('fQBgY', t.y);
+    const l1 = document.getElementById('vQBgS');
+    const l2 = document.getElementById('vQBgX');
+    const l3 = document.getElementById('vQBgY');
+    if (l1) l1.textContent = Math.round(t.scale * 100) + '%';
+    if (l2) l2.textContent = t.x + '%';
+    if (l3) l3.textContent = t.y + '%';
+    syncFitChips('fQBgFit', t.fit);
   }
 
   /** 裁剪后把设置面板上的滑块同步到新值 */
@@ -8320,7 +8663,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="mb-foot"><button class="btn primary" data-close>完成</button></div>' +
       '</div>';
 
-    root.classList.add('open');
+    openLayer(root);
     renderStretchList();
     renderColList();
 
@@ -8914,11 +9257,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   function quoteBgEff() {
     const st = state.quoteStyle;
     const it = curQuoteBgItem();
-    if (!it) return { scale: st.bgScale, x: st.bgX, y: st.bgY };
+    if (!it) return { scale: st.bgScale, x: st.bgX, y: st.bgY, fit: st.bgFit };
     return {
       scale: (it.s != null ? it.s : st.bgScale),
       x: (it.x != null ? it.x : st.bgX),
-      y: (it.y != null ? it.y : st.bgY)
+      y: (it.y != null ? it.y : st.bgY),
+      fit: (it.fit || st.bgFit || 'cover')
     };
   }
 
@@ -8929,6 +9273,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     else {
       if (key === 's') state.quoteStyle.bgScale = val;
       else if (key === 'x') state.quoteStyle.bgX = val;
+      else if (key === 'fit') state.quoteStyle.bgFit = val;
       else state.quoteStyle.bgY = val;
     }
   }
@@ -9041,6 +9386,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     if (layer) {
       /* 缩放作用在背景层上，卡片尺寸和文字排版都不受影响 */
       const t = quoteBgEff();
+      layer.style.backgroundSize = t.fit === 'contain' ? 'contain' : 'cover';
       layer.style.transform = 'scale(' + t.scale + ')';
       layer.style.backgroundPosition = t.x + '% ' + t.y + '%';
     }
@@ -9080,17 +9426,18 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             'style="background-image:url(\'' + url + '\')" title="' + esc(it.name || '未命名') + '">' +
             '<span class="mask">已隐藏</span>' +
             '<button class="del" data-qbdel="' + it.id + '" aria-label="删除">×</button>' +
+            '<button class="fr" data-qbfr="' + it.id + '" aria-label="调整取景">取景</button>' +
           '</div>';
       });
-      html += '<label class="qb-add" style="position:relative;overflow:hidden">+<input type="file" id="fQbFile" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>';
+      html += '<label class="qb-add" style="position:relative;overflow:hidden">+<input type="file" id="fQbFile" accept="image/*" multiple style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer"></label>';
       html += '</div>';
-      html += '<div class="sp-note" style="margin:0">点图片可切换是否参与随机；最多 ' + ASSET_LIMIT.image + ' 张。</div>';
+      html += '<div class="sp-note" style="margin:0">点图片切换是否参与随机；点左下角「取景」单独调整这一张的位置；最多 ' + ASSET_LIMIT.image + ' 张。</div>';
     }
     box.innerHTML = html;
 
     if (!items.length) {
       box.innerHTML += '<label class="qb-add" style="position:relative;overflow:hidden">+ 添加图片' +
-        '<input type="file" id="fQbFile" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>';
+        '<input type="file" id="fQbFile" accept="image/*" multiple style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer"></label>';
     }
   }
 
@@ -9130,7 +9477,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     }
 
     html += '<label class="qb-add" style="position:relative;overflow:hidden">+ 上传字体文件' +
-      '<input type="file" id="fFontFile" accept=".ttf,.otf,.woff,.woff2,font/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">' +
+      '<input type="file" id="fFontFile" accept=".ttf,.otf,.woff,.woff2,font/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
     '</label>';
 
     box.innerHTML = html;
@@ -10141,7 +10488,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         if ($('#searchRoot').classList.contains('open')) { closeSearch(); return; }
-        if ($('#cropper').classList.contains('open')) { closeCropper(); return; }
+        if ($('#framer').classList.contains('open')) { closeFramer(); return; }
         if ($('#modalRoot').classList.contains('open')) closeModal();
         else {
           $('#noteEditor').classList.remove('open');
@@ -10149,8 +10496,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         }
         return;
       }
-      /* 裁剪器打开时不响应切页 / 新建快捷键 */
-      if ($('#cropper').classList.contains('open')) return;
+      /* 取景器打开时不响应切页 / 新建快捷键 */
+      if ($('#framer').classList.contains('open')) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         openSearch();
@@ -10324,6 +10671,32 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     }, 600);
   }
 
+  /**
+   * 开场层兜底。
+   * 部分机型（实测 vivo，WebView 84–86）不认 `inset` 简写，fixed 层会退化成
+   * 「按内容撑开、贴在左上角」的一条，露出下面的主页；`#modalRoot` 同样会塌成 0×0，
+   * 表现就是点设置毫无反应。样式已改成四向长写，这里再量一次实际尺寸做保险：
+   * 覆盖率不足就用内联样式钉死成整屏。
+   */
+  function hardenBootSplash() {
+    const el = $('#bootSplash');
+    if (!el || el.hidden) return;
+    const w = window.innerWidth || 360;
+    const h = window.innerHeight || 640;
+    const r = el.getBoundingClientRect();
+    if (r.width >= w * 0.92 && r.height >= h * 0.88) return;
+
+    el.style.position = 'fixed';
+    el.style.top = '0';
+    el.style.right = '0';
+    el.style.bottom = '0';
+    el.style.left = '0';
+    el.style.width = '100%';
+    el.style.height = '100%';
+    el.style.zIndex = '9998';
+    console.warn('[DayLeaf] 开场层未覆盖整屏，已启用兜底布局', r.width, r.height, w, h);
+  }
+
   /** 开场：抽一条语录并起动画（在 boot 的最前面调用） */
   function startBootSplash() {
     const root = $('#bootSplash');
@@ -10375,6 +10748,9 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     /* 先起开场动画：抽一条语录逐字浮现，内容在它下面继续渲染 */
     startBootSplash();
+    hardenBootSplash();
+    /* 兜底：万一某个内核把收场流程卡住，8 秒后无条件撤掉开场层，绝不让人卡在上面 */
+    setTimeout(function () { if (!bsClosed) bsClose(); }, 8000);
 
     applyTheme();
     applyBg();

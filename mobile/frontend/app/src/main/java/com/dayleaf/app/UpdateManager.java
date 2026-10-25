@@ -19,14 +19,19 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UpdateManager {
 
@@ -106,16 +111,18 @@ public class UpdateManager {
     /**
      * 取所有源里最新的那一份。
      *
-     * thorough=true（用户手动点「检查更新」）时多问一轮：如果拿到的版本不比当前新，
-     * 很可能是这台设备连到的 CDN 边缘还缓存着旧清单，这时带一个时间戳再请求一次——
-     * URL 变了就是新的缓存键，会强制回源。启动时的静默检测不做这一步，省一次请求。
+     * 清单里只有最新版本，客户端一次就能拿到目标版本，不存在「必须先装中间版本」的
+     * 逻辑。之所以有人看到逐版本升级，是 CDN 边缘缓存了旧清单：1.0.10 的机器先看到
+     * 1.0.11，装完再请求才看到 1.0.12。这里每个地址都带时间戳（尽力而为），
+     * 5 个源并行取最大版本；@latest 每次发版都是新 tag/new cache key，双重保证直达最新。
      */
     private UpdateInfo fetchBest(boolean thorough) {
-        UpdateInfo first = fetchRound(null);
+        UpdateInfo first = fetchRound(String.valueOf(System.currentTimeMillis()));
+        if (first != null && first.versionCode > currentVersionCode()) return first;
         if (!thorough) return first;
 
-        if (first != null && first.versionCode > currentVersionCode()) return first;
-
+        /* 手动检查再问一轮：防止刚好撞上某个边缘节点的旧缓存 */
+        try { Thread.sleep(350); } catch (InterruptedException e) { /* ignore */ }
         UpdateInfo again = fetchRound(String.valueOf(System.currentTimeMillis()));
         if (again == null) return first;
         if (first == null || again.versionCode > first.versionCode) return again;
@@ -175,8 +182,17 @@ public class UpdateManager {
         info.url = o.optString("url", "");
         info.notes = o.optString("notes", "");
         info.size = o.optLong("size", 0);
-        info.sha256 = o.optString("sha256", "");
+        info.sha256 = o.optString("sha256", "").trim();
         info.force = o.optBoolean("force", false);
+        info.minVersionCode = o.optInt("minVersionCode", 0);
+
+        JSONArray arr = o.optJSONArray("urls");
+        if (arr != null) {
+            for (int i = 0; i < arr.length(); i++) {
+                String u = arr.optString(i, "");
+                if (u != null && u.length() > 0) info.urls.add(u);
+            }
+        }
         return info;
     }
 
@@ -187,7 +203,7 @@ public class UpdateManager {
             char c = url.charAt(i);
             if (c > 0x7F) {
                 byte[] b = String.valueOf(c).getBytes("UTF-8");
-                for (byte x : b) sb.append('%').append(String.format("%02X", x));
+                for (byte x : b) sb.append('%').append(String.format("%02X", x & 0xFF));
             } else {
                 sb.append(c);
             }
@@ -206,13 +222,13 @@ public class UpdateManager {
         int code = c.getResponseCode();
         if (code < 200 || code >= 300) throw new Exception("HTTP " + code);
         InputStream in = c.getInputStream();
-        StringBuilder sb = new StringBuilder();
+        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
         byte[] buf = new byte[4096];
         int n;
-        while ((n = in.read(buf)) != -1) sb.append(new String(buf, 0, n, "UTF-8"));
+        while ((n = in.read(buf)) != -1) bos.write(buf, 0, n);
         in.close();
         c.disconnect();
-        return sb.toString();
+        return new String(bos.toByteArray(), "UTF-8");
     }
 
     /** 把字节数换成便于阅读的大小；几百 KB 的包不能被整除成「0 MB」。 */
@@ -228,22 +244,27 @@ public class UpdateManager {
     /* ---------------- 弹窗 ---------------- */
 
     private void showUpdateDialog(final UpdateInfo info) {
+        final int curCode = currentVersionCode();
+        final boolean force = info.force ||
+                (info.minVersionCode > 0 && curCode < info.minVersionCode);
+
         StringBuilder msg = new StringBuilder();
-        msg.append("发现新版本 v").append(info.versionName)
-           .append("（当前 v").append(currentVersionName()).append("）");
+        msg.append("当前 v").append(currentVersionName())
+           .append(" → 最新 v").append(info.versionName)
+           .append("\n可直接一步升级到最新版，不用逐版安装。");
         if (info.notes != null && info.notes.length() > 0) msg.append("\n\n").append(info.notes);
         if (info.size > 0) msg.append("\n\n大小约 ").append(humanSize(info.size));
 
         AlertDialog.Builder b = new AlertDialog.Builder(activity);
-        b.setTitle(info.force ? "需要更新" : "发现新版本");
+        b.setTitle(force ? "需要更新" : "发现新版本");
         b.setMessage(msg.toString());
         b.setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
             @Override public void onClick(DialogInterface d, int which) { downloadAndInstall(info); }
         });
-        if (!info.force) {
+        if (!force) {
             b.setNegativeButton("以后再说", null);
         }
-        b.setCancelable(!info.force);
+        b.setCancelable(!force);
         b.show();
     }
 
@@ -255,46 +276,133 @@ public class UpdateManager {
         final ProgressDialog pd = new ProgressDialog(activity);
         pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         pd.setTitle("正在下载更新");
-        pd.setMessage(info.versionName);
+        pd.setMessage("v" + info.versionName + " · 可直接覆盖安装");
         pd.setCancelable(false);
         pd.show();
 
         new Thread(new Runnable() {
             @Override public void run() {
-                try {
-                    File dir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-                    if (dir == null) dir = activity.getCacheDir();
-                    final File apk = new File(dir, "dayleaf-" + info.versionCode + ".apk");
+                File dir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (dir == null) dir = activity.getCacheDir();
+                final File apk = new File(dir, "dayleaf-" + info.versionCode + ".apk");
+                final File part = new File(dir, "dayleaf-" + info.versionCode + ".part");
 
-                    download(info.url, apk, new ProgressCallback() {
-                        @Override public void onProgress(final long done, final long total) {
+                List<String> sources = candidateUrls(info);
+                Exception last = null;
+                boolean ok = false;
+
+                for (int i = 0; i < sources.size(); i++) {
+                    final String src = sources.get(i);
+                    try {
+                        if (part.exists()) part.delete();
+                        /* 每个地址都带时间戳：避免 CDN 把旧版本安装包当成新包发下来 */
+                        download(withBuster(src, String.valueOf(System.currentTimeMillis())), part,
+                                new ProgressCallback() {
+                                    @Override public void onProgress(final long done, final long total) {
+                                        ui.post(new Runnable() {
+                                            @Override public void run() {
+                                                if (total > 0) {
+                                                    pd.setIndeterminate(false);
+                                                    pd.setMax((int) total);
+                                                    pd.setProgress((int) done);
+                                                } else {
+                                                    pd.setIndeterminate(true);
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                        verifyPackage(part, info);
+                        if (apk.exists() && !apk.delete()) throw new Exception("无法写入安装包");
+                        if (!part.renameTo(apk)) throw new Exception("无法保存安装包");
+                        ok = true;
+                        break;
+                    } catch (Exception e) {
+                        last = e;
+                        if (part.exists()) part.delete();
+                        /* 还有备用源时提示一下，别让用户以为下载失败了 */
+                        if (i < sources.size() - 1) {
                             ui.post(new Runnable() {
                                 @Override public void run() {
-                                    if (total > 0) {
-                                        pd.setMax((int) total);
-                                        pd.setProgress((int) done);
-                                    }
+                                    pd.setMessage("下载源不可用，正在切换备用源…");
                                 }
                             });
                         }
-                    });
+                    }
+                }
 
-                    ui.post(new Runnable() {
-                        @Override public void run() {
-                            try { pd.dismiss(); } catch (Exception e) { /* ignore */ }
-                            installApk(apk);
-                        }
-                    });
-                } catch (final Exception e) {
+                if (!ok) {
+                    final String why = last != null && last.getMessage() != null
+                            ? last.getMessage() : "没有可用的下载源";
                     ui.post(new Runnable() {
                         @Override public void run() {
                             try { pd.dismiss(); } catch (Exception ex) { /* ignore */ }
-                            Toast.makeText(activity, "下载失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(activity, "下载失败：" + why + "，请稍后重试",
+                                    Toast.LENGTH_LONG).show();
                         }
                     });
+                    return;
                 }
+
+                ui.post(new Runnable() {
+                    @Override public void run() {
+                        try { pd.dismiss(); } catch (Exception e) { /* ignore */ }
+                        installApk(apk);
+                    }
+                });
             }
         }).start();
+    }
+
+    /** 主地址 + urls[] 备用源，去重后按顺序尝试 */
+    private static List<String> candidateUrls(UpdateInfo info) {
+        List<String> out = new ArrayList<String>();
+        addUrl(out, info.url);
+        for (String u : info.urls) addUrl(out, u);
+        return out;
+    }
+
+    private static void addUrl(List<String> list, String url) {
+        if (url == null) return;
+        String u = url.trim();
+        if (u.length() == 0 || list.contains(u)) return;
+        list.add(u);
+    }
+
+    /**
+     * 安装包校验：大小与 sha256 至少对上一个。
+     * 只有清单里给了 sha256 才比对；老清单没有这项时仍会校验大小。
+     */
+    private static void verifyPackage(File f, UpdateInfo info) throws Exception {
+        long len = f.length();
+        if (len <= 0) throw new Exception("下载到的文件为空");
+        if (info.size > 0 && len != info.size) {
+            throw new Exception("安装包大小不符（应为 " + info.size + " 字节，实际 " + len + "）");
+        }
+        if (info.sha256 != null && info.sha256.length() == 64) {
+            String got = sha256(f);
+            if (!got.equalsIgnoreCase(info.sha256)) {
+                throw new Exception("安装包校验失败（文件可能被 CDN 缓存替换）");
+            }
+        }
+    }
+
+    private static String sha256(File f) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        FileInputStream in = new FileInputStream(f);
+        try {
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) md.update(buf, 0, n);
+        } finally {
+            try { in.close(); } catch (Exception e) { /* ignore */ }
+        }
+        byte[] d = md.digest();
+        StringBuilder sb = new StringBuilder(d.length * 2);
+        for (int i = 0; i < d.length; i++) {
+            sb.append(String.format("%02x", d[i] & 0xFF));
+        }
+        return sb.toString();
     }
 
     private void download(String urlStr, File out, ProgressCallback cb) throws Exception {
