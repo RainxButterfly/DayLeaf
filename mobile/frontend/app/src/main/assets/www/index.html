@@ -2915,7 +2915,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.5',
+    version: '1.0.6',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -9774,13 +9774,19 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         clearTimeout(s.timer);
         stopEdge(s);
         document.body.classList.remove('is-moving');
-        lastMoveEnd = Date.now();
+
+        /* 只有「长按进入拖动并且真的移动过」才算一次拖拽。
+           单纯点一下绝不能走到下面的落点计算里：那会把日程吸附到最近的
+           15 分钟刻度上（看起来就是「点一下它自己乱跳」），而且会顺带
+           把随后要打开编辑面板的 click 吞掉。 */
+        const dragged = !!(s.armed && s.moved);
+        if (dragged) lastMoveEnd = Date.now();
 
         if (s.ghost) {
-          if (commit && s.target) {
+          if (commit && dragged && s.target) {
             s.ghost.remove();
           } else {
-            /* 无效区 / 取消：浮起卡片弹回原位再消失 */
+            /* 无效区 / 取消 / 只是点了一下：浮起卡片弹回原位再消失 */
             s.ghost.classList.add('snap-back');
             s.ghost.style.transform = 'translate(0,0) scale(1)';
             setTimeout(function () { s.ghost.remove(); }, 220);
@@ -9790,7 +9796,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (s.holdEl) s.holdEl.classList.remove('ev-source');
         $$('.move-slot').forEach(function (n) { n.remove(); });
 
-        if (!commit) return;
+        if (!commit || !dragged) return;
 
         /* 松手时按当前手指位置重新算一次落点：
            翻页（renderGrid 重建 DOM）后 s.target 可能已过期，直接用它会导致事件丢失 */
@@ -9840,6 +9846,10 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           if (!st) return;
           st.armed = true;
           document.body.classList.add('is-moving');
+
+          /* 进入拖拽的这一刻重新量一次列几何：一次拖拽只多一次测量，
+             却能保证表格刚渲染完、或被滚动过之后落点依然准确。 */
+          cacheGeo();
 
           st.holdEl = body.querySelector('.ev[data-id="' + st.id + '"]');
           if (st.holdEl) st.holdEl.classList.add('ev-source');
@@ -10224,10 +10234,20 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       setTimeout(function () { startGuide(false); }, 340);
     });
 
+    /* 版本号以原生为准：同一份界面被手机和电脑两套外壳加载，版本号并不一致 */
+    let verText = APP.version;
+    const nbFoot = nativeBridge();
+    if (nbFoot) {
+      try {
+        const v = nbFoot.getVersionName && nbFoot.getVersionName();
+        if (v) verText = String(v);
+      } catch (e) { /* ignore */ }
+    }
+
     /* 主页底部署名：一行小字，点进设置能看到完整作者信息与邮箱 */
     const foot = $('#homeFoot');
     if (foot) {
-      foot.textContent = APP.name + ' · ' + APP.cnName + ' v' + APP.version + ' · ' + APP.authorCn;
+      foot.textContent = APP.name + ' · ' + APP.cnName + ' v' + verText + ' · ' + APP.authorCn;
       foot.addEventListener('click', openSettings);
     }
     /* 图片与字体存在 IndexedDB，异步读回来后再补一次渲染 */

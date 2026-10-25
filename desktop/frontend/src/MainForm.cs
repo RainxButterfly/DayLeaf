@@ -24,6 +24,7 @@ namespace DayLeaf
         private bool _dark;
         private readonly bool _selfTest;
         private bool _selfTestDone;
+        private bool _startupCheckDone;
 
         public MainForm()
         {
@@ -246,6 +247,38 @@ namespace DayLeaf
             if (ok == DialogResult.OK) OpenExternal(r.Latest.Url);
         }
 
+        /// <summary>启动后静默检测：不提示「已是最新」，只有新版才问一次。</summary>
+        private void StartupUpdateCheck()
+        {
+            DesktopUpdate.Check(delegate(DesktopUpdate.Result r)
+            {
+                if (r == null || r.Latest == null || !r.HasNewer) return;
+
+                // 同一个版本只提醒一次，别每次开都弹
+                string seen = AppPaths.ReadNotifiedVersion();
+                if (seen == r.Latest.VersionName) return;
+                AppPaths.WriteNotifiedVersion(r.Latest.VersionName);
+
+                if (IsDisposed) return;
+                try
+                {
+                    BeginInvoke((Action)delegate { ShowStartupUpdate(r); });
+                }
+                catch (Exception) { /* 窗口已关 */ }
+            });
+        }
+
+        private void ShowStartupUpdate(DesktopUpdate.Result r)
+        {
+            string text = "新版本 v" + r.Latest.VersionName + " 已发布（当前 v" + r.Current + "）";
+            if (!string.IsNullOrEmpty(r.Latest.Notes)) text += "\n\n" + r.Latest.Notes;
+            text += "\n\n现在去下载吗？";
+
+            DialogResult ok = MessageBox.Show(this, text, "叶历 DayLeaf",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2);
+            if (ok == DialogResult.Yes) OpenExternal(r.Latest.Url);
+        }
+
         private static string HumanSize(long bytes)
         {
             if (bytes < 1024) return bytes + " B";
@@ -289,7 +322,20 @@ namespace DayLeaf
         /// </summary>
         private async void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
-            if (!_selfTest || _selfTestDone) return;
+            /* 启动更新检测：界面先正常显示，过几秒再在后台问一次。
+               只有真的发现新版本才打扰用户，且同一版本只提醒一次。 */
+            if (!_selfTest)
+            {
+                if (e.IsSuccess && !_startupCheckDone)
+                {
+                    _startupCheckDone = true;
+                    await System.Threading.Tasks.Task.Delay(4000);
+                    StartupUpdateCheck();
+                }
+                return;
+            }
+
+            if (_selfTestDone) return;
             _selfTestDone = true;
 
             string log = "navigation_ok=" + e.IsSuccess;

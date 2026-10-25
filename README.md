@@ -31,7 +31,7 @@
 | 平台 | 要求 | 文件 |
 |---|---|---|
 | Android | 8.0（API 26）及以上 | `DayLeaf-android-*.apk` |
-| Windows | 10 / 11（需 WebView2 运行时，系统自带） | `DayLeaf-windows-*.zip`，解压即用 |
+| Windows | 10 / 11（需 WebView2 运行时，系统自带） | `DayLeaf-Setup-*.exe` 安装包；也可用 `*-windows-*.zip` 免安装 |
 
 都在 [Releases](https://github.com/RainxButterfly/DayLeaf/releases) 页面。两端数据结构一致，可互相导入导出的 JSON。
 
@@ -54,14 +54,14 @@ keytool -genkey -v -keystore dayleaf-release.jks -alias dayleaf \
 
 详见 [`mobile/frontend/README.md`](mobile/frontend/README.md)。
 
-**Windows**：需要 .NET Framework 4.8（系统自带）与任意版本的 .NET SDK。
+**Windows**：需要 .NET Framework 4.8（系统自带）、任意版本的 .NET SDK 与 [NSIS](https://nsis.sourceforge.io)。
 
 ```powershell
 cd desktop/frontend
 powershell -ExecutionPolicy Bypass -File build.ps1 -Version 1.0.0
 ```
 
-脚本会自动同步移动端的 `index.html`、下载 WebView2 SDK、编译并打包到 `dist\`。
+脚本会自动同步移动端的 `index.html`、下载 WebView2 SDK、编译、打包，并调 NSIS 生成安装包到 `dist\`。
 详见 [`desktop/frontend/README.md`](desktop/frontend/README.md)。
 
 ## 自动更新

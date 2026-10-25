@@ -14,6 +14,7 @@ namespace DayLeaf
         public static string WwwDir { get { return Path.Combine(Root, "www"); } }
         public static string ThemeFile { get { return Path.Combine(Root, "theme.txt"); } }
         public static string WindowFile { get { return Path.Combine(Root, "window.json"); } }
+        public static string NotifiedFile { get { return Path.Combine(Root, "update-notified.txt"); } }
 
         public static void Ensure()
         {
@@ -74,6 +75,28 @@ namespace DayLeaf
         public static bool IsDarkNow()
         {
             return IsDark(ReadTheme());
+        }
+
+        /* ---------- 更新提醒记录（同一版本只提示一次） ---------- */
+
+        public static string ReadNotifiedVersion()
+        {
+            try
+            {
+                if (File.Exists(NotifiedFile)) return File.ReadAllText(NotifiedFile).Trim();
+            }
+            catch (Exception) { /* ignore */ }
+            return "";
+        }
+
+        public static void WriteNotifiedVersion(string version)
+        {
+            try
+            {
+                Directory.CreateDirectory(Root);
+                File.WriteAllText(NotifiedFile, version ?? "");
+            }
+            catch (Exception) { /* ignore */ }
         }
 
         /* ---------- 窗口尺寸 ---------- */

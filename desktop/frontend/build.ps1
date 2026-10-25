@@ -81,12 +81,33 @@ try {
     if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
     Compress-Archive -Path (Join-Path $pkgDir "*") -DestinationPath $zipPath -CompressionLevel Optimal
 
+    # ---------- 5. 安装包（NSIS） ----------
+    $nsi      = Join-Path (Split-Path $here -Parent) "setup\DayLeaf.nsi"
+    $setupOut = Join-Path $distRoot "DayLeaf-Setup-$Version.exe"
+    if (Test-Path $nsi) {
+        $makensis = $null
+        foreach ($p in @("${env:ProgramFiles(x86)}\NSIS\makensis.exe",
+                         "$env:ProgramFiles\NSIS\makensis.exe")) {
+            if (Test-Path $p) { $makensis = $p; break }
+        }
+        if (-not $makensis) { throw "没找到 makensis.exe，请先安装 NSIS（https://nsis.sourceforge.io）" }
+
+        Write-Host "· 编译安装包（NSIS）..." -ForegroundColor DarkGray
+        & $makensis "/DVERSION=$Version" "/DSRCDIR=$pkgDir" "/DOUTFILE=$setupOut" $nsi | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "安装包编译失败" }
+        if (-not (Test-Path $setupOut)) { throw "没生成安装包：$setupOut" }
+    }
+
     $exeSize = [math]::Round((Get-Item (Join-Path $pkgDir "DayLeaf.exe")).Length / 1KB)
     $zipSize = [math]::Round((Get-Item $zipPath).Length / 1KB)
     Write-Host ""
     Write-Host "完成：" -ForegroundColor Green
     Write-Host "  程序目录  $pkgDir  (exe $exeSize KB)" -ForegroundColor Gray
-    Write-Host "  发布压缩包 $zipPath  ($zipSize KB)" -ForegroundColor Gray
+    Write-Host "  免安装包  $zipPath  ($zipSize KB)" -ForegroundColor Gray
+    if (Test-Path $setupOut) {
+        $setupSize = [math]::Round((Get-Item $setupOut).Length / 1KB)
+        Write-Host "  安装包    $setupOut  ($setupSize KB)" -ForegroundColor Gray
+    }
     Write-Host ""
 }
 finally {
