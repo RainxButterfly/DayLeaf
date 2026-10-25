@@ -96,12 +96,23 @@ public class UpdateManager {
         return out[0];
     }
 
+    /**
+     * CDN 会把 @main 分支的清单缓存十几个小时，导致刚发版客户端还看到旧版本。
+     * 给 jsDelivr 这类分支型地址加一个时间戳参数，使每次请求都是新 URL，
+     * 直接穿透缓存取到最新清单。文件只有几百字节，这点代价可以忽略。
+     */
+    private static String bustCache(String url) {
+        if (url.indexOf("jsdelivr.net") < 0 && url.indexOf("statically.io") < 0) return url;
+        String sep = (url.indexOf('?') >= 0) ? "&" : "?";
+        return url + sep + "_=" + System.currentTimeMillis();
+    }
+
     /** 依次尝试每个源，解析 JSON，返回 versionCode 最大的一个；全失败返回 null。 */
     private UpdateInfo fetchBest() {
         UpdateInfo best = null;
         for (String src : UPDATE_SOURCES) {
             try {
-                UpdateInfo info = parse(httpGet(src, 3000));
+                UpdateInfo info = parse(httpGet(bustCache(src), 3000));
                 if (info != null && info.url != null && info.url.length() > 0) {
                     if (best == null || info.versionCode > best.versionCode) best = info;
                 }
@@ -145,6 +156,7 @@ public class UpdateManager {
         c.setConnectTimeout(timeout);
         c.setReadTimeout(timeout);
         c.setRequestProperty("User-Agent", "DayLeaf-Android/" + currentVersionName());
+        c.setRequestProperty("Cache-Control", "no-cache, no-store");
         c.setInstanceFollowRedirects(true);
         c.connect();
         int code = c.getResponseCode();

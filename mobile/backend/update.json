@@ -5,8 +5,8 @@
   "minVersionCode": 1,
   "force": false,
   "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.2/DayLeaf-android-v1.0.2.apk",
-  "size": 455217,
-  "sha256": "01cbfd9ca3195237281feae78e8ab8d6ec886dbdfec5498c8af891b30fa79b2a",
+  "size": 455401,
+  "sha256": "ae056fed6fe9a1fde79246fcf9e635f46a4e981371ef0b1b7af9e31b2b174fc5",
   "notes": "补全选图/导入/导出（系统文件选择器与另存为）、修复记事快速选色不显示颜色、大幅优化卡顿（大图移出 localStorage 存 IndexedDB、主卡不再每秒重建、滑块松手才保存、表格拖拽不再每帧强制回流、列绘制隔离）。",
   "publishedAt": "2026-10-25"
 }
