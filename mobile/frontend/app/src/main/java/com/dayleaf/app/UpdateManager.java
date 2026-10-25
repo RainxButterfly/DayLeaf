@@ -40,6 +40,7 @@ public class UpdateManager {
     private static final String[] UPDATE_SOURCES = {
         "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/mobile/backend/update.json",
         "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/mobile/backend/update.json",
+        "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/mobile/backend/update.json",
         "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/main/mobile/backend/update.json",
         "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/mobile/backend/update.json"
     };
@@ -70,7 +71,7 @@ public class UpdateManager {
     public void checkForUpdate(final boolean manual) {
         new Thread(new Runnable() {
             @Override public void run() {
-                final UpdateInfo best = fetchBestWithDeadline();
+                final UpdateInfo best = fetchBestWithDeadline(manual);
                 ui.post(new Runnable() {
                     @Override public void run() {
                         if (best != null && best.versionCode > currentVersionCode()) {
@@ -88,37 +89,52 @@ public class UpdateManager {
         }).start();
     }
 
-    /** 整体最多等 14 秒（正常网络下 1 秒内就有结果）；超时就当没结果，绝不卡住界面。 */
-    private UpdateInfo fetchBestWithDeadline() {
+    /** 整体最多等 14 秒（手动检查多一轮重试，给到 20 秒）；超时就当没结果，绝不卡住界面。 */
+    private UpdateInfo fetchBestWithDeadline(final boolean thorough) {
         final UpdateInfo[] out = new UpdateInfo[1];
         Thread t = new Thread(new Runnable() {
-            @Override public void run() { out[0] = fetchBest(); }
+            @Override public void run() { out[0] = fetchBest(thorough); }
         });
         t.setDaemon(true);
         t.start();
         try {
-            t.join(14000);
+            t.join(thorough ? 20000 : 14000);
         } catch (InterruptedException e) { /* ignore */ }
         return out[0];
     }
 
     /**
-     * 并行请求所有源，取 versionCode 最大的一个；全失败返回 null。
+     * 取所有源里最新的那一份。
      *
-     * 并行而不是依次尝试：只要有一个源通就能出结果，不会被前面卡住的源拖住，
-     * 出国外的 raw 源被墙时也不会连累整体耗时。
+     * thorough=true（用户手动点「检查更新」）时多问一轮：如果拿到的版本不比当前新，
+     * 很可能是这台设备连到的 CDN 边缘还缓存着旧清单，这时带一个时间戳再请求一次——
+     * URL 变了就是新的缓存键，会强制回源。启动时的静默检测不做这一步，省一次请求。
      */
-    private UpdateInfo fetchBest() {
+    private UpdateInfo fetchBest(boolean thorough) {
+        UpdateInfo first = fetchRound(null);
+        if (!thorough) return first;
+
+        if (first != null && first.versionCode > currentVersionCode()) return first;
+
+        UpdateInfo again = fetchRound(String.valueOf(System.currentTimeMillis()));
+        if (again == null) return first;
+        if (first == null || again.versionCode > first.versionCode) return again;
+        return first;
+    }
+
+    /** 一轮并发请求；buster 非空时给每个地址加时间戳参数，绕开 CDN 缓存。 */
+    private UpdateInfo fetchRound(String buster) {
         final java.util.List<UpdateInfo> got =
                 java.util.Collections.synchronizedList(new java.util.ArrayList<UpdateInfo>());
         final java.util.concurrent.CountDownLatch latch =
                 new java.util.concurrent.CountDownLatch(UPDATE_SOURCES.length);
 
         for (final String src : UPDATE_SOURCES) {
+            final String url = withBuster(src, buster);
             Thread t = new Thread(new Runnable() {
                 @Override public void run() {
                     try {
-                        UpdateInfo info = parse(httpGet(src, 2500));
+                        UpdateInfo info = parse(httpGet(url, 2500));
                         if (info != null && info.url != null && info.url.length() > 0) {
                             got.add(info);
                         }
@@ -144,6 +160,11 @@ public class UpdateManager {
             }
         }
         return best;
+    }
+
+    private static String withBuster(String url, String buster) {
+        if (buster == null || buster.length() == 0) return url;
+        return url + (url.indexOf('?') >= 0 ? "&" : "?") + "_=" + buster;
     }
 
     private UpdateInfo parse(String json) throws Exception {

@@ -1,12 +1,12 @@
 {
   "channel": "windows",
-  "versionCode": 8,
-  "versionName": "1.0.7",
+  "versionCode": 9,
+  "versionName": "1.0.8",
   "minVersionCode": 1,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.7/DayLeaf-Setup-1.0.7.exe",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.8/DayLeaf-Setup-1.0.8.exe",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
-  "size": 716458,
-  "sha256": "304c59423a0aa983cf6869ac98bff3d6aef7e2c187fb169c827b7ded7805a0ae",
-  "notes": "与安卓端同版本发布：修复表格里单击日程被吸附到刻度、且打不开编辑面板的问题；启动 1.5 秒后自动检查更新。",
+  "size": 716522,
+  "sha256": "20ff578ee9b7c74da2bb740576e0ea3d8f6009992d9bfded302d2bf893d725c5",
+  "notes": "与安卓端同版本发布：更新源增加一条镜像，降低个别网络下误报「已是最新版本」的概率。",
   "publishedAt": "2026-10-25"
 }

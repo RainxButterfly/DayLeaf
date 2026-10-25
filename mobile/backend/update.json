@@ -1,12 +1,12 @@
 {
   "channel": "android",
-  "versionCode": 8,
-  "versionName": "1.0.7",
+  "versionCode": 9,
+  "versionName": "1.0.8",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.7/DayLeaf-android-v1.0.7.apk",
-  "size": 459801,
-  "sha256": "db2b1dd99015377189691afb87f7b9d0fa38b7ded5f3dd8766fc52b86c00ccfc",
-  "notes": "修复表格里单击日程却被吸附到整点、且打不开编辑面板的问题；同时重新校准拖拽落点。",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.8/DayLeaf-android-v1.0.8.apk",
+  "size": 460118,
+  "sha256": "b334b152e57422aa909a9fb546a6d8e632781d77fb0dc1b0a5f52d86785d6002",
+  "notes": "修复个别设备在 CDN 边缘缓存旧清单时误报「已是最新版本」：更新源增加一条镜像，手动检查时若版本不比当前新会带时间戳重试一次，强制回源。",
   "publishedAt": "2026-10-25"
 }

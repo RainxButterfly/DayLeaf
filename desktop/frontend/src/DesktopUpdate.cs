@@ -17,6 +17,7 @@ namespace DayLeaf
         {
             "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/desktop/backend/update.json",
             "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/desktop/backend/update.json",
+            "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/desktop/backend/update.json",
             "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/main/desktop/backend/update.json",
             "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@main/desktop/backend/update.json"
         };
