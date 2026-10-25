@@ -13,4 +13,18 @@
         <item name="android:windowSplashScreenIconBackgroundColor">@color/dayleaf_bg</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
     </style>
+
+    <!-- 深色主题：窗口底色、状态栏、Android 12+ 系统闪屏全部走深色，
+         这样选深色的人从点开图标那一刻起就不会看到白光。 -->
+    <style name="Theme.DayLeaf.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/dayleaf_bg_dark</item>
+        <item name="android:statusBarColor">@color/dayleaf_bg_dark</item>
+        <item name="android:navigationBarColor">@color/dayleaf_bg_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <item name="android:windowSplashScreenBackground">@color/dayleaf_bg_dark</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/dayleaf_bg_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
+    </style>
 </resources>

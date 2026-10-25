@@ -126,6 +126,26 @@
 <meta name="author" content="星河一叶Roxy (StarLeaf·Roxy)">
 <title>DayLeaf · 叶历</title>
 
+<script>
+/* 首帧就把主题定下来。
+   原来 dark 类是在 DOMContentLoaded 里才加的，页面会先按浅色画一帧，
+   选深色的人就会看到「先浅一下、再变深」。这段同步执行，在首次绘制之前生效。 */
+(function () {
+  var dark = false;
+  try {
+    var raw = localStorage.getItem('dayleaf.prototype.v2');
+    var t = raw ? (JSON.parse(raw).theme || 'light') : 'light';
+    dark = t === 'dark' || (t === 'system' && window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) { dark = false; }
+  var el = document.documentElement;
+  if (dark) el.classList.add('dark');
+  el.style.colorScheme = dark ? 'dark' : 'light';
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', dark ? '#0E1118' : '#4C6FFF');
+})();
+</script>
+
 <style>
 /* ==========================================================================
    1. 设计令牌与基础样式
@@ -2895,7 +2915,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.4',
+    version: '1.0.5',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -7695,8 +7715,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   function applyTheme() {
     const dark = isDarkTheme();
     document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', dark ? '#0E1118' : '#4C6FFF');
+
+    /* 让原生记住偏好：下次启动时窗口底色与系统闪屏要用它，不必等网页加载 */
+    const nb = nativeBridge();
+    if (nb && nb.setThemeMode) {
+      try { nb.setThemeMode(state.theme || 'light'); } catch (e) { /* ignore */ }
+    }
   }
 
   /**

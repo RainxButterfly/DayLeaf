@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="dayleaf_bg">#ECEFF6</color>
+    <!-- 深色主题的窗口底色，与网页 html.dark 的 bg 变量保持一致 -->
+    <color name="dayleaf_bg_dark">#0E1118</color>
 </resources>

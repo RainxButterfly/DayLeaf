@@ -8,7 +8,9 @@ package com.dayleaf.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,8 +40,58 @@ public class MainActivity extends Activity {
         this.hasModal = has;
     }
 
+    /** 读 JS 同步过来的主题偏好（light / dark / system），判断当前是否深色 */
+    private boolean isDarkStored() {
+        String mode = "light";
+        try {
+            SharedPreferences sp = getSharedPreferences("dayleaf", MODE_PRIVATE);
+            mode = sp.getString("theme", "light");
+        } catch (Exception e) { /* 读不到就按浅色 */ }
+
+        if ("dark".equals(mode)) return true;
+        if ("system".equals(mode)) {
+            int ui = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            return ui == Configuration.UI_MODE_NIGHT_YES;
+        }
+        return false;
+    }
+
+    /** 运行时切换主题后，同步状态栏、导航栏与 WebView 底色（由 JS 触发） */
+    public void applyStoredThemeToChrome() {
+        final boolean dark = isDarkStored();
+        final int bg = getColor(dark ? R.color.dayleaf_bg_dark : R.color.dayleaf_bg);
+        runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try {
+                    getWindow().setStatusBarColor(bg);
+                    getWindow().setNavigationBarColor(bg);
+                    if (webView != null) webView.setBackgroundColor(bg);
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        int flags = getWindow().getDecorView().getSystemUiVisibility();
+                        if (dark) {
+                            flags &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        } else {
+                            flags |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        }
+                        if (Build.VERSION.SDK_INT >= 26) {
+                            if (dark) {
+                                flags &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                            } else {
+                                flags |= android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                            }
+                        }
+                        getWindow().getDecorView().setSystemUiVisibility(flags);
+                    }
+                } catch (Exception e) { /* ignore */ }
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 主题必须在 super.onCreate 之前定：窗口底色与 Android 12+ 系统闪屏都取自它，
+        // 晚一步就会先闪一层浅色再变深色。
+        setTheme(isDarkStored() ? R.style.Theme_DayLeaf_Dark : R.style.Theme_DayLeaf);
         super.onCreate(savedInstanceState);
         // 手机（最小宽度 < 600dp）锁竖屏；平板放行横竖屏旋转
         if (getResources().getConfiguration().smallestScreenWidthDp < 600) {
@@ -78,8 +130,8 @@ public class MainActivity extends Activity {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
 
-        // 背景跟随主题色（values-night 自动切深色），避免加载期间露出白屏
-        webView.setBackgroundColor(getColor(R.color.dayleaf_bg));
+        // 背景跟随主题：深色用户不该在网页加载完之前看到一层浅色
+        webView.setBackgroundColor(getColor(isDarkStored() ? R.color.dayleaf_bg_dark : R.color.dayleaf_bg));
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 // 外链（mailto / http / https）交给系统；其余留在壳内

@@ -87,6 +87,28 @@ public class WebAppInterface {
         });
     }
 
+    /**
+     * JS 把主题偏好同步给原生存一份。
+     * 原生在 Activity 起来时（比网页加载更早）就要用到它，
+     * 否则深色用户会先看到一层浅色的窗口背景和系统闪屏。
+     */
+    @JavascriptInterface
+    public void setThemeMode(final String mode) {
+        try {
+            activity.getSharedPreferences("dayleaf", Context.MODE_PRIVATE)
+                    .edit().putString("theme", mode == null ? "light" : mode).apply();
+        } catch (Exception e) { /* ignore */ }
+
+        /* 运行中切换主题时，状态栏/导航栏也跟着走，不用等下次启动 */
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                if (activity instanceof MainActivity) {
+                    ((MainActivity) activity).applyStoredThemeToChrome();
+                }
+            }
+        });
+    }
+
     /** 导出备份/日历文件：交给原生「另存为」保存（WebView 里 <a download> 不生效）。 */
     @JavascriptInterface
     public void saveTextFile(final String filename, final String content) {

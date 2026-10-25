@@ -1,12 +1,12 @@
 {
   "channel": "android",
-  "versionCode": 5,
-  "versionName": "1.0.4",
+  "versionCode": 6,
+  "versionName": "1.0.5",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.4/DayLeaf-android-v1.0.4.apk",
-  "size": 457846,
-  "sha256": "7c66aa18fb5e5c6254293f901246a34ccf033004b3379d06fb3ac286a6aed8f4",
-  "notes": "背景图改为完整显示裁剪结果（不再被二次裁切），取景框默认按屏幕比例、裁完立即生效；修复长按向下拖动无法新建日程；切换表格/记事页不再重建整页，切换即时完成。",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.5/DayLeaf-android-v1.0.5.apk",
+  "size": 459345,
+  "sha256": "ba01ae59aa22af8a6807c250291cd5eed286e53eda9207751af7507d56a7a8f9",
+  "notes": "启动即深色：主题在首帧前就生效，窗口底色与系统闪屏跟随设置，不再先浅后深；一并包含背景裁剪、长按拖动新建、切页即时的修复。",
   "publishedAt": "2026-10-25"
 }
