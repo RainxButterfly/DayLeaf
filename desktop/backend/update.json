@@ -1,12 +1,12 @@
 {
   "channel": "windows",
-  "versionCode": 10,
-  "versionName": "1.0.9",
+  "versionCode": 11,
+  "versionName": "1.0.10",
   "minVersionCode": 1,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.9/DayLeaf-Setup-1.0.9.exe",
+  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.10/DayLeaf-Setup-1.0.10.exe",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
-  "size": 718559,
-  "sha256": "bce9913837bf9b54915e95b6eca0b522c294d03f2c45bc1a66bf1e282bd7551f",
-  "notes": "与安卓端同版本发布：新增「睡眠时段」折叠；修复点击日程被误判成拖动。",
+  "size": 720801,
+  "sha256": "15a94bdef173b350af78a8dee6b18143da1d3d7b98cad4c8062cdce6da005bfb",
+  "notes": "更新提示改为软件内原生弹窗：右下角「立即下载」在应用内直接下载并拉起安装程序，左下角「稍后下载」关闭弹窗；修复通知点击无反应；修复长按下拉无法新建日程。",
   "publishedAt": "2026-10-25"
 }

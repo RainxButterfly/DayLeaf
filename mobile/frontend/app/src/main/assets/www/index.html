@@ -2926,7 +2926,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.9',
+    version: '1.0.10',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -6471,7 +6471,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
   }
   function notifySupported() {
-    return typeof window.Notification !== 'undefined' || !!nativeBridge();
+    return typeof window.Notification !== 'undefined' || !!(nativeBridge() && nativeBridge().notify);
   }
 
   /**
@@ -6501,7 +6501,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
   /** 设置里那颗按钮的文案：把权限状态翻译成人话 */
   function notifyPermText() {
-    if (nativeBridge()) return '已授权（App 内原生通知）';
+    if (nativeBridge() && nativeBridge().notify) return '已授权（App 内原生通知）';
     if (!notifySupported()) return '此浏览器不支持通知';
     const p = Notification.permission;
     if (p === 'granted') return '已授权 ✓（点此复查）';
@@ -6509,15 +6509,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     return '点击授权';
   }
   function canNotify() {
-    if (nativeBridge()) return true;   // App 内由原生处理权限
+    if (nativeBridge() && nativeBridge().notify) return true;   // App 内由原生处理权限
     return notifySupported() && Notification.permission === 'granted';
   }
 
   /** 请求系统通知权限；cb(granted) */
   function askNotifyPermission(cb) {
     const _nb = nativeBridge();
-    if (_nb) {
-      try { if (_nb.ensureNotifyPermission) _nb.ensureNotifyPermission(); } catch (e) { /* ignore */ }
+    if (_nb && _nb.ensureNotifyPermission) {
+      try { _nb.ensureNotifyPermission(); } catch (e) { /* ignore */ }
       cb && cb(true);
       return;
     }
@@ -6584,7 +6584,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     const body = (Number(ev.rm) > 0 ? '还有 ' + ev.rm + ' 分钟开始' : '到点了') +
       ' · ' + ev.s + (ev.p ? ' · ' + ev.p : '');
     const _nb = nativeBridge();
-    if (_nb) {
+    if (_nb && _nb.notify) {
       try { _nb.notify(ev.t, body, 'dayleaf-' + ev.id); } catch (e) { /* ignore */ }
       return;
     }
@@ -9585,6 +9585,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const wrap = $('#gridWrap');
       const ARM_DELAY = 220;      // 按住多久进入拖拽
       const MOVE_TOL = 10;        // 超过这个位移就当成在动（手指抖动一般 3~8px，给足余量）
+      const DRAG_MIN = 6;         // 长按之后至少挪这么远才算「拖动」，否则仍按点击处理
       const DRAG_SLOT = 15;       // 拖拽吸附粒度（分钟）
 
       let cur = null;

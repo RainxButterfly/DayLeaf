@@ -15,12 +15,14 @@ namespace DayLeaf
         public static string ThemeFile { get { return Path.Combine(Root, "theme.txt"); } }
         public static string WindowFile { get { return Path.Combine(Root, "window.json"); } }
         public static string NotifiedFile { get { return Path.Combine(Root, "update-notified.txt"); } }
+        public static string UpdateDir { get { return Path.Combine(Root, "update"); } }
 
         public static void Ensure()
         {
             Directory.CreateDirectory(Root);
             Directory.CreateDirectory(WwwDir);
             Directory.CreateDirectory(WebViewData);
+            Directory.CreateDirectory(UpdateDir);
         }
 
         /* ---------- 主题偏好（与网页共用同一个值：light / dark / system） ---------- */

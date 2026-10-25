@@ -101,6 +101,7 @@ namespace DayLeaf
                 core.NavigationStarting += OnNavigationStarting;
                 core.ProcessFailed += OnProcessFailed;
                 core.NavigationCompleted += OnNavigationCompleted;
+                core.PermissionRequested += OnPermissionRequested;
 
                 await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildBridgeScript());
 
@@ -128,8 +129,10 @@ namespace DayLeaf
             sb.Append("setThemeMode:function(m){post({cmd:'theme',arg:String(m||'light')});},");
             sb.Append("saveTextFile:function(n,c){post({cmd:'save',name:String(n||'dayleaf.txt'),content:String(c==null?'':c)});},");
             sb.Append("getVersionName:function(){return '").Append(version).Append("';},");
-            // 桌面端没有这几个能力，留空实现保证网页调用不报错
-            sb.Append("notify:function(){},ensureNotifyPermission:function(){},vibrate:function(){},setHasModal:function(){}");
+            // 桌面端不提供 notify/ensureNotifyPermission（置 undefined），网页会回落到
+            // WebView2 自带的 Notification API；授权在 PermissionRequested 里统一放行。
+            // 这样「点击通知跳转到日程」走网页里已有的 onclick 逻辑。
+            sb.Append("notify:undefined,ensureNotifyPermission:undefined,vibrate:function(){},setHasModal:function(){}");
             sb.Append("};})();");
             return sb.ToString();
         }
@@ -238,13 +241,7 @@ namespace DayLeaf
                 return;
             }
 
-            string text = "发现新版本 v" + r.Latest.VersionName + "（当前 v" + r.Current + "）";
-            if (!string.IsNullOrEmpty(r.Latest.Notes)) text += "\n\n" + r.Latest.Notes;
-            if (r.Latest.Size > 0) text += "\n\n大小约 " + HumanSize(r.Latest.Size);
-
-            DialogResult ok = MessageBox.Show(this, text + "\n\n是否前往下载页面？", "发现新版本",
-                MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
-            if (ok == DialogResult.OK) OpenExternal(r.Latest.Url);
+            ShowUpdateDialog(r);
         }
 
         /// <summary>启动后静默检测：不提示「已是最新」，只有新版才问一次。</summary>
@@ -270,20 +267,18 @@ namespace DayLeaf
 
         private void ShowStartupUpdate(DesktopUpdate.Result r)
         {
-            string text = "新版本 v" + r.Latest.VersionName + " 已发布（当前 v" + r.Current + "）";
-            if (!string.IsNullOrEmpty(r.Latest.Notes)) text += "\n\n" + r.Latest.Notes;
-            text += "\n\n现在去下载吗？";
-
-            DialogResult ok = MessageBox.Show(this, text, "叶历 DayLeaf",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2);
-            if (ok == DialogResult.Yes) OpenExternal(r.Latest.Url);
+            ShowUpdateDialog(r);
         }
 
-        private static string HumanSize(long bytes)
+        /// <summary>软件内更新弹窗：立即下载在应用内完成，下载后拉起安装程序。</summary>
+        private void ShowUpdateDialog(DesktopUpdate.Result r)
         {
-            if (bytes < 1024) return bytes + " B";
-            if (bytes < 1024 * 1024) return Math.Max(1, (long)Math.Round(bytes / 1024.0)) + " KB";
-            return (bytes / 1048576.0).ToString("0.0") + " MB";
+            try
+            {
+                var dlg = new UpdateDialog(r.Latest, r.Current, _dark);
+                dlg.ShowDialog(this);
+            }
+            catch (Exception) { /* 弹不出来就不打扰用户 */ }
         }
 
         /* ------------------------------------------------------------------
@@ -314,6 +309,19 @@ namespace DayLeaf
                 MessageBox.Show(this, "界面进程已退出，请重新打开应用。", "叶历 DayLeaf",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
+
+        /// <summary>放行网页的 Notification 权限，让提醒能弹出系统通知（点击由网页内 onclick 处理跳转）。</summary>
+        private void OnPermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e)
+        {
+            try
+            {
+                if (e.PermissionKind == CoreWebView2PermissionKind.Notifications)
+                {
+                    e.State = CoreWebView2PermissionState.Allow;
+                }
+            }
+            catch (Exception) { /* 旧运行时没有通知权限枚举就忽略 */ }
         }
 
         /// <summary>
