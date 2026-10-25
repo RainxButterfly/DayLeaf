@@ -322,14 +322,14 @@ namespace DayLeaf
         /// </summary>
         private async void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
-            /* 启动更新检测：界面先正常显示，过几秒再在后台问一次。
+            /* 启动更新检测：界面先正常显示，1.5 秒后后台问一次。
                只有真的发现新版本才打扰用户，且同一版本只提醒一次。 */
             if (!_selfTest)
             {
                 if (e.IsSuccess && !_startupCheckDone)
                 {
                     _startupCheckDone = true;
-                    await System.Threading.Tasks.Task.Delay(4000);
+                    await System.Threading.Tasks.Task.Delay(1500);
                     StartupUpdateCheck();
                 }
                 return;

@@ -70,6 +70,30 @@ powershell -ExecutionPolicy Bypass -File build.ps1 -Version 1.0.0
 
 清单位置：安卓 [`mobile/backend/update.json`](mobile/backend/update.json)、Windows [`desktop/backend/update.json`](desktop/backend/update.json)。
 
+## 发版
+
+两端共用一个版本号，**一个 Release 挂两个附件**（因为界面是同一份，修复天然同时生效，没必要各走各的版本）。
+
+1. 改版本号：`mobile/frontend/app/build.gradle` 的 `versionCode` +1、`versionName`；`index.html` 里的 `version`
+2. 构建两端：
+
+   ```bash
+   cd mobile/frontend && ./gradlew assembleRelease
+   cd desktop/frontend && powershell -ExecutionPolicy Bypass -File build.ps1 -Version <版本>
+   ```
+
+3. 填两份清单的 `versionName` / `url` / `size` / `sha256`
+4. 提交，打 tag `v<版本>` 并推送
+5. 在 Releases 建同名 Release，上传 `DayLeaf-android-v<版本>.apk` 和 `DayLeaf-Setup-<版本>.exe`
+6. 刷一次 CDN 缓存：
+
+   ```bash
+   curl "https://purge.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/mobile/backend/update.json"
+   curl "https://purge.jsdelivr.net/gh/RainxButterfly/DayLeaf@latest/desktop/backend/update.json"
+   ```
+
+> tag 推送后不要再移动。CDN 把 tag 当不可变内容，同一个地址会长期返回旧文件，purge 也救不回来——要改内容就发新版本号。
+
 ## 目录结构
 
 ```
