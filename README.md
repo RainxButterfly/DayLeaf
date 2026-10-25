@@ -6,7 +6,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84.svg)](https://developer.android.com)
-[![Release](https://img.shields.io/badge/release-v1.0.0-4C6FFF.svg)](https://github.com/RainxButterfly/DayLeaf/releases)
+[![Release](https://img.shields.io/github/v/release/RainxButterfly/DayLeaf?color=4C6FFF)](https://github.com/RainxButterfly/DayLeaf/releases)
 
 </div>
 
