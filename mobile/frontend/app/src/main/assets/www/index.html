@@ -2984,7 +2984,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.11',
+    version: '1.0.12',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -6593,19 +6593,6 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   }
 
   /**
-   * 运行环境摘要：「安卓壳 · WebView 108」这样一行，出问题时让用户截图就能定位。
-   * 内核低于 87（不认识 inset 简写）时标出兼容布局已生效。
-   */
-  function envText() {
-    const ua = navigator.userAgent || '';
-    const m = ua.match(/Chrom(?:e|ium)\/(\d+)/);
-    const major = m ? Number(m[1]) : 0;
-    const shell = window.DayLeafNative ? '安卓壳' : (/Windows/i.test(ua) ? '电脑端' : '浏览器');
-    if (!major) return shell + ' · 内核未知';
-    return shell + ' · WebView ' + major + (major < 87 ? '（兼容布局已生效）' : '');
-  }
-
-  /**
    * 这条日程有没有开提醒。
    * 0 分钟是「到点提醒」而不是「关」，所以开关和分钟数得分开存：
    * 新数据看 rmOn；老数据（只有 rm>0 才叫开）也能正确还原。
@@ -7180,7 +7167,6 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="about"><b>' + APP.name + ' · ' + APP.cnName + '</b> v' + APP.version + (nat ? '' : '（UI 原型）') + '<br>' +
           '作者 ' + APP.authorCn + '（' + APP.author + '）<br>' +
           '维护邮箱 <a href="mailto:' + APP.email + '?subject=DayLeaf%20反馈">' + APP.email + '</a><br>' +
-          '运行环境 ' + envText() + '<br>' +
           APP.license + ' License · 图片与字体只存在本机（IndexedDB），不会上传；导出备份不含这些文件</div>' +
 
         '<div class="mb-foot"><button class="btn primary" data-close>完成</button></div>' +

@@ -24,6 +24,8 @@ namespace DayLeaf
         private bool _dark;
         private readonly bool _selfTest;
         private bool _selfTestDone;
+        private readonly bool _updatePreview;
+        private bool _updatePreviewDone;
         private bool _startupCheckDone;
 
         public MainForm()
@@ -31,6 +33,7 @@ namespace DayLeaf
             AppPaths.Ensure();
             _dark = AppPaths.IsDarkNow();
             _selfTest = Array.IndexOf(Environment.GetCommandLineArgs(), "--selftest") >= 0;
+            _updatePreview = Array.IndexOf(Environment.GetCommandLineArgs(), "--update-preview") >= 0;
 
             SuspendLayout();
             Text = "叶历 DayLeaf";
@@ -281,6 +284,72 @@ namespace DayLeaf
             catch (Exception) { /* 弹不出来就不打扰用户 */ }
         }
 
+        /// <summary>
+        /// --update-preview：生成深色/浅色/错误态三张弹窗截图，供打包后做视觉回归。
+        /// 只在测试参数下运行，正常启动不会走到这里。
+        /// </summary>
+        private void ShowUpdatePreview()
+        {
+            try
+            {
+                var info = new DesktopUpdate.Info
+                {
+                    VersionName = "1.0.12",
+                    VersionCode = 13,
+                    Url = "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
+                    Size = 723786,
+                    Notes = "· 修复部分机型（vivo NEX S）开场层被压成顶栏、点「设置」没有反应的问题。\r\n" +
+                            "· 背景图片支持自由取景：拖动、双指缩放，可铺满裁切或完整显示。\r\n" +
+                            "· 记事页「完成」按钮移到脚栏，快速选色改为圆形色块。\r\n" +
+                            "· 更新下载改为多源自动切换，并校验安装包大小与 SHA-256。\r\n" +
+                            "· 优化更新弹窗的排版、按钮与进度显示。\r\n" +
+                            "· 其他稳定性与细节优化。"
+                };
+                info.Urls.Add("https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe");
+                info.Urls.Add("https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe");
+
+                var dark = new UpdateDialog(info, "1.0.10", true);
+                dark.CaptureAndClose(Path.Combine(AppPaths.Root, "update-preview-dark.png"), 1000);
+                dark.ShowDialog(this);
+
+                var light = new UpdateDialog(info, "1.0.10", false);
+                light.CaptureAndClose(Path.Combine(AppPaths.Root, "update-preview-light.png"), 1000);
+                light.ShowDialog(this);
+
+                var error = new UpdateDialog(info, "1.0.10", true);
+                error.ShowPreviewError();
+                error.CaptureAndClose(Path.Combine(AppPaths.Root, "update-preview-error.png"), 1000);
+                error.ShowDialog(this);
+
+                var longInfo = new DesktopUpdate.Info
+                {
+                    VersionName = info.VersionName,
+                    VersionCode = info.VersionCode,
+                    Url = info.Url,
+                    Size = info.Size,
+                    Sha256 = info.Sha256,
+                    Notes = info.Notes + "\r\n· 这是一条用于检查长文案滚动的说明，正常情况下会自动换行。" +
+                            "\r\n· 下载过程中会显示进度、已下载大小与总大小。" +
+                            "\r\n· 全部下载源失败时会显示友好的错误提示，并把技术细节写入本地日志。"
+                };
+                longInfo.Urls.AddRange(info.Urls);
+                var downloading = new UpdateDialog(longInfo, "1.0.10", true);
+                downloading.ShowPreviewProgress(42, "正在下载 42%　·　297 KB / 707 KB");
+                downloading.CaptureAndClose(Path.Combine(AppPaths.Root, "update-preview-download.png"), 1000);
+                downloading.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(Path.Combine(AppPaths.Root, "update-preview.log"),
+                        DateTime.Now.ToString("s") + " " + ex + "\r\n", new UTF8Encoding(false));
+                }
+                catch { }
+            }
+            Close();
+        }
+
         /* ------------------------------------------------------------------
          * 导航与外链
          * ---------------------------------------------------------------- */
@@ -334,6 +403,12 @@ namespace DayLeaf
                只有真的发现新版本才打扰用户，且同一版本只提醒一次。 */
             if (!_selfTest)
             {
+                if (_updatePreview && !_updatePreviewDone)
+                {
+                    _updatePreviewDone = true;
+                    ShowUpdatePreview();
+                    return;
+                }
                 if (e.IsSuccess && !_startupCheckDone)
                 {
                     _startupCheckDone = true;

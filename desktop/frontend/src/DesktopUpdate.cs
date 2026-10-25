@@ -25,9 +25,13 @@ namespace DayLeaf
         internal sealed class Info
         {
             public string VersionName = "";
+            public int VersionCode;
             public string Url = "";
+            public List<string> Urls = new List<string>();
             public string Notes = "";
             public long Size;
+            public string Sha256 = "";
+            public int MinVersionCode;
         }
 
         internal sealed class Result
@@ -117,7 +121,9 @@ namespace DayLeaf
                     wc.Headers[HttpRequestHeader.UserAgent] = "DayLeaf-Desktop/" + CurrentVersion();
                     wc.Headers[HttpRequestHeader.CacheControl] = "no-cache";
                     wc.Encoding = System.Text.Encoding.UTF8;
-                    string json = wc.DownloadString(url);
+                    /* 时间戳只用于绕开分支级缓存；@latest 发版后本来就是新缓存键。 */
+                    string busted = url + (url.IndexOf('?') >= 0 ? "&" : "?") + "_=" + DateTime.UtcNow.Ticks;
+                    string json = wc.DownloadString(busted);
                     if (string.IsNullOrEmpty(json)) return null;
 
                     var ser = new JavaScriptSerializer();
@@ -130,10 +136,36 @@ namespace DayLeaf
                         Url = dict.ContainsKey("url") ? Convert.ToString(dict["url"]) : "",
                         Notes = dict.ContainsKey("notes") ? Convert.ToString(dict["notes"]) : ""
                     };
+                    if (dict.ContainsKey("versionCode"))
+                    {
+                        int code;
+                        if (int.TryParse(Convert.ToString(dict["versionCode"]), out code)) info.VersionCode = code;
+                    }
+                    if (dict.ContainsKey("minVersionCode"))
+                    {
+                        int min;
+                        if (int.TryParse(Convert.ToString(dict["minVersionCode"]), out min)) info.MinVersionCode = min;
+                    }
+                    if (dict.ContainsKey("sha256"))
+                    {
+                        info.Sha256 = (Convert.ToString(dict["sha256"]) ?? "").Trim();
+                    }
                     if (dict.ContainsKey("size"))
                     {
                         long sz;
                         if (long.TryParse(Convert.ToString(dict["size"]), out sz)) info.Size = sz;
+                    }
+                    if (dict.ContainsKey("urls"))
+                    {
+                        var arr = dict["urls"] as object[];
+                        if (arr != null)
+                        {
+                            foreach (object o in arr)
+                            {
+                                string u = Convert.ToString(o);
+                                if (!string.IsNullOrEmpty(u)) info.Urls.Add(u);
+                            }
+                        }
                     }
                     return info;
                 }

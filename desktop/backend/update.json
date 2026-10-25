@@ -1,13 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 12,
-  "versionName": "1.0.11",
+  "versionCode": 13,
+  "versionName": "1.0.12",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://github.com/RainxButterfly/DayLeaf/releases/download/v1.0.11/DayLeaf-Setup-1.0.11.exe",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
+  "urls": [
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.exe",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.12/desktop/backend/DayLeaf-Setup.exe"
+  ],
+  "size": 730852,
+  "sha256": "763728c67de34dabde01e781afe93afe79b5fa33b26cf1fee831aab54febdd73",
+  "notes": "更新弹窗重做为无边框圆角卡片，下载进度、错误提示与按钮全部重绘；下载源从 GitHub 改为国内可达的 jsDelivr 镜像，支持自动切换备用源并校验文件大小与 SHA-256，修复 GitHub 无法解析导致的下载失败。同时包含旧机型兼容、背景取景、记事页 UI 与跨版本直达更新。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
-  "size": 723786,
-  "sha256": "a981b5eae5bea4da7a658ff47855f6c29003c34a1386f590337805fda4a647f4",
-  "notes": "修复部分机型（vivo，WebView 84–86）开场层被压成顶栏、点「设置」无反应；背景图片改为自由取景（拖动/双指缩放，铺满或完整显示）；记事页「完成」按钮移到脚栏、选色改为圆形色块；更新可直接跨版本升到最新。",
-  "publishedAt": "2026-10-25"
+  "publishedAt": "2026-10-26"
 }

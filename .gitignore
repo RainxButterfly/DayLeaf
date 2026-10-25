@@ -35,3 +35,7 @@ desktop/frontend/obj/
 desktop/frontend/res/www/
 desktop/frontend/dist/
 *.zip
+
+# ---- 更新镜像 ----
+# GitHub Release 在部分地区无法解析，安装包随仓库托管，客户端从 jsDelivr 下载
+!mobile/backend/DayLeaf-android.apk
