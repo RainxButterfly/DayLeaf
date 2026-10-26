@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 33,
-  "versionName": "1.1.14",
+  "versionCode": 34,
+  "versionName": "1.1.15",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.14/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.15/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.14/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.14/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.14/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.15/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.15/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.15/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 1021511,
-  "sha256": "1426ed5daa9eb963ea92a97d3301b92f2afaf845eb1c1e9b41756f9c459b08a0",
-  "notes": "新增回收站、日程分类与筛选统计、子任务清单、同步中心与冲突副本；快捷录入支持自然语言重复；周模板、复制上周与整周移动、ICS 日历订阅与全部导出；电脑端新增 Ctrl+Alt+N 全局快速录入、图片拖入/打开方式分享，小窗与托盘可完成或稍后提醒。修复启动开场语录字体闪动与停留过短的问题。",
+  "size": 1022207,
+  "sha256": "bf3c53d958decb06907d5c8e2c456777d7eaa02ca7775dd6df06c93bcba481c3",
+  "notes": "「未来 7 天 / 数据概览 / 纪念日」合并默认收起；表格页窄屏日期短格式与「今天」按钮不换行；快速添加面板内容滚动、底部按钮固定；启动字体预加载与开场停留修复。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-27"
 }

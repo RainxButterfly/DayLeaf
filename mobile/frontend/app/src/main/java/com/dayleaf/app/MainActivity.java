@@ -539,7 +539,7 @@ public class MainActivity extends Activity {
             runJs("window.__dlVoiceResult && window.__dlVoiceResult(" +
                     (said.length() > 0 ? "true" : "false") + "," +
                     JSONObject.quote(said) + "," +
-                    JSONObject.quote(said.length() > 0 ? "" : "没有识别到语音") + ");");
+                    JSONObject.quote(said.length() > 0 ? "" : "没有识别到语音，再说一次或改用键盘输入") + ");");
             return;
         }
         if (requestCode == REQ_RINGTONE) {
@@ -571,16 +571,20 @@ public class MainActivity extends Activity {
 
     /** 语音输入：调用系统识别器（不需要我们自己录权限） */
     public void startVoiceInput() {
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
+        i.putExtra(RecognizerIntent.EXTRA_PROMPT, "说一句日程，比如「明天下午三点开会」");
+        i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
         try {
-            Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
-            i.putExtra(RecognizerIntent.EXTRA_PROMPT, "说一句日程，比如「明天下午三点开会」");
-            i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+            if (i.resolveActivity(getPackageManager()) == null) {
+                /* 不再额外弹原生 Toast：页面内的提示已经够清楚，避免一次点击出现两条错误 */
+                runJs("window.__dlVoiceResult && window.__dlVoiceResult(false,'','这台手机没有系统语音识别服务，可以改用键盘输入，或在系统设置里开启语音服务');");
+                return;
+            }
             startActivityForResult(i, REQ_VOICE);
         } catch (Exception e) {
-            Toast.makeText(this, "这台手机没有可用的语音识别服务", Toast.LENGTH_LONG).show();
-            runJs("window.__dlVoiceResult && window.__dlVoiceResult(false,'','没有可用的语音识别服务');");
+            runJs("window.__dlVoiceResult && window.__dlVoiceResult(false,'','语音输入打不开，可以改用键盘输入');");
         }
     }
 

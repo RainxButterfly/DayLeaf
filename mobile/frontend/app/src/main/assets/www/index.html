@@ -49,7 +49,7 @@
     其余（重复、状态、重要项目、全天、地点、备注、图片、粘贴识别）收进「更多选项」折叠。
     主操作「保存」在移动端常驻底部（sticky + margin-top:auto，内容不足一屏也贴底）。
   · 导航：FAB 在三个页面都显示，加日程不必先切回主页；主页「数据概览 / 纪念日」
-    在手机上默认折叠（#homeFold），电脑端自动展开。
+    「未来 7 天 / 数据概览 / 纪念日」默认折叠（#homeFold）。
   · 表单主区 = 标题 / 日期 / 开始–结束 / 提醒 / 地点 / 备注；其余（全天 · 重复 · 状态 ·
     重要项目 · 图片 · 粘贴识别）收进「更多选项」。
   · 表格页不放悬浮加号：它挡格子，拖日程时还会被误判成无效区。新建走「按住空白
@@ -580,13 +580,13 @@ html.dark .t-imp{color:#F5C56B}
 /* ==========================================================================
    4. 表格页
    ========================================================================== */
-.gv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px 10px}
-.gv-title{font-size:15px;font-weight:750;letter-spacing:-.2px}
-.gv-nav{display:flex;align-items:center;gap:6px}
+.gv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 14px 10px}
+.gv-title{flex:1;min-width:0;font-size:15px;font-weight:750;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gv-nav{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .gv-nav button{
-  height:32px;min-width:32px;padding:0 10px;border-radius:10px;
+  flex:0 0 auto;height:32px;min-width:32px;padding:0 10px;border-radius:10px;
   background:var(--card);border:1px solid var(--line);color:var(--ink2);
-  font-size:12.5px;display:grid;place-items:center;transition:.16s;
+  font-size:12.5px;white-space:nowrap;display:grid;place-items:center;transition:.16s;
 }
 .gv-nav button:hover{background:var(--surface-2)}
 .gv-nav button:active{transform:scale(.95)}
@@ -1041,7 +1041,7 @@ html.gh-none .cal-wd{background:transparent!important}
   font-size:13px;font-weight:650;color:var(--ink2);
   cursor:pointer;list-style:none;user-select:none;
 }
-/* 主页底部的「数据概览 / 纪念日」折叠：手机上默认收起，电脑端自动展开 */
+/* 主页底部的「未来 7 天 / 数据概览 / 纪念日」折叠：默认收起 */
 .home-fold{
   margin-top:22px;border-radius:16px;overflow:hidden;
   background:rgba(var(--card-rgb),var(--card-a,.78));border:1px solid var(--line);
@@ -3009,7 +3009,16 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 .grid-mini button:active{transform:scale(.95)}
 .grid-mini button svg{width:14px;height:14px;display:block;margin:auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .grid-mini span{font-size:11px;color:var(--ink2);padding:0 3px;font-variant-numeric:tabular-nums;white-space:nowrap}
-@media (max-width:959px){ .grid-mini{top:6px;right:8px} }
+@media (max-width:959px){
+  .grid-mini{top:6px;right:8px}
+  /* 表格顶栏：窄屏下日期用短格式，按钮不再被挤成两行 */
+  .gv-head{padding:0 10px 8px;gap:6px}
+  .gv-title{font-size:13.5px;letter-spacing:0}
+  .gv-nav{gap:4px}
+  .gv-nav button{height:30px;min-width:30px;padding:0 7px;border-radius:9px;font-size:12px}
+  .gv-nav button#wkToday{padding:0 9px}
+  .gv-nav svg{width:15px;height:15px}
+}
 
 /* 设置首页 / 分类卡片 / 子页面 */
 .mb-panel.settings-panel{overflow-y:auto}
@@ -3366,12 +3375,21 @@ html.dark .app-tabs{background:var(--bg)}
 /* ==========================================================================
    9. 1.1.0 新组件：快速录入 / 月视图 / 导入 / 复盘 / 锁屏 / 附件
    ========================================================================== */
-.dl-sheet-sm{max-height:min(40vh,320px)}
+.dl-sheet-sm{max-height:min(72vh,540px)}
 .dl-sheet{max-height:min(78vh,720px)}
-.dl-quick-preview{padding:12px 14px;font-size:12.5px;color:var(--ink2);line-height:1.8;min-height:64px}
+.dl-sheet-sm>.search-bar{flex:0 0 auto;padding-right:10px}
+.dl-quick-preview{
+  flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;padding:12px 14px;font-size:12.5px;color:var(--ink2);line-height:1.8;min-height:64px;
+}
 .dl-quick-preview b{color:var(--ink)}
 .dl-quick-preview .k{color:var(--muted);font-size:11px;margin-right:6px}
-.dl-quick-foot{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);justify-content:flex-end}
+.dl-quick-foot{display:flex;flex:0 0 auto;gap:8px;padding:10px 14px;border-top:1px solid var(--line);justify-content:flex-end;background:var(--card)}
+@media (max-width:959px){
+  /* 键盘弹起时 search-root 高度会跟着可视区缩，面板用百分比高度并让预览区滚动 */
+  .search-root .dl-sheet-sm{margin-top:10px;max-height:calc(100% - 20px);border-radius:16px}
+  .dl-quick-foot{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}
 .dl-quick-foot .btn{height:34px}
 .dl-quick-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .dl-quick-chips button{font-size:11px;padding:4px 9px;border-radius:8px;border:1px solid var(--line2);color:var(--ink2);background:var(--surface-soft)}
@@ -3671,15 +3689,6 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         </div>
       </div>
 
-      <!-- 未来 7 天 -->
-      <div class="week-block next7" id="next7Block" style="display:none">
-        <div class="sec-head">
-          <h2>未来 7 天</h2>
-          <span class="sec-stat" id="next7Stat"></span>
-        </div>
-        <div id="next7Body"></div>
-      </div>
-
       <!-- 本周概览 -->
       <div class="week-block">
         <div class="sec-head">
@@ -3689,10 +3698,19 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         <div class="wk-strip" id="weekStrip"></div>
       </div>
 
-      <!-- 手机上把「数据概览 / 纪念日」收进折叠，别一进主页就一堆数字 -->
+      <!-- 未来 7 天 / 数据概览 / 纪念日统一收起，主页只留今天的重点 -->
       <details class="home-fold" id="homeFold">
-        <summary><span>数据概览 · 纪念日</span><i>点开看统计</i></summary>
+        <summary><span>未来 7 天 · 数据概览 · 纪念日</span><i>点开看安排与统计</i></summary>
         <div class="fold-inner">
+
+      <!-- 未来 7 天 -->
+      <div class="week-block next7" id="next7Block" style="display:none">
+        <div class="sec-head">
+          <h2>未来 7 天</h2>
+          <span class="sec-stat" id="next7Stat"></span>
+        </div>
+        <div id="next7Body"></div>
+      </div>
 
       <!-- 数据概览：完成率 + 时间分配（点条目看明细） -->
       <div class="week-block" id="statBlock">
@@ -3995,7 +4013,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.14',
+    version: '1.1.15',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -5667,9 +5685,11 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 
     /* ---- 周区间标题 ---- */
     const rangeText = weekRangeText();
+    const fullRange = weekRangeFullText();
     $('#gridRange').textContent = rangeText;
+    $('#gridRange').title = fullRange;
     const gmRange = document.getElementById('gmRange');
-    if (gmRange) gmRange.textContent = rangeText;
+    if (gmRange) { gmRange.textContent = rangeText; gmRange.title = fullRange; }
 
     /* ---- 表头：日期 / 星期 ---- */
     let head = '<div class="gh-gutter"></div>';
@@ -5791,12 +5811,34 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     });
   }
 
-  /** 当前周的区间文案，如「10月19日 – 10月25日」 */
+  /** 当前周的区间文案；手机上用短格式，避免和右侧按钮抢宽度 */
   function weekRangeText() {
     const ws = weekStart;
     const we = addDays(weekStart, 6);
+    if (isMobileView()) {
+      return (ws.getMonth() + 1) + '/' + ws.getDate() + ' – ' +
+        (we.getMonth() + 1) + '/' + we.getDate();
+    }
     return (ws.getMonth() + 1) + '月' + ws.getDate() + '日 – ' +
       (we.getMonth() + 1) + '月' + we.getDate() + '日';
+  }
+  function weekRangeFullText() {
+    const ws = weekStart;
+    const we = addDays(weekStart, 6);
+    return (ws.getFullYear() !== new Date().getFullYear() ? ws.getFullYear() + '年' : '') +
+      (ws.getMonth() + 1) + '月' + ws.getDate() + '日 – ' +
+      (we.getFullYear() !== new Date().getFullYear() ? we.getFullYear() + '年' : '') +
+      (we.getMonth() + 1) + '月' + we.getDate() + '日 · ' +
+      '第 ' + weekNumber(ws) + ' 周';
+  }
+  function weekNumber(d) {
+    const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const day = (target.getDay() + 6) % 7;
+    target.setDate(target.getDate() - day + 3);
+    const first = new Date(target.getFullYear(), 0, 4);
+    const fday = (first.getDay() + 6) % 7;
+    first.setDate(first.getDate() - fday + 3);
+    return 1 + Math.round((target - first) / 604800000);
   }
 
   /** 更新「当前时间」红线位置 */
@@ -14679,9 +14721,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     syncDraftBar();
     /* 开启了自动清理的话，每天首次打开时清一次 */
     autoCleanOnBoot();
-    /* 电脑上空间够，主页的统计区默认摊开；手机上一进主页先收起来 */
-    const homeFold = $('#homeFold');
-    if (homeFold && window.innerWidth >= 960) homeFold.open = true;
+    /* 未来 7 天、数据概览与纪念日统一收起；需要时点开，避免主页一进来就是一片数字 */
     /* 提醒轮询（内部会看总开关，关着就不扫） */
     startReminders();
     /* 1.1.0 新功能：快捷录入、搜索扩展、快照、云端同步、锁屏等 */
@@ -16661,7 +16701,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   window.__dlVoiceResult = function (ok, text, err) {
     const mic = $('#quickVoice');
     if (mic) mic.classList.remove('rec');
-    if (!ok) { toast(err ? ('语音识别失败：' + err) : '没有听清，再试一次'); return; }
+    if (!ok) { toast(err || '没有听清，再说一次或改用键盘输入'); return; }
     const val = String(text || '').trim();
     if (!val) { toast('没有识别到内容'); return; }
     const inp = $('#quickInput');
@@ -17195,7 +17235,16 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.14', date: '2026-10-27', latest: true,
+      v: '1.1.15', date: '2026-10-27', latest: true,
+      fix: [
+        '「未来 7 天」「数据概览」「纪念日」合并到同一个折叠区，默认收起，主页只保留今天的重点。',
+        '表格页窄屏日期改为 10/26 – 11/1 短格式，「今天」等按钮不再被挤成竖排或换行。',
+        '快速添加面板改为内容区独立滚动、底部按钮固定；键盘弹起时模板按钮不会再压住「完整表单 / 创建日程」。',
+        '语音输入失败时只保留一条提示，不再同时弹系统 Toast 和页面提示；没有系统语音服务时会直接建议改用键盘输入。'
+      ]
+    },
+    {
+      v: '1.1.14', date: '2026-10-27', latest: false,
       fix: [
         '修复手机启动时开场语录先闪系统字体、字体加载后跳一下的问题：先等自定义字体就绪再显示第一句。',
         '修复长句开场语录在最后几个字还没浮完时就收场的问题，按实际动画时长延长停留。'
