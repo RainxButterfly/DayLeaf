@@ -58,6 +58,7 @@ public class NextWidgetProvider extends AppWidgetProvider {
                 JSONObject first = items.optJSONObject(0);
                 if (first != null) {
                     JSONObject out = new JSONObject();
+                    out.put("id", trim(first.optString("id", "")));
                     out.put("title", trim(first.optString("title", "")));
                     out.put("time", trim(first.optString("time", "")));
                     out.put("body", trim(first.optString("body", "")));
@@ -75,17 +76,33 @@ public class NextWidgetProvider extends AppWidgetProvider {
         } catch (Exception e) { /* ignore */ }
     }
 
+    /** 小组件上直接点「完成」后先把这一条从缓存里拿掉；应用下次推送会补全列表 */
+    public static void removeItem(Context context, String id) {
+        if (context == null || id == null || id.length() == 0) return;
+        try {
+            SharedPreferences sp = context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE);
+            String raw = sp.getString(KEY_WIDGET_NEXT, "");
+            if (raw == null || raw.length() == 0) return;
+            JSONObject o = new JSONObject(raw);
+            if (id.equals(trim(o.optString("id", "")))) {
+                sp.edit().putString(KEY_WIDGET_NEXT, "").apply();
+            }
+        } catch (Exception e) { /* ignore */ }
+    }
+
     private static RemoteViews build(Context context) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_next);
 
         String title = "";
         String time = "";
         String body = "";
+        String itemId = "";
         try {
             SharedPreferences sp = context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE);
             String raw = sp.getString(KEY_WIDGET_NEXT, "");
             if (raw != null && raw.length() > 0) {
                 JSONObject o = new JSONObject(raw);
+                itemId = trim(o.optString("id", ""));
                 title = trim(o.optString("title", ""));
                 time = trim(o.optString("time", ""));
                 body = trim(o.optString("body", ""));
@@ -103,7 +120,31 @@ public class NextWidgetProvider extends AppWidgetProvider {
         PendingIntent pi = PendingIntent.getActivity(context, REQ_OPEN, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         rv.setOnClickPendingIntent(R.id.widget_next_root, pi);
+
+        boolean hasItem = itemId.length() > 0;
+        try {
+            rv.setViewVisibility(R.id.widget_next_done, hasItem ? android.view.View.VISIBLE : android.view.View.GONE);
+            rv.setViewVisibility(R.id.widget_next_snooze, hasItem ? android.view.View.VISIBLE : android.view.View.GONE);
+        } catch (Exception e) { /* 旧内核忽略 */ }
+        if (hasItem) {
+            rv.setOnClickPendingIntent(R.id.widget_next_done,
+                    action(context, ReminderReceiver.ACTION_WIDGET_DONE, itemId, title, body, 21));
+            rv.setOnClickPendingIntent(R.id.widget_next_snooze,
+                    action(context, ReminderReceiver.ACTION_WIDGET_SNOOZE, itemId, title, body, 22));
+        }
         return rv;
+    }
+
+    private static PendingIntent action(Context context, String action, String id,
+                                        String title, String body, int slot) {
+        Intent i = new Intent(context, ReminderReceiver.class);
+        i.setAction(action);
+        i.putExtra("id", id);
+        i.putExtra("title", title);
+        i.putExtra("body", body);
+        i.putExtra("kind", "rm");
+        return PendingIntent.getBroadcast(context, REQ_OPEN + slot, i,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static String trim(String s) {

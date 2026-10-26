@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 31,
-  "versionName": "1.1.12",
+  "versionCode": 32,
+  "versionName": "1.1.13",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.12/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.13/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.12/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.12/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.12/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.13/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.13/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.13/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 1000757,
-  "sha256": "1ab8560826db59a104587b7ad156280c4e33def94a0b4312f78fd204954f8edd",
-  "notes": "局域网地址显示网卡名称/类型（Wi-Fi/以太网/虚拟），192 与 10 都支持；手机显示本机 Wi-Fi IP 并提示是否与电脑同网段；新增测试连接与电脑端请求日志；安装器会结束占端口的旧进程，修复更新后仍跑旧版。",
+  "size": 1021805,
+  "sha256": "a71eb769c6022fa884c304e61ab4d9cb09089643b922abba66f716b7d7bc51be",
+  "notes": "新增回收站、日程分类与筛选统计、子任务清单、同步中心与冲突副本；快捷录入支持自然语言重复；周模板、复制上周与整周移动、ICS 日历订阅与全部导出；电脑端新增 Ctrl+Alt+N 全局快速录入、图片拖入/打开方式分享，小窗与托盘可完成或稍后提醒。修复启动开场语录字体闪动与停留过短的问题。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-27"
 }

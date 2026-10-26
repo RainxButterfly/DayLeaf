@@ -11,9 +11,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.util.Base64;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -43,6 +45,15 @@ public class MainActivity extends Activity {
     private static final int REQ_SAVE_FILE = 2002;
     private byte[] pendingSaveBytes = null;          // 待写入的二进制（PNG / 备份包）
     private static final int REQ_SAVE_BINARY = 2003;
+    private static final int REQ_VOICE = 2004;
+    private static final int REQ_RINGTONE = 2005;
+
+    /** 后台服务/小组件需要把「完成」动作交给前台页面时用 */
+    public static MainActivity CURRENT = null;
+    private boolean pendingAlarm = false;
+    private String pendingAlarmId = "";
+    private String pendingAlarmTitle = "";
+    private String pendingAlarmBody = "";
 
     private final Object shareLock = new Object();
     private String pendingSharedText = null;   // 系统分享进来、还没被 JS 取走的内容
@@ -118,12 +129,20 @@ public class MainActivity extends Activity {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
         setContentView(R.layout.activity_main);
+        CURRENT = this;
 
         // 从系统「分享到叶历」进来：先收下内容，等网页加载完再取
         handleShareIntent(getIntent());
         try {
             Intent it = getIntent();
             pendingQuickAdd = it != null && it.getBooleanExtra("quick_add", false);
+            if (it != null && it.getBooleanExtra("alarm", false)) {
+                pendingAlarm = true;
+                pendingAlarmId = it.getStringExtra("alarm_id") == null ? "" : it.getStringExtra("alarm_id");
+                pendingAlarmTitle = it.getStringExtra("alarm_title") == null ? "日程提醒" : it.getStringExtra("alarm_title");
+                pendingAlarmBody = it.getStringExtra("alarm_body") == null ? "" : it.getStringExtra("alarm_body");
+                showOverLockScreen();
+            }
         } catch (Exception e) { pendingQuickAdd = false; }
 
         webView = findViewById(R.id.webview);
@@ -184,6 +203,17 @@ public class MainActivity extends Activity {
                         }
                     }, 350);
                 }
+                if (pendingAlarm) {
+                    pendingAlarm = false;
+                    view.postDelayed(new Runnable() {
+                        @Override public void run() {
+                            presentNativeAlarm(pendingAlarmId, pendingAlarmTitle, pendingAlarmBody);
+                        }
+                    }, 420);
+                }
+                view.postDelayed(new Runnable() {
+                    @Override public void run() { flushNativeActions(); }
+                }, 700);
             }
         });
         // 重写 onShowFileChooser：网页里的「选择图片 / 导入 JSON / 上传字体」
@@ -253,6 +283,18 @@ public class MainActivity extends Activity {
         if (intent == null) return;
         setIntent(intent);
         try {
+            if (intent.getBooleanExtra("alarm", false)) {
+                showOverLockScreen();
+                presentNativeAlarm(intent.getStringExtra("alarm_id") == null ? "" : intent.getStringExtra("alarm_id"),
+                        intent.getStringExtra("alarm_title") == null ? "日程提醒" : intent.getStringExtra("alarm_title"),
+                        intent.getStringExtra("alarm_body") == null ? "" : intent.getStringExtra("alarm_body"));
+                return;
+            }
+            String doneId = intent.getStringExtra("done_id");
+            if (doneId != null && doneId.length() > 0) {
+                runJs("window.__dlNativeDone && window.__dlNativeDone(" + JSONObject.quote(doneId) + ");");
+                return;
+            }
             if (intent.getBooleanExtra("quick_add", false)) {
                 if (webView != null) {
                     webView.postDelayed(new Runnable() {
@@ -487,11 +529,147 @@ public class MainActivity extends Activity {
             pendingSaveBytes = null;
             return;
         }
+        if (requestCode == REQ_VOICE) {
+            String text = "";
+            if (resultCode == RESULT_OK && data != null) {
+                java.util.ArrayList<String> list = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (list != null && !list.isEmpty()) text = list.get(0);
+            }
+            final String said = text == null ? "" : text.trim();
+            runJs("window.__dlVoiceResult && window.__dlVoiceResult(" +
+                    (said.length() > 0 ? "true" : "false") + "," +
+                    JSONObject.quote(said) + "," +
+                    JSONObject.quote(said.length() > 0 ? "" : "没有识别到语音") + ");");
+            return;
+        }
+        if (requestCode == REQ_RINGTONE) {
+            boolean ok = resultCode == RESULT_OK && data != null;
+            Uri uri = null;
+            if (ok) {
+                try {
+                    uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+                } catch (Exception e) { uri = null; }
+            }
+            String name = "系统默认";
+            try {
+                if (uri != null) {
+                    android.media.Ringtone r = RingtoneManager.getRingtone(this, uri);
+                    if (r != null) name = String.valueOf(r.getTitle(this));
+                    getSharedPreferences(ReminderScheduler.PREFS, MODE_PRIVATE)
+                            .edit().putString("alarm_ringtone", uri.toString())
+                            .putString("alarm_ringtone_name", name).apply();
+                } else {
+                    getSharedPreferences(ReminderScheduler.PREFS, MODE_PRIVATE)
+                            .edit().remove("alarm_ringtone").putString("alarm_ringtone_name", "系统默认").apply();
+                }
+            } catch (Exception e) { /* ignore */ }
+            runJs("window.__dlRingtonePicked && window.__dlRingtonePicked(true," + JSONObject.quote(name) + ");");
+            return;
+        }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /** 语音输入：调用系统识别器（不需要我们自己录权限） */
+    public void startVoiceInput() {
+        try {
+            Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
+            i.putExtra(RecognizerIntent.EXTRA_PROMPT, "说一句日程，比如「明天下午三点开会」");
+            i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+            startActivityForResult(i, REQ_VOICE);
+        } catch (Exception e) {
+            Toast.makeText(this, "这台手机没有可用的语音识别服务", Toast.LENGTH_LONG).show();
+            runJs("window.__dlVoiceResult && window.__dlVoiceResult(false,'','没有可用的语音识别服务');");
+        }
+    }
+
+    /** 选择闹钟铃声：系统铃声选择器 */
+    public void pickAlarmRingtone() {
+        try {
+            Intent i = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+            i.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM);
+            i.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "选择叶历闹钟铃声");
+            i.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+            i.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+            String cur = getSharedPreferences(ReminderScheduler.PREFS, MODE_PRIVATE).getString("alarm_ringtone", "");
+            if (cur != null && cur.length() > 0) {
+                try { i.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(cur)); } catch (Exception e) { /* ignore */ }
+            }
+            startActivityForResult(i, REQ_RINGTONE);
+        } catch (Exception e) {
+            Toast.makeText(this, "无法打开铃声选择器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 全屏闹钟页在主卡/锁屏之上 */
+    private void showOverLockScreen() {
+        try {
+            if (Build.VERSION.SDK_INT >= 27) {
+                setShowWhenLocked(true);
+                setTurnScreenOn(true);
+            } else {
+                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                        | android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            }
+        } catch (Exception e) { /* ignore */ }
+    }
+
+    private void presentNativeAlarm(String id, String title, String body) {
+        showOverLockScreen();
+        runJs("window.__dlNativeAlarm && window.__dlNativeAlarm(" +
+                JSONObject.quote(id == null ? "" : id) + "," +
+                JSONObject.quote(title == null ? "日程提醒" : title) + "," +
+                JSONObject.quote(body == null ? "" : body) + ");");
+    }
+
+    /**
+     * 后台通知/小组件点了「完成」时，如果应用没开，先把 id 存在 prefs；
+     * 下次打开页面时再补一次，避免动作悄悄丢掉。
+     */
+    public static void notifyNativeDone(android.content.Context ctx, String id) {
+        if (ctx == null || id == null || id.length() == 0) return;
+        try {
+            SharedPreferences sp = ctx.getSharedPreferences(ReminderScheduler.PREFS, android.content.Context.MODE_PRIVATE);
+            String old = sp.getString("pending_done_ids", "");
+            if (old == null) old = "";
+            if (("," + old + ",").indexOf("," + id + ",") < 0) {
+                String val = old.length() == 0 ? id : (old + "," + id);
+                if (val.length() > 4000) val = val.substring(val.length() - 4000);
+                sp.edit().putString("pending_done_ids", val).apply();
+            }
+        } catch (Exception e) { /* ignore */ }
+        if (CURRENT != null) {
+            final String doneId = id;
+            CURRENT.runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    CURRENT.runJs("window.__dlNativeDone && window.__dlNativeDone(" + JSONObject.quote(doneId) + ");");
+                }
+            });
+        }
+    }
+
+    private void flushNativeActions() {
+        try {
+            SharedPreferences sp = getSharedPreferences(ReminderScheduler.PREFS, MODE_PRIVATE);
+            String ids = sp.getString("pending_done_ids", "");
+            if (ids == null || ids.length() == 0) return;
+            sp.edit().putString("pending_done_ids", "").apply();
+            String[] arr = ids.split(",");
+            StringBuilder js = new StringBuilder("(function(){try{");
+            for (String id : arr) {
+                if (id == null || id.length() == 0) continue;
+                js.append("window.__dlNativeDone&&window.__dlNativeDone(")
+                        .append(JSONObject.quote(id)).append(");");
+            }
+            js.append("}catch(e){}})();");
+            runJs(js.toString());
+        } catch (Exception e) { /* ignore */ }
     }
 
     @Override
     protected void onDestroy() {
+        if (CURRENT == this) CURRENT = null;
         if (webView != null) {
             webView.destroy();
             webView = null;

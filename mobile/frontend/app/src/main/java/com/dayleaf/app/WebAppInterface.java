@@ -290,6 +290,120 @@ public class WebAppInterface {
         } catch (Exception e) { return ""; }
     }
 
+    /** 语音快速录入：系统识别界面，结果回调 window.__dlVoiceResult(ok,text,err) */
+    @JavascriptInterface
+    public void startVoiceInput() {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                if (activity instanceof MainActivity) {
+                    ((MainActivity) activity).startVoiceInput();
+                }
+            }
+        });
+    }
+
+    /** 选择闹钟铃声（系统铃声选择器），只影响叶历自己的闹钟提醒 */
+    @JavascriptInterface
+    public void pickAlarmRingtone() {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                if (activity instanceof MainActivity) {
+                    ((MainActivity) activity).pickAlarmRingtone();
+                }
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public String getAlarmRingtoneName() {
+        try {
+            return activity.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE)
+                    .getString("alarm_ringtone_name", "");
+        } catch (Exception e) { return ""; }
+    }
+
+    /** 全屏闹钟页面接管后，停掉后台播的铃声，避免双重响铃 */
+    @JavascriptInterface
+    public void stopAlarmRingtone() {
+        try { ReminderReceiver.stopCustomRingtone(); } catch (Exception e) { /* ignore */ }
+    }
+
+    /** 打开闹钟通知的类别设置（让用户把声音、横幅设为允许） */
+    @JavascriptInterface
+    public void openAlarmChannelSettings() {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        Intent i = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+                        i.putExtra(Settings.EXTRA_APP_PACKAGE, activity.getPackageName());
+                        i.putExtra(Settings.EXTRA_CHANNEL_ID, "dayleaf_bg_alarm");
+                        activity.startActivity(i);
+                        return;
+                    }
+                } catch (Exception e) { /* 退到通知设置 */ }
+                openNotificationSettings();
+            }
+        });
+    }
+
+    /**
+     * 通用 HTTP GET（ICS 订阅、日历链接）。
+     * 完成后回调 window.__dlHttpGetResult(id, ok, data, error)。
+     */
+    @JavascriptInterface
+    public void httpGet(final String url, final String reqId) {
+        if (url == null || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+            finishHttpGet(reqId, false, "", "链接要以 http:// 或 https:// 开头");
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override public void run() {
+                HttpURLConnection conn = null;
+                String data = "";
+                String err = "";
+                boolean ok = false;
+                try {
+                    conn = (HttpURLConnection) new URL(url.trim()).openConnection();
+                    conn.setConnectTimeout(12000);
+                    conn.setReadTimeout(NET_TIMEOUT_MS);
+                    conn.setUseCaches(false);
+                    conn.setInstanceFollowRedirects(true);
+                    conn.setRequestProperty("Accept", "text/calendar, text/plain, application/octet-stream, */*");
+                    conn.setRequestProperty("User-Agent", "DayLeaf/" + getVersionName());
+                    int code = conn.getResponseCode();
+                    if (code >= 200 && code < 300) {
+                        data = readLimited(conn.getInputStream());
+                        ok = true;
+                    } else if (code == 401 || code == 403) {
+                        err = "这个订阅需要登录或已失效（HTTP " + code + "）";
+                    } else if (code == 404) {
+                        err = "链接不存在（404）";
+                    } else {
+                        err = "服务器返回 HTTP " + code;
+                    }
+                } catch (Exception e) {
+                    err = lanFriendlyError(e);
+                } finally {
+                    try { if (conn != null) conn.disconnect(); } catch (Exception e) { /* ignore */ }
+                }
+                finishHttpGet(reqId, ok, data, err);
+            }
+        }, "dayleaf-httpget").start();
+    }
+
+    private void finishHttpGet(String reqId, boolean ok, String data, String err) {
+        String js = "(function(){try{if(window.__dlHttpGetResult){window.__dlHttpGetResult("
+                + quote(reqId == null ? "" : reqId) + ","
+                + (ok ? "true" : "false") + ","
+                + quote(data == null ? "" : data) + ","
+                + quote(err == null ? "" : err)
+                + ");}}catch(e){}})();";
+        if (activity instanceof MainActivity) {
+            ((MainActivity) activity).runJs(js);
+        }
+    }
+
     /** 请求把「下一项」小组件钉到桌面（Android 8+ 支持；不支持的启动器会提示手动添加） */
     @JavascriptInterface
     public void pinNextWidget() {

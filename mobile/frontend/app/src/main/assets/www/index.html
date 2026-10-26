@@ -132,14 +132,19 @@
    选深色的人就会看到「先浅一下、再变深」。这段同步执行，在首次绘制之前生效。 */
 (function () {
   var dark = false;
+  var bootFont = '';
   try {
     var raw = localStorage.getItem('dayleaf.prototype.v2');
-    var t = raw ? (JSON.parse(raw).theme || 'light') : 'light';
+    var obj = raw ? JSON.parse(raw) : null;
+    var t = (obj && obj.theme) || 'light';
     dark = t === 'dark' || (t === 'system' && window.matchMedia &&
       window.matchMedia('(prefers-color-scheme: dark)').matches);
-  } catch (e) { dark = false; }
+    bootFont = obj && obj.typeStyle && obj.typeStyle.boot && obj.typeStyle.boot.font;
+  } catch (e) { dark = false; bootFont = ''; }
   var el = document.documentElement;
   if (dark) el.classList.add('dark');
+  /* 开场语录用自定义字体时，先别让系统字体闪一下；字体读好后由 JS 放出来 */
+  if (bootFont && String(bootFont).indexOf('f_') === 0) el.classList.add('bs-boot-wait');
   el.style.colorScheme = dark ? 'dark' : 'light';
   var m = document.querySelector('meta[name="theme-color"]');
   if (m) m.setAttribute('content', dark ? '#0E1118' : '#4C6FFF');
@@ -1600,7 +1605,8 @@ html.dark .bs-grain{background-image:radial-gradient(rgba(255,255,255,.05) 1px,t
 .bs-sub{font-size:11px;color:var(--muted);letter-spacing:1.6px}
 
 /* 语录本体 */
-.bs-quote-wrap{position:relative;display:flex;align-items:flex-start;justify-content:center;gap:6px}
+.bs-quote-wrap{position:relative;display:flex;align-items:flex-start;justify-content:center;gap:6px;transition:opacity .16s ease}
+html.bs-boot-wait .bs-quote-wrap{opacity:0}
 .bs-quo{
   font-family:Georgia,"Times New Roman",serif;line-height:1;
   font-size:clamp(34px,7vw,64px);color:rgba(76,111,255,.22);
@@ -3449,6 +3455,100 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 .cc-hd.work{background:rgba(22,163,74,.18);color:#16A34A}
 .cc-hd.work{background:rgba(22,163,74,.16);color:#16A34A}
 .cloud-warn{color:#F59E0B;font-size:11px}
+
+/* ---- 1.1.13 分类筛选 / 子任务 / 回收站 / 同步中心 ---- */
+.cat-filter{display:flex;gap:6px;overflow-x:auto;padding:1px 0 7px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cat-filter::-webkit-scrollbar{display:none}
+.cat-filter button{flex:0 0 auto;height:27px;padding:0 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface-soft);font-size:11.5px;color:var(--ink2);white-space:nowrap;transition:.14s}
+.cat-filter button.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 12px -6px var(--accent)}
+.cat-filter button.cf-manage{padding:0 9px;color:var(--muted)}
+.grid-cat-filter{padding:0 14px 7px;flex:0 0 auto}
+.cat-filter-empty{font-size:11px;color:var(--muted);padding:3px 0}
+.t-cat{font-style:normal;font-size:10px;margin-right:4px;opacity:.85;vertical-align:1px}
+
+.todo-box{display:flex;flex-direction:column;gap:6px;margin-top:7px}
+.td-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:11px;background:var(--surface-soft);border:1px solid var(--line)}
+.td-row .td-check{flex:0 0 20px;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:11px;color:transparent;background:var(--surface)}
+.td-row .td-check.on{background:var(--done);border-color:var(--done);color:#fff}
+.td-row input{flex:1;min-width:0;border:0;background:transparent;font-size:12px;color:var(--ink);outline:none;padding:0}
+.td-row.done input{color:var(--muted);text-decoration:line-through}
+.td-row .td-del{flex:0 0 auto;width:24px;height:24px;border-radius:7px;font-size:12px;color:var(--muted)}
+.td-row .td-del:hover{background:rgba(244,63,94,.1);color:#F43F5E}
+.td-add{display:flex;gap:7px;margin-top:7px}
+.td-add input{flex:1;height:34px}
+.td-add button{flex:0 0 auto;height:34px;padding:0 12px;border-radius:10px;background:var(--accent);color:#fff;font-size:12px;font-weight:600}
+.td-prog{font-size:10.5px;color:var(--muted);margin-left:6px}
+.evd-todo{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--line)}
+.evd-todo .evd-todo-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px}
+.evd-todo .evd-todo-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--ink2);cursor:pointer}
+.evd-todo .evd-todo-row i{flex:0 0 18px;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:10px;color:transparent;font-style:normal}
+.evd-todo .evd-todo-row.on i{background:var(--done);border-color:var(--done);color:#fff}
+.evd-todo .evd-todo-row.on span{text-decoration:line-through;color:var(--muted)}
+.evd-cat{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--surface-soft);border:1px solid var(--line)}
+
+.mgr-root{z-index:92}
+.mgr-panel{width:min(560px,100%);max-height:calc(100% - 24px);display:flex;flex-direction:column}
+.mgr-body{padding:12px 14px 18px;overflow-y:auto;flex:1}
+.mgr-sec{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:16px 2px 7px}
+.mgr-sec:first-child{margin-top:2px}
+.mgr-tip{font-size:11px;color:var(--muted);line-height:1.75;margin:6px 2px 0}
+.mgr-summary{font-size:11px;color:var(--ink2);line-height:1.7;margin-top:6px}
+.mgr-summary .pill{display:inline-block;margin:2px 5px 2px 0;padding:2px 7px;border-radius:99px;background:var(--surface-soft);border:1px solid var(--line);font-size:10.5px}
+.mgr-row{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--line);margin-bottom:7px}
+.mgr-row .dot{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:13px;flex:0 0 24px;color:#fff}
+.mgr-row .tx{flex:1;min-width:0}
+.mgr-row .tx b{display:block;font-size:12.5px;color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mgr-row .tx span{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+.mgr-row .acts{display:flex;gap:5px;flex:0 0 auto}
+.mgr-row .acts button{font-size:11px;padding:5px 8px;border-radius:8px;color:var(--accent);background:var(--surface)}
+.mgr-row .acts button.danger{color:#F43F5E}
+.mgr-row .acts button.ok{color:var(--done)}
+.mgr-form{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:var(--surface-soft);border:1px dashed var(--line2);margin-bottom:10px}
+.mgr-form .line{display:flex;gap:8px;align-items:center}
+.mgr-form input[type=text]{flex:1;min-width:0;height:34px}
+.mgr-form .swatches{display:flex;gap:6px;flex-wrap:wrap}
+.mgr-form .swatches button{width:24px;height:24px;border-radius:8px;border:2px solid transparent}
+.mgr-form .swatches button.on{border-color:var(--ink);transform:scale(1.06)}
+.mgr-form .icon-picks{display:flex;gap:5px;flex-wrap:wrap}
+.mgr-form .icon-picks button{width:30px;height:30px;border-radius:8px;background:var(--surface);font-size:15px;border:1.5px solid transparent}
+.mgr-form .icon-picks button.on{border-color:var(--accent);background:rgba(76,111,255,.08)}
+.mgr-empty{padding:18px 10px;text-align:center;font-size:11.5px;color:var(--muted);line-height:1.8}
+.trash-meta{font-size:10px;color:var(--muted);flex:0 0 auto;text-align:right;line-height:1.4}
+.sync-card{padding:11px 12px;border-radius:13px;background:var(--surface-soft);border:1px solid var(--line);margin-bottom:9px}
+.sync-card .sc-head{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.sync-card .sc-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:0 0 8px}
+.sync-card .sc-dot.ok{background:var(--done);box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+.sync-card .sc-dot.bad{background:#F43F5E;box-shadow:0 0 0 3px rgba(244,63,94,.12)}
+.sync-card .sc-meta{font-size:10.5px;color:var(--muted);line-height:1.7;margin-top:5px}
+.sync-card .sc-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.sync-card .sc-acts button{height:28px;padding:0 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:11px;color:var(--ink2)}
+.sync-card .sc-acts button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.conflict-card{padding:10px 11px;border-radius:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);margin-bottom:8px}
+.conflict-card b{font-size:12px;color:var(--ink)}
+.conflict-card p{font-size:10.5px;color:var(--ink2);line-height:1.65;margin:4px 0 7px;white-space:pre-line}
+.conflict-card .acts{display:flex;gap:6px;flex-wrap:wrap}
+.conflict-card .acts button{font-size:11px;padding:5px 9px;border-radius:7px;background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.ics-row{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--line);margin-bottom:8px}
+.ics-row .line{display:flex;align-items:center;gap:8px}
+.ics-row .line b{flex:1;min-width:0;font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ics-row .line span{font-size:10px;color:var(--muted);flex:0 0 auto}
+.ics-row .acts{display:flex;gap:6px}
+.ics-row .acts button{font-size:11px;padding:5px 9px;border-radius:7px;background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.week-tpl-row{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:11px;background:var(--surface-soft);border:1px solid var(--line);margin-bottom:7px}
+.week-tpl-row .tx{flex:1;min-width:0}
+.week-tpl-row .tx b{display:block;font-size:12px;color:var(--ink)}
+.week-tpl-row .tx span{display:block;font-size:10.5px;color:var(--muted)}
+.week-tpl-row button{font-size:11px;padding:5px 8px;border-radius:7px;background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.week-tpl-row button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.quick-mic{flex:0 0 auto;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:var(--surface-soft);color:var(--ink2)}
+.quick-mic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.quick-mic:hover{color:var(--accent)}
+.quick-mic.rec{background:rgba(244,63,94,.12);color:#F43F5E;animation:micPulse 1.1s infinite}
+@keyframes micPulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media (max-width:959px){
+  .mgr-panel{max-height:calc(100% - 12px);border-radius:18px}
+  .grid-cat-filter{padding:0 10px 6px}
+}
 </style>
 </head>
 
@@ -3555,6 +3655,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             <h2>今日日程</h2>
             <span class="sec-stat" id="todayStat"></span>
           </div>
+          <div class="cat-filter" id="homeCatFilter"></div>
           <div class="today-list" id="todayList"></div>
         </div>
       </div>
@@ -3637,6 +3738,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         <span>轻点空白处快速新建 · 长按日程可拖动改时间</span>
       </div>
+      <div class="cat-filter grid-cat-filter" id="gridCatFilter"></div>
       <div class="grid-mini" id="gridMini" aria-label="周切换">
         <button id="gmSearch" aria-label="搜索日程"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg></button>
         <button id="gmStretch" aria-label="调整时间块"><svg viewBox="0 0 24 24"><path d="M12 4v16"/><path d="M9 7l3-3 3 3"/><path d="M9 17l3 3 3-3"/></svg></button>
@@ -3796,6 +3898,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     <div class="search-bar">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
       <input id="quickInput" type="text" placeholder="明天下午两点到六点上JAVA课 提前三十分钟提醒" autocomplete="off">
+      <button class="quick-mic" id="quickVoice" title="语音输入" aria-label="语音输入">
+        <svg viewBox="0 0 24 24"><rect x="9" y="3.2" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
+      </button>
       <button class="search-esc" id="quickEsc">Esc</button>
     </div>
     <div class="dl-quick-preview" id="quickPreview"></div>
@@ -3843,6 +3948,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     <div class="dl-review" id="rvBody"></div>
   </div>
 </div>
+<!-- 整理面板：分类 / 回收站 / 同步中心 / 周模板 / ICS 订阅 -->
+<div class="modal-root mgr-root" id="mgrRoot"></div>
 <!-- 应用锁 -->
 <div class="dl-lock" id="lockRoot" hidden>
   <div class="dl-lock-inner">
@@ -3888,7 +3995,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.12',
+    version: '1.1.13',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3955,6 +4062,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       icon: '<rect x="3" y="4.2" width="18" height="15.6" rx="2.6"/><path d="M3 9.4h18M9 9.4V20M15 9.4V20"/>' },
     { key: 'notify', label: '提醒与通知', desc: '系统通知、提醒时间与手机闹钟', color: '#F43F5E',
       icon: '<path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4 1.5 5.2 2.5 6H4c1-.8 2.5-2 2.5-6"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>' },
+    { key: 'organize', label: '整理与同步', desc: '分类、回收站、同步中心、周模板与日历订阅', color: '#EC4899',
+      icon: '<path d="M4 7.5h16M4 12h10M4 16.5h7"/><circle cx="18.5" cy="15.5" r="2.2"/><path d="M18.5 13.3V11"/>' },
     { key: 'data', label: '数据与备份', desc: '导入导出、清理与本地存储', color: '#16A34A',
       icon: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>' },
     { key: 'about', label: '关于与更新', desc: '版本、作者、许可与检查更新', color: '#06B6D4',
@@ -4257,6 +4366,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       state.notes = obj.notes || {};
       state.tags = obj.tags || {};
       state.annual = obj.annual || {};
+      state.trash = Array.isArray(obj.trash) ? obj.trash : [];
+      state.categories = Array.isArray(obj.categories) ? obj.categories : [];
+      state.conflicts = Array.isArray(obj.conflicts) ? obj.conflicts : [];
+      state.weekTemplates = Array.isArray(obj.weekTemplates) ? obj.weekTemplates : [];
       state.blocks = ensureBlocks(obj.blocks);
       state.cols = ensureCols(obj.cols);
       state.draft = obj.draft || null;
@@ -4379,7 +4492,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
    */
   let saveTimer = null;
   let quotaWarned = false;
-  function saveState() {
+  function saveState(opts) {
     /* 数据变了，三个页面都得重建一次（在真正切过去时重建，不是现在） */
     markViewsDirty();
     clearTimeout(saveTimer);
@@ -4402,7 +4515,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       }
     }, 120);
     scheduleNativeReminderSync(false);
-    scheduleCloudPush();
+    if (!(opts && opts.noCloud)) scheduleCloudPush();
     scheduleStatusPush();
     scheduleLanPublish();
   }
@@ -5084,28 +5197,37 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     renderAnniv();
     renderStats();
     renderNext7();
+    renderCatFilters();
 
-    const todays = state.events
-      .filter(function (ev) { return ev.d === todayStr; })
-      .sort(function (a, b) { return toMin(a.s) - toMin(b.s); });
+    const allToday = state.events.filter(function (ev) { return ev.d === todayStr; });
+    const todays = applyFilters(allToday).sort(function (a, b) { return toMin(a.s) - toMin(b.s); });
 
     const doneCount = todays.filter(function (e) { return e.st === 'done'; }).length;
-    $('#todayStat').textContent = todays.length ? ('已完成 ' + doneCount + ' / ' + todays.length) : '';
+    const catLabel = state.ui.catFilter ? (eventCat({ cat: state.ui.catFilter }) || {}).name || '' : '';
+    $('#todayStat').textContent = todays.length
+      ? ('已完成 ' + doneCount + ' / ' + todays.length + (catLabel ? ' · ' + catLabel : ''))
+      : (catLabel && allToday.length ? catLabel + ' · 0 项' : '');
 
     if (!todays.length) {
-      $('#todayList').innerHTML = '<div class="empty-tip">今天还没有安排<br>点右下角的 + 新建第一个日程</div>';
+      $('#todayList').innerHTML = '<div class="empty-tip">' +
+        (catLabel && allToday.length
+          ? '今天没有「' + esc(catLabel) + '」的日程<br>点上面的「全部」看其他安排'
+          : '今天还没有安排<br>点右下角的 + 新建第一个日程') +
+        '</div>';
       return;
     }
 
     const nowMin = now.getHours() * 60 + now.getMinutes();
     $('#todayList').innerHTML = todays.map(function (ev) {
       const isPast = toMin(ev.e) <= nowMin;
-      return '<button class="trow st-' + ev.st + (isPast ? ' past' : '') + '" data-id="' + ev.id + '" style="--h:' + hueOf(ev.t) + '">' +
+      return '<button class="trow st-' + ev.st + (isPast ? ' past' : '') + '" data-id="' + ev.id + '" style="--h:' + eventHue(ev) + '">' +
         '<span class="t-time"><b>' + esc(ev.s) + '</b><i>' + esc(ev.e) + '</i></span>' +
         '<span class="t-main"><span class="t-title">' +
+          (eventCat(ev) ? '<i class="t-cat" title="' + esc(eventCat(ev).name) + '">' + (eventCat(ev).icon || '') + '</i>' : '') +
           (ev.imp ? '<i class="t-imp" title="重要项目">★</i>' : '') + esc(ev.t) + '</span>' +
         '<span class="t-sub">' + (ev.p ? esc(ev.p) + ' · ' : '') +
           (remindOn(ev) ? (ev.al ? '⏰' : '🔔') + ' ' + remindText(ev) + ' · ' : '') +
+          (ev.todos && ev.todos.length ? '☑ ' + ev.todos.filter(function (t) { return t.done; }).length + '/' + ev.todos.length + ' · ' : '') +
           (ev.imp ? '重要项目 · ' : '') + STATUS[ev.st].label + '</span></span>' +
         '<span class="t-st">' + STATUS[ev.st].sym + '</span>' +
       '</button>';
@@ -5368,6 +5490,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const TYPE_OTHER = { key: 'other', label: '其他', hue: 220 };
 
   function typeOfEvent(ev) {
+    const cat = eventCat(ev);
+    if (cat) {
+      let hue = 220;
+      try { hue = Math.round(hexToHsl(cat.color).h); } catch (e) { /* ignore */ }
+      return { key: 'cat:' + cat.id, label: cat.name, hue: hue };
+    }
     const hay = (ev.t || '') + ' ' + (ev.p || '') + ' ' + (ev.n || '');
     for (let i = 0; i < EV_TYPES.length; i++) {
       if (EV_TYPES[i].re.test(hay)) return EV_TYPES[i];
@@ -5497,7 +5625,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       head = '未完成 ' + list.length + ' 项 · 点 ✓ 直接标完成，点标题进编辑';
     } else if (statOpen.indexOf('type:') === 0) {
       const key = statOpen.slice(5);
-      const tp = EV_TYPES.filter(function (t) { return t.key === key; })[0] || TYPE_OTHER;
+      const tp = key.indexOf('cat:') === 0
+        ? (function () {
+            const c = catById(key.slice(4));
+            if (!c) return TYPE_OTHER;
+            let hue = 220;
+            try { hue = Math.round(hexToHsl(c.color).h); } catch (e) { /* ignore */ }
+            return { key: key, label: c.name, hue: hue };
+          })()
+        : (EV_TYPES.filter(function (t) { return t.key === key; })[0] || TYPE_OTHER);
       list = week.filter(function (x) { return typeOfEvent(x).key === key; })
         .sort(function (a, b) {
           return a.d < b.d ? -1 : a.d > b.d ? 1 : toMin(a.s) - toMin(b.s);
@@ -5527,6 +5663,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const geo = buildGeo();
     const todayStr = toYMD(new Date());
     const lineBg = hourLinesCss(geo);
+    renderCatFilters();
 
     /* ---- 周区间标题 ---- */
     const rangeText = weekRangeText();
@@ -5576,7 +5713,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       const d = addDays(weekStart, i);
       const ds = toYMD(d);
 
-      const evs = state.events.filter(function (x) { return x.d === ds; }).map(function (x) {
+      const evs = applyFilters(state.events.filter(function (x) { return x.d === ds; })).map(function (x) {
         /* 跨夜（结束早于开始，如 23:00–02:00）：画到表底为止，
            时间文字仍原样显示，看得出是越过零点的那一段 */
         const s = toMin(x.s);
@@ -5612,7 +5749,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             (x._cross ? ' is-cross' : '') + '" data-id="' + x.id + '" ' +
             'style="top:' + top.toFixed(1) + 'px;height:' + hgt.toFixed(1) + 'px;' +
             'left:calc(' + leftPct.toFixed(3) + '% + 2px);width:calc(' + cardPct.toFixed(3) + '% - 4px);' +
-            '--h:' + hueOf(x.t) + bgImg + '">' +
+            '--h:' + eventHue(x) + bgImg + '">' +
             '<span class="ev-badge">' + STATUS[x.st || 'todo'].sym + '</span>' +
             (x.imp ? '<span class="ev-imp" title="重要项目">★</span>' : '') +
             '<div class="ev-t">' + esc(x.t) + '</div>' +
@@ -5623,6 +5760,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             (remindOn(x) ? '<span class="ev-rm" title="' +
               (x.al ? '提醒 + 闹钟' : remindText(x) + '提醒') + '">' +
               (x.al ? '⏰' : '🔔') + '</span>' : '') +
+            (x.todos && x.todos.length ? '<span class="ev-rep" title="子任务进度">☑' +
+              x.todos.filter(function (t) { return t.done; }).length + '/' + x.todos.length + '</span>' : '') +
             (x.gid ? '<span class="ev-rep" title="重复日程">↻</span>' : '') +
           '</div>';
       });
@@ -5898,8 +6037,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       const b = $('#neBody').value;
       if (!state.meta) state.meta = {};
       if (!state.meta.notesU) state.meta.notesU = {};
-      if (!t && !b) delete state.notes[selectedDate];
-      else state.notes[selectedDate] = { title: t, body: b };
+      if (!t && !b) {
+        if (state.notes[selectedDate]) trashPut('note', { d: selectedDate, note: state.notes[selectedDate] });
+        delete state.notes[selectedDate];
+      } else state.notes[selectedDate] = { title: t, body: b };
       state.meta.notesU[selectedDate] = Date.now();
       saveState();
       clearTimeout(noteTimer);
@@ -6886,14 +7027,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const groupMembers = groupMeta ? groupMeta.members : [];
     const formDate = groupMeta ? groupMeta.anchor : base.d;
     let onlyOne = false;
-    let repRule = groupMeta ? groupMeta.rule : 'none';
+    let repRule = groupMeta ? groupMeta.rule
+      : (preset && preset.repRule ? preset.repRule : 'none');
     let repWds = (groupMeta && groupMeta.wds && groupMeta.wds.length)
       ? groupMeta.wds.slice()
-      : [fromYMD(base.d).getDay()];
+      : ((preset && preset.repWds && preset.repWds.length) ? preset.repWds.slice() : [fromYMD(base.d).getDay()]);
     let repUntil = (groupMeta && groupMeta.until)
       ? groupMeta.until
-      : toYMD(addDays(fromYMD(base.d), 60));
-    let repTouched = false;
+      : ((preset && preset.repUntil) ? preset.repUntil : toYMD(addDays(fromYMD(base.d), 60)));
+    let repTouched = !!(preset && preset.repRule && preset.repRule !== 'none');
 
     const groupHtml = groupMeta
       ? '<div class="grp-row grp-edit">' +
@@ -6954,6 +7096,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '<div class="fcard">' +
           '<div class="field"><label>标题</label>' +
             '<input class="inp" id="fTitle" maxlength="40" placeholder="例如：产品评审" value="' + esc(base.t) + '"></div>' +
+
+          '<div class="field"><label>分类</label>' +
+            '<div class="chips cat-pick" id="fCatSeg">' +
+              '<button type="button" data-cat="" class="' + (!base.cat ? 'on' : '') + '">未分类</button>' +
+              (state.categories || []).map(function (c) {
+                return '<button type="button" data-cat="' + esc(c.id) + '" class="' + (base.cat === c.id ? 'on' : '') + '">' +
+                  (c.icon || '') + ' ' + esc(c.name) + '</button>';
+              }).join('') +
+            '</div></div>' +
 
           '<div class="field"><label>日期</label>' +
             '<div class="dt-date">' +
@@ -7060,6 +7211,14 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 
         '<div class="field"><label>状态标记</label><div class="seg" id="fSeg">' + segHtml + '</div></div>' +
 
+        '<div class="field"><label>子任务清单 <span class="td-prog" id="fTodoProg"></span></label>' +
+          '<div class="todo-box" id="fTodoList"></div>' +
+          '<div class="td-add">' +
+            '<input class="inp" id="fTodoInput" maxlength="80" placeholder="例如：带笔记本 / 交报告">' +
+            '<button type="button" id="fTodoAdd">添加</button>' +
+          '</div>' +
+          '<p class="hint">把一件事拆成几步；首页和表格会显示完成进度，通知后也能逐项勾掉。</p></div>' +
+
         '<div class="field"><div class="row-sw">' +
           '<span>重要项目</span>' +
           '<button class="sw' + (base.imp ? ' on' : '') + '" id="fImp" aria-label="标为重要项目"></button>' +
@@ -7100,7 +7259,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     pushModal(closeModal);
 
     /* ---- 重复规则状态与联动 ---- */
-    let wdTouched = !!groupMeta;
+    let wdTouched = !!groupMeta || !!(preset && preset.repWds && preset.repWds.length);
 
     function syncWd() {
       $$('#repWd button').forEach(function (b) {
@@ -7406,6 +7565,30 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       });
     });
 
+    /* 分类：手动选过就不再按标题猜；没选时保存前按标题补一个 */
+    let catId = base.cat || '';
+    let catTouched = !!base.cat;
+    const syncCatPick = function () {
+      $$('#fCatSeg button').forEach(function (b) {
+        b.classList.toggle('on', (b.dataset.cat || '') === catId);
+      });
+    };
+    $$('#fCatSeg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        catId = b.dataset.cat || '';
+        catTouched = true;
+        syncCatPick();
+      });
+    });
+    const titleEl = $('#fTitle');
+    if (titleEl) {
+      titleEl.addEventListener('blur', function () {
+        if (catTouched || catId) return;
+        const guess = inferCategoryId(titleEl.value);
+        if (guess) { catId = guess; syncCatPick(); }
+      });
+    }
+
     /* 重要项目开关（自动清理豁免） */
     let impOn = !!base.imp;
     const impBtn = $('#fImp');
@@ -7656,6 +7839,75 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       });
     }
 
+    /* ---- 子任务清单：本地编辑，保存时一起写入 ---- */
+    let todoList = (base.todos || []).map(function (t) {
+      return { id: t.id || uid('td'), t: String(t.t || ''), done: !!t.done };
+    });
+    const todoProg = function () {
+      const el = $('#fTodoProg');
+      if (!el) return;
+      el.textContent = todoList.length
+        ? ('已完成 ' + todoList.filter(function (t) { return t.done; }).length + ' / ' + todoList.length)
+        : '';
+    };
+    const renderTodoList = function () {
+      const box = $('#fTodoList');
+      if (!box) return;
+      box.innerHTML = todoList.length
+        ? todoList.map(function (t, i) {
+            return '<div class="td-row' + (t.done ? ' done' : '') + '" data-td-row="' + i + '">' +
+              '<button type="button" class="td-check' + (t.done ? ' on' : '') + '" data-td-check="' + i + '" aria-label="勾选子任务">✓</button>' +
+              '<input type="text" data-td-text="' + i + '" maxlength="80" value="' + esc(t.t) + '">' +
+              '<button type="button" class="td-del" data-td-del="' + i + '" aria-label="删除子任务">✕</button>' +
+            '</div>';
+          }).join('')
+        : '<div class="mgr-tip" style="margin:0">还没有子任务。可以先把「要带的东西 / 要交的材料」写进来。</div>';
+      $$('[data-td-check]', box).forEach(function (b) {
+        b.addEventListener('click', function () {
+          const i = Number(b.dataset.tdCheck);
+          if (!todoList[i]) return;
+          todoList[i].done = !todoList[i].done;
+          renderTodoList();
+        });
+      });
+      $$('[data-td-del]', box).forEach(function (b) {
+        b.addEventListener('click', function () {
+          const i = Number(b.dataset.tdDel);
+          todoList.splice(i, 1);
+          renderTodoList();
+          scheduleDraftSave();
+        });
+      });
+      $$('[data-td-text]', box).forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          const i = Number(inp.dataset.tdText);
+          if (todoList[i]) todoList[i].t = inp.value;
+          scheduleDraftSave();
+        });
+      });
+      todoProg();
+    };
+    const addTodoFromInput = function () {
+      const inp = $('#fTodoInput');
+      if (!inp) return;
+      const val = inp.value.trim();
+      if (!val) { inp.focus(); return; }
+      todoList.push({ id: uid('td'), t: val.slice(0, 80), done: false });
+      inp.value = '';
+      renderTodoList();
+      inp.focus();
+      scheduleDraftSave();
+    };
+    const todoAddBtn = $('#fTodoAdd');
+    if (todoAddBtn) todoAddBtn.addEventListener('click', addTodoFromInput);
+    const todoInput = $('#fTodoInput');
+    if (todoInput) {
+      todoInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); addTodoFromInput(); }
+      });
+    }
+    renderTodoList();
+
     /* ---- 草稿：注册读取器 + 输入时自动保存（仅新建） ---- */
     if (!ev) {
       draftCtx = {
@@ -7675,6 +7927,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             rm: rmOn ? rmMin : 0,
             rmOn: !!rmOn,
             al: !!(rmOn && alarmOn),
+            cat: catId || '',
+            todos: todoList.filter(function (t) { return String(t.t || '').trim(); }).map(function (t) {
+              return { id: t.id, t: t.t, done: !!t.done };
+            }),
             repRule: repRule,
             repWds: repWds.slice(),
             repUntil: $('#fUntil') ? $('#fUntil').value : ''
@@ -7719,6 +7975,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         p: $('#fPlace').value.trim(),
         n: $('#fNote').value.trim(),
         st: st,
+        cat: catId || inferCategoryId(title),
+        todos: todoList.filter(function (t) { return String(t.t || '').trim(); }).map(function (t) {
+          return { id: t.id || uid('td'), t: String(t.t).slice(0, 80), done: !!t.done };
+        }),
         img: imgData || '',
         imp: !!impOn,
         /* 提醒提前分钟（0=关）/ 闹钟（到点响铃） */
@@ -7918,23 +8178,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
      */
     function deleteWithUndo(victims, msg) {
       if (!victims.length) { closeModal(); return; }
-
-      const ids = {};
-      victims.forEach(function (x) { ids[x.id] = 1; });
-      state.events = state.events.filter(function (x) { return !ids[x.id]; });
-      saveState();
-      closeModal();
-      renderAll();
-
-      toast(msg, {
-        label: '撤销',
-        fn: function () {
-          state.events = state.events.concat(victims);
-          saveState();
-          renderAll();
-          toast('已恢复 ' + victims.length + ' 项');
-        }
-      });
+      deleteEventsWithUndo(victims, msg);
     }
 
     /* 删除单条：点第一下变「再点一次」，3 秒没动作自动复位，避免误删 */
@@ -7996,6 +8240,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       (d.n || '').trim() ||
       (d.p || '').trim() ||
       d.img ||
+      (d.todos && d.todos.length) ||
       (d.repRule && d.repRule !== 'none'));
   }
 
@@ -8072,7 +8317,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const d = state.draft;
     if (!d) return;
     openEventDialog(null, {
-      d: d.d, s: d.s, e: d.e, t: d.t, p: d.p, n: d.n, st: d.st, img: d.img
+      d: d.d, s: d.s, e: d.e, t: d.t, p: d.p, n: d.n, st: d.st, img: d.img,
+      cat: d.cat || '', todos: d.todos || []
     }, { draft: d });
   }
 
@@ -8097,18 +8343,31 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   function deleteEventsWithUndo(victims, msg) {
     if (!victims || !victims.length) return;
     const ids = {};
-    victims.forEach(function (x) { ids[x.id] = 1; });
+    const trIds = [];
+    victims.forEach(function (x) {
+      ids[x.id] = 1;
+      trIds.push(trashPut('event', x));
+    });
     state.events = state.events.filter(function (x) { return !ids[x.id]; });
     markDeleted(ids);
     saveState();
     closeModal();
     renderAll();
+    renderOrganizePane();
     toast(msg, {
       label: '撤销',
       fn: function () {
         state.events = state.events.concat(victims);
+        (state.trash || []).forEach(function (t) {
+          if (trIds.indexOf(t.id) >= 0) trashPurgeAssets(t);
+        });
+        state.trash = (state.trash || []).filter(function (t) { return trIds.indexOf(t.id) < 0; });
+        Object.keys(ids).forEach(function (id) {
+          if (state.meta && state.meta.deletedEvents) delete state.meta.deletedEvents[id];
+        });
         saveState();
         renderAll();
+        renderOrganizePane();
         toast('已恢复 ' + victims.length + ' 项');
       }
     });
@@ -8138,6 +8397,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     let chips = '<span class="evd-chip time">' + esc(timeText) + '</span>' +
       '<span class="evd-chip">' + st.sym + ' ' + st.label + '</span>';
     if (ev.imp) chips += '<span class="evd-chip imp">★ 重要</span>';
+    const evCat = eventCat(ev);
+    if (evCat) chips += '<span class="evd-cat" style="border-color:' + hexA(evCat.color, 0.4) + ';color:' + evCat.color + '">' +
+      (evCat.icon || '') + ' ' + esc(evCat.name) + '</span>';
     if (ev.gid) chips += '<span class="evd-chip">↻ ' + esc(repeatRuleLabel(meta ? meta.rule : 'weekly')) + '</span>';
 
     let rows = '';
@@ -8161,7 +8423,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const root = $('#modalRoot');
     root.innerHTML =
       '<div class="mb-back" data-close></div>' +
-      '<div class="mb-panel ev-detail" style="--h:' + hueOf(ev.t) + '">' +
+      '<div class="mb-panel ev-detail" style="--h:' + eventHue(ev) + '">' +
         '<div class="evd-top">' +
           '<div class="evd-date">' + esc(dateText) + '</div>' +
           '<button class="icon-btn sm evd-close" data-close aria-label="关闭">✕</button>' +
@@ -8170,6 +8432,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '</div>' +
         '<div class="evd-body">' +
           rows +
+          (ev.todos && ev.todos.length
+            ? '<div class="evd-todo"><div class="evd-todo-head"><span>子任务清单</span>' +
+                '<span id="evdTodoProg">' + ev.todos.filter(function (t) { return t.done; }).length + ' / ' + ev.todos.length + '</span></div>' +
+                ev.todos.map(function (t, i) {
+                  return '<button type="button" class="evd-todo-row' + (t.done ? ' on' : '') + '" data-evd-todo="' + i + '">' +
+                    '<i>✓</i><span>' + esc(t.t) + '</span></button>';
+                }).join('') +
+              '</div>'
+            : '') +
           (ev.n ? '<div class="evd-note"><b style="font-size:10.5px;color:var(--muted);display:block;margin-bottom:4px">备注</b>' +
             esc(ev.n) + '</div>' : '') +
         '</div>' +
@@ -8190,6 +8461,23 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 
     $$('[data-close]', root).forEach(function (el) {
       el.addEventListener('click', closeModal);
+    });
+
+    $$('[data-evd-todo]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const i = Number(b.dataset.evdTodo);
+        if (!ev.todos || !ev.todos[i]) return;
+        ev.todos[i].done = !ev.todos[i].done;
+        b.classList.toggle('on', ev.todos[i].done);
+        const prog = $('#evdTodoProg');
+        if (prog) prog.textContent = ev.todos.filter(function (t) { return t.done; }).length + ' / ' + ev.todos.length;
+        saveState();
+        renderHome();
+        renderGrid();
+        if (state.notify && ev.todos.every(function (t) { return t.done; })) {
+          toast('清单全部完成 ✓');
+        }
+      });
     });
 
     const evdSys = $('#evdSysAlarm', root);
@@ -8335,16 +8623,28 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     }
 
     const ids = {};
-    list.forEach(function (x) { ids[x.id] = 1; });
+    const trIds = [];
+    list.forEach(function (x) {
+      ids[x.id] = 1;
+      trIds.push(trashPut('event', x));
+    });
     state.events = state.events.filter(function (x) { return !ids[x.id]; });
+    markDeleted(ids);
     saveState();
     renderAll();
 
     /* 清理是后台做的，用户可能压根没注意；留一个撤销口子 */
-    toast('已清理 ' + list.length + ' 条过期日程', {
+    toast('已移入回收站 ' + list.length + ' 条过期日程', {
       label: '撤销',
       fn: function () {
         state.events = state.events.concat(list);
+        (state.trash || []).forEach(function (t) {
+          if (trIds.indexOf(t.id) >= 0) trashPurgeAssets(t);
+        });
+        state.trash = (state.trash || []).filter(function (t) { return trIds.indexOf(t.id) < 0; });
+        Object.keys(ids).forEach(function (id) {
+          if (state.meta && state.meta.deletedEvents) delete state.meta.deletedEvents[id];
+        });
         saveState();
         renderAll();
         toast('已恢复 ' + list.length + ' 条');
@@ -9297,7 +9597,13 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           ? '<div class="field"><div class="row-sw">' +
               '<span>闹钟响铃</span>' +
               '<button class="sw' + (nt.sound !== false ? ' on' : '') + '" id="ntSound" aria-label="闹钟响铃"></button>' +
-            '</div></div>'
+            '</div></div>' +
+            '<div class="field"><label>闹钟铃声</label>' +
+              '<div class="data-pick">' +
+                '<button class="btn ghost" data-dl-act="pick-ringtone"><span id="ntRingName">系统默认</span></button>' +
+                '<button class="btn ghost" data-dl-act="alarm-channel">通知类别设置</button>' +
+              '</div>' +
+              '<p class="hint">选择只属于叶历闹钟的铃声；如果系统把通知静音了，去「通知类别设置」把「日程闹钟」的声音和横幅打开。</p></div>'
           : '<div class="field"><div class="row-sw">' +
               '<span>闹钟（手机端专属）</span>' +
               '<b class="plat-note">电脑端不实现</b>' +
@@ -9366,7 +9672,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             '<button class="btn ghost" data-dl-act="review">周复盘</button>' +
             '<button class="btn ghost" data-dl-act="share-day">今日分享图</button>' +
           '</div>' +
-          '<p class="hint">Excel 课表按「周一到周日为列、节次为行」识别，先预览再导入。</p></div>' +
+          '<p class="hint">Excel 课表按「周一到周日为列、节次为行」识别，先预览再导入。</p>' +
+          (isMobileView() ? '' :
+            '<p class="hint" style="margin-top:8px">电脑端随时按 <b>Ctrl+Alt+N</b> 呼出快速录入；把图片或通知文件直接拖进窗口，也能识别成日程或当作配图。</p>') +
+        '</div>' +
 
         '<div class="sec-line">桌面组件</div>' +
         '<div class="field" id="widgetMobileBox" style="display:none">' +
@@ -9445,6 +9754,53 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           '<button class="btn ghost" data-dl-act="lock-now">立即锁定</button>' +
         '</div></div>' +
 
+        '</div>' +
+        '<div class="set-pane" data-setpane="organize">' +
+        '<div class="sec-line">日程分类</div>' +
+        '<div class="field"><label>分类、颜色与筛选</label>' +
+          '<div class="mgr-summary" id="setCatSummary"></div>' +
+          '<div class="data-pick" style="margin-top:9px">' +
+            '<button class="btn ghost" data-dl-act="manage-cats">管理分类</button>' +
+            '<button class="btn ghost" data-dl-act="cat-filter-clear">清除筛选</button>' +
+          '</div>' +
+          '<p class="hint">分类会显示在首页与表格的筛选条上，也用于数据概览的时间分配。</p></div>' +
+
+        '<div class="sec-line">回收站</div>' +
+        '<div class="field"><label>误删恢复</label>' +
+          '<div class="mgr-summary" id="setTrashSummary"></div>' +
+          '<div class="data-pick" style="margin-top:9px">' +
+            '<button class="btn ghost" data-dl-act="open-trash">打开回收站</button>' +
+            '<button class="btn ghost" data-dl-act="empty-trash">清空回收站</button>' +
+          '</div>' +
+          '<p class="hint">删除的日程与记事会在这里保留 30 天；期间可以随时恢复。过期后自动清理。</p></div>' +
+
+        '<div class="sec-line">同步中心</div>' +
+        '<div class="field"><label>云端与局域网</label>' +
+          '<div class="mgr-summary" id="setSyncSummary"></div>' +
+          '<div class="data-pick" style="margin-top:9px">' +
+            '<button class="btn ghost" data-dl-act="open-sync-center">打开同步中心</button>' +
+            '<button class="btn ghost" data-dl-act="open-conflicts">查看冲突</button>' +
+          '</div>' +
+          '<p class="hint">查看最近一次同步结果、失败原因与冲突副本；不用来回翻设置。</p></div>' +
+
+        '<div class="sec-line">周计划</div>' +
+        '<div class="field"><label>模板与批量移动</label>' +
+          '<div class="data-pick">' +
+            '<button class="btn ghost" data-dl-act="open-week-tpl">周模板</button>' +
+            '<button class="btn ghost" data-dl-act="copy-last-week">复制上周到本周</button>' +
+            '<button class="btn ghost" data-dl-act="shift-week-prev">整周前移</button>' +
+            '<button class="btn ghost" data-dl-act="shift-week-next">整周后移</button>' +
+          '</div>' +
+          '<p class="hint">把一周的课程/值班存成模板，下学期直接套用；整周移动会把这一周的所有日程平移到相邻周。</p></div>' +
+
+        '<div class="sec-line">日历订阅（ICS）</div>' +
+        '<div class="field"><label>课表 / 日历链接</label>' +
+          '<div id="icsSubList"></div>' +
+          '<div class="data-pick" style="margin-top:8px">' +
+            '<button class="btn ghost" data-dl-act="open-ics">管理订阅</button>' +
+            '<button class="btn ghost" data-dl-act="export-ics-all">导出全部 .ics</button>' +
+          '</div>' +
+          '<p class="hint">支持手机系统日历、学校教务导出的订阅链接；刷新时按 UID 更新，不会重复堆积。</p></div>' +
         '</div>' +
         '<div class="set-pane" data-setpane="about">' +
         (nat
@@ -12158,13 +12514,16 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
    * @param {string} id     字体 id
    * @param {string} dataUrl data:font/...;base64,...
    */
+  const fontLoading = {};
   function registerCustomFont(id, dataUrl) {
     const meta = (state.quoteFont.custom || []).filter(function (x) { return x.id === id; })[0];
-    if (!meta || fontReady[id]) return;
+    if (!meta) return Promise.resolve(false);
+    if (fontReady[id]) return Promise.resolve(true);
+    if (fontLoading[id]) return fontLoading[id];
     const alias = 'DLFont_' + id;
     try {
       const face = new FontFace(alias, 'url(' + dataUrl + ')');
-      face.load().then(function (loaded) {
+      const p = face.load().then(function (loaded) {
         document.fonts.add(loaded);
         fontReady[id] = alias;
         if (state.quoteFont.key === id) applyQuoteFont();
@@ -12173,16 +12532,41 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         renderTypeFontLib();
         const pane = document.getElementById('qbPaneFont');
         if (pane && pane.classList.contains('on')) renderFontPane();
+        return true;
       }).catch(function (err) {
         console.warn('[DayLeaf] 字体载入失败', err);
         fontReady[id] = false;
         refreshTypeFontSelects();
         renderTypeFontLib();
+        return false;
       });
+      fontLoading[id] = p;
+      return p;
     } catch (err) {
       console.warn('[DayLeaf] 字体注册失败', err);
       fontReady[id] = false;
+      return Promise.resolve(false);
     }
+  }
+
+  /**
+   * 开场前只等「开场语录自己的字体」：字体通常已缓存在 IndexedDB，
+   * 这里等它真正 load 完再画第一句，避免手机上先闪系统字体再跳一下。
+   */
+  function preloadBootFont() {
+    const key = state.typeStyle && state.typeStyle.boot && state.typeStyle.boot.font;
+    if (!key || String(key).indexOf('f_') !== 0) return Promise.resolve(false);
+    if (fontReady[key]) return Promise.resolve(true);
+    if (fontLoading[key]) return fontLoading[key];
+    const load = new Promise(function (resolve) {
+      AssetDB.get('font_' + key).then(function (dataUrl) {
+        if (!dataUrl) { resolve(false); return; }
+        registerCustomFont(key, dataUrl).then(resolve, function () { resolve(false); });
+      }, function () { resolve(false); });
+    });
+    /* IndexedDB 异常时不要卡在开场层；3 秒后退回系统字体 */
+    const timeout = new Promise(function (resolve) { setTimeout(function () { resolve(false); }, 3000); });
+    return Promise.race([load, timeout]);
   }
 
   /** 导入一个字体文件：校验、入库、注册，成功后回调 id */
@@ -14091,7 +14475,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     caret.className = 'bs-caret';
     frag.appendChild(caret);
     el.appendChild(frag);
-    return 420 + chars.length * step * 0.7;   // 读完大概要多久
+    /* 最后一个字开始的时间 + 0.62s 入场 + 一小段停留；
+       之前按字数估的时间偏短，长句会在最后几个字还没浮完时就收场。 */
+    const lastStart = 150 + Math.max(0, chars.length - 1) * step;
+    return lastStart + 620 + 520;
   }
 
   /** 上浮微粒：rAF 画，收场时停掉，不常驻 */
@@ -14212,14 +14599,27 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     bsClosed = false;
     bsTimer = 0;
 
-    if (state.quotes.bootAnim === false) { root.hidden = true; return; }
+    if (state.quotes.bootAnim === false) {
+      root.hidden = true;
+      document.documentElement.classList.remove('bs-boot-wait');
+      return;
+    }
 
     const pick = pickBootQuote();
     bootQuotePick = pick || null;
-    if (!pick) { root.hidden = true; return; }   // 语料库空了就直接进界面
+    if (!pick) {
+      root.hidden = true;
+      document.documentElement.classList.remove('bs-boot-wait');
+      return;   // 语料库空了就直接进界面
+    }
 
     root.hidden = false;
+    const quoteEl = $('#bsQuote');
+    if (quoteEl) {
+      quoteEl.style.fontFamily = fontStackForKey(state.typeStyle && state.typeStyle.boot && state.typeStyle.boot.font);
+    }
     const need = bsRenderQuote(pick.text);
+    document.documentElement.classList.remove('bs-boot-wait');
 
     const src = $('#bsSrc');
     if (src) {
@@ -14241,7 +14641,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const onKey = function (e) { if (e.key === 'Escape') { bsClose(); document.removeEventListener('keydown', onKey); } };
     document.addEventListener('keydown', onKey);
 
-    bsNeedMs = Math.min(3000, Math.max(1550, need));
+    bsNeedMs = Math.min(3800, Math.max(1700, need));
   }
 
   /** 读完了，安排收场（至少露一小会儿，太快会像闪一下） */
@@ -14250,11 +14650,19 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     bsTimer = setTimeout(bsClose, bsNeedMs);
   }
 
-  function boot() {
+  async function boot() {
     loadState();
+    try { ensure11Defaults(); } catch (e) { console.warn('[DayLeaf] 数据初始化失败', e); }
     if (!selectedDate) selectedDate = toYMD(new Date());
 
-    /* 先起开场动画：抽一条语录逐字浮现，内容在它下面继续渲染 */
+    /* 开场语录如果用了自定义字体，先等字体真正可用，再画第一句。
+       否则手机上会先按系统字体排一遍，字体加载完再跳一次。 */
+    const bootFontKey = state.typeStyle && state.typeStyle.boot && state.typeStyle.boot.font;
+    if (state.quotes.bootAnim !== false && bootFontKey && String(bootFontKey).indexOf('f_') === 0) {
+      try { await preloadBootFont(); } catch (e) { /* 字体失败就退回系统字体 */ }
+    }
+
+    /* 再起开场动画：抽一条语录逐字浮现，内容在它下面继续渲染 */
     startBootSplash();
     hardenBootSplash();
     /* 兜底：万一某个内核把收场流程卡住，8 秒后无条件撤掉开场层，绝不让人卡在上面 */
@@ -14553,7 +14961,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       state.blocks = ensureBlocks(st.blocks);
       state.cols = ensureCols(st.cols);
       state.draft = null;
-      ['theme', 'home', 'quoteStyle', 'quotes', 'quoteBg', 'quoteFont', 'typeStyle', 'ui', 'clean', 'notify', 'settings', 'lock', 'meta'].forEach(function (k) {
+      ['theme', 'home', 'quoteStyle', 'quotes', 'quoteBg', 'quoteFont', 'typeStyle', 'ui', 'clean', 'notify', 'settings', 'lock', 'meta',
+        'trash', 'categories', 'conflicts', 'weekTemplates'].forEach(function (k) {
         if (st[k] != null) state[k] = st[k];
       });
       ensure11Defaults();
@@ -14623,7 +15032,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.4 快速录入：中文自然语言解析 ---------- */
   function parseQuickText(raw) {
     const text = String(raw || '').trim();
-    const out = { title: '', d: toYMD(new Date()), s: '', e: '', p: '', rm: null };
+    const out = {
+      title: '', d: toYMD(new Date()), s: '', e: '', p: '', rm: null,
+      cat: '', repRule: 'none', repWds: [], repUntil: '', repCount: 0
+    };
     if (!text) return out;
     let rest = text;
     const today = new Date();
@@ -14648,6 +15060,86 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       if (pm && h < 12) h += 12;
       return h;
     };
+    const pickWeekdays = function (s) {
+      const map = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 0, 天: 0 };
+      const outW = [];
+      String(s || '').replace(/[一二三四五六日天]/g, function (ch) {
+        if (outW.indexOf(map[ch]) < 0) outW.push(map[ch]);
+        return ch;
+      });
+      return outW;
+    };
+
+    /* ---------- 重复规则：先剥离，避免「每周三」被当成日期「周三」 ---------- */
+    let repRule = 'none';
+    let repWds = [];
+    let repCount = 0;
+    let repWeeks = 0;
+    let repTermEnd = false;
+    let mRep = rest.match(/(?:每(?:个)?工作日|每个工作日|工作日每天)/);
+    if (mRep) {
+      repRule = 'workday';
+      rest = rest.replace(mRep[0], ' ');
+    } else {
+      mRep = rest.match(/(?:每两周|隔周|双周)([一二三四五六日天、,，和及]{0,14})?/);
+      if (mRep) {
+        repRule = 'biweekly';
+        repWds = pickWeekdays(mRep[1]);
+        rest = rest.replace(mRep[0], ' ');
+      } else {
+        mRep = rest.match(/每(?:周|星期|礼拜)([一二三四五六日天、,，和及]{0,14})?/);
+        if (mRep) {
+          repRule = 'weekly';
+          repWds = pickWeekdays(mRep[1]);
+          rest = rest.replace(mRep[0], ' ');
+        } else {
+          mRep = rest.match(/每(?:天|日|晚)/);
+          if (mRep) { repRule = 'daily'; rest = rest.replace(mRep[0], ' '); }
+          else {
+            mRep = rest.match(/每(?:个)?月/);
+            if (mRep) { repRule = 'monthly'; rest = rest.replace(mRep[0], ' '); }
+          }
+        }
+      }
+    }
+
+    /* ---------- 重复结束条件：到几月几日 / 期末 / 持续 N 周 ---------- */
+    let untilRaw = '';
+    let untilMonthDay = null;
+    if (repRule !== 'none') {
+      let um = rest.match(/(?:到|截止|直到)\s*(\d{4})[-年./](\d{1,2})[-月./](\d{1,2})[日号]?/);
+      if (um) {
+        untilRaw = um[1] + '-' + ('0' + um[2]).slice(-2) + '-' + ('0' + um[3]).slice(-2);
+        rest = rest.replace(um[0], ' ');
+      } else {
+        um = rest.match(/(?:到|截止|直到)\s*(\d{1,2})月(\d{1,2})[日号]?/);
+        if (um) {
+          untilMonthDay = [+um[1], +um[2]];
+          rest = rest.replace(um[0], ' ');
+        } else {
+          um = rest.match(/(?:到|截止|直到)?(?:本|这)?(?:个)?学期末|到期末/);
+          if (um) {
+            repTermEnd = true;
+            rest = rest.replace(um[0], ' ');
+          }
+        }
+      }
+      const nm = rest.match(/(?:持续|连续|共|一共)\s*([0-9一二两三四五六七八九十]+)\s*(周|次)/);
+      if (nm) {
+        const n = qnum(nm[1]);
+        if (isFinite(n) && n > 0) {
+          if (nm[2] === '周') repWeeks = Math.min(200, Math.round(n));
+          else repCount = Math.min(200, Math.round(n));
+        }
+        rest = rest.replace(nm[0], ' ');
+      }
+      const wm = rest.match(/([0-9一二两三四五六七八九十]+)\s*(?:个)?星期(?:的|课|程)?/);
+      if (!repCount && wm && /持续|连续|共/.test(rest)) {
+        const n = qnum(wm[1]);
+        if (isFinite(n) && n > 0) repCount = Math.min(200, Math.round(n));
+        rest = rest.replace(wm[0], ' ');
+      }
+    }
 
     /* ---------- 日期（支持补录：昨天/上周/上上周） ---------- */
     const dt = (function () {
@@ -14692,6 +15184,64 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       return null;
     })();
     if (dt) out.d = toYMD(dt);
+
+    /* 重复规则：没写具体日期的「每周三」自动落到最近一次周三 */
+    if (repRule !== 'none') {
+      let base = fromYMD(out.d);
+      if (!dt && repWds.length) {
+        let best = null;
+        repWds.forEach(function (wd) {
+          const delta = (wd - base.getDay() + 7) % 7;
+          const cand = addDays(base, delta);
+          if (!best || cand < best) best = cand;
+        });
+        if (best) base = best;
+      } else if (!dt && repRule === 'monthly') {
+        const md = rest.match(/(\d{1,2})[日号]/);
+        if (md) {
+          const day = Math.max(1, Math.min(28, Number(md[1]) || 1));
+          let cand = new Date(base.getFullYear(), base.getMonth(), day);
+          if (cand < base) cand = new Date(base.getFullYear(), base.getMonth() + 1, day);
+          base = cand;
+          rest = rest.replace(md[0], ' ');
+        }
+      } else if (!dt && repRule === 'workday') {
+        while (base.getDay() === 0 || base.getDay() === 6) base = addDays(base, 1);
+      }
+      out.d = toYMD(base);
+      if ((repRule === 'weekly' || repRule === 'biweekly') && !repWds.length) {
+        repWds = [base.getDay()];
+      }
+      out.repWds = repWds.slice();
+      if (untilRaw) out.repUntil = untilRaw;
+      else if (untilMonthDay) {
+        let y = base.getFullYear();
+        let d2 = new Date(y, untilMonthDay[0] - 1, untilMonthDay[1]);
+        if (d2 < base) d2 = new Date(y + 1, untilMonthDay[0] - 1, untilMonthDay[1]);
+        out.repUntil = toYMD(d2);
+      } else if (repTermEnd) {
+        out.repUntil = toYMD(addDays(base, 18 * 7));
+      } else if (repWeeks) {
+        const interval = repRule === 'biweekly' ? 2 : 1;
+        const span = repRule === 'daily' ? repWeeks * 7 - 1 : repWeeks * 7 * interval - 1;
+        out.repUntil = toYMD(addDays(base, span));
+      } else if (repCount) {
+        const interval = repRule === 'biweekly' ? 2 : 1;
+        let span = repCount * 7 * interval;
+        if (repRule === 'daily') span = repCount + 1;
+        else if (repRule === 'workday') span = Math.ceil(repCount * 7 / 5) + 7;
+        else if (repRule === 'monthly') {
+          const d3 = new Date(base.getFullYear(), base.getMonth() + repCount, base.getDate());
+          out.repUntil = toYMD(d3);
+        }
+        if (!out.repUntil) out.repUntil = toYMD(addDays(base, span));
+      } else {
+        out.repUntil = toYMD(addDays(base, 60));
+      }
+      out.repRule = repRule;
+      out.repCount = repCount;
+      out.repWeeks = repWeeks;
+    }
 
     /* ---------- 提醒：先剥离，避免“提前30分钟”被当成时长 ---------- */
     const rm = rest.match(/提前\s*(半|[0-9一二两三四五六七八九十]+)\s*个?\s*(分钟|分|小时|钟头)?(?:提醒)?/);
@@ -14779,6 +15329,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     out.title = out.title.replace(/^上(?=[A-Za-z])/, '');
     if (!out.title) out.title = '新日程';
     out.title = out.title.slice(0, 40);
+    out.cat = inferCategoryId(out.title);
     if (!out.s) out.s = '09:00';
     if (out.e) {
       if (toMin(out.e) <= toMin(out.s)) out.e = toHM(Math.min(23 * 60 + 59, toMin(out.s) + 60));
@@ -14814,7 +15365,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!text) {
       box.innerHTML = '<span class="k">示例</span>明天下午3点 开会 1小时 在3F会议室 提前10分钟' +
         '<div class="dl-quick-chips">' +
-        ['今天 20:00 复习英语', '明天 9点 交作业 提前30分钟', '下周三 14:00 项目评审 在B2-102', '昨天 10点 补录会议'].map(function (t) {
+        ['今天 20:00 复习英语', '明天 9点 交作业 提前30分钟', '下周三 14:00 项目评审 在B2-102', '昨天 10点 补录会议',
+          '每周三 19:00 社团活动 到12月31日', '每周一三五 7点 晨跑 持续16周'].map(function (t) {
           return '<button data-quick-tpl="' + esc(t) + '">' + esc(t) + '</button>';
         }).join('') + '</div>';
       return;
@@ -14822,9 +15374,23 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const p = parseQuickText(text);
     const d = fromYMD(p.d);
     quickCtx = p;
+    let rl = '';
+    if (p.repRule && p.repRule !== 'none') {
+      const baseLabel = (REPEAT_RULES.filter(function (r) { return r.key === p.repRule; })[0] || {}).label || '重复';
+      const wdNames = ['日', '一', '二', '三', '四', '五', '六'];
+      const wdTxt = (p.repWds && p.repWds.length && (p.repRule === 'weekly' || p.repRule === 'biweekly'))
+        ? '·' + p.repWds.slice().sort().map(function (w) { return wdNames[w]; }).join('、')
+        : '';
+      rl = baseLabel + wdTxt + ' · 到 ' + p.repUntil;
+      if (p.repCount) rl += ' · 共 ' + p.repCount + ' 次';
+      else if (p.repWeeks) rl += ' · 共 ' + p.repWeeks + ' 周';
+    }
+    const cat = catById(p.cat);
     box.innerHTML = '<b>' + esc(p.title) + '</b><br>' +
       '<span class="k">时间</span>' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WEEKDAY[d.getDay()] + ' ' + p.s + ' – ' + p.e +
       (p.p ? '<br><span class="k">地点</span>' + esc(p.p) : '') +
+      (cat ? '<br><span class="k">分类</span>' + (cat.icon || '') + ' ' + esc(cat.name) : '') +
+      (rl ? '<br><span class="k">重复</span>' + esc(rl) : '') +
       (p.rm != null ? '<br><span class="k">提醒</span>提前 ' + p.rm + ' 分钟' : '');
   }
   function quickSave() {
@@ -14832,28 +15398,75 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!inp) return;
     const p = parseQuickText(inp.value);
     if (!inp.value.trim()) { openEventDialog(null); closeQuickAdd(); return; }
-    const ev = {
-      id: uid('ev'),
-      d: p.d, s: p.s, e: p.e, t: p.title, p: p.p || '', n: '',
-      st: 'todo', imp: false,
-      rm: p.rm == null ? (state.notify && state.notify.defMin != null ? state.notify.defMin : 10) : p.rm,
-      rmOn: p.rm == null ? !!(state.notify && state.notify.on) : true,
-      al: false
+    let list = [];
+    const buildList = function () {
+      let dates = [p.d];
+      if (p.repRule && p.repRule !== 'none') {
+        dates = expandRepeat(p.d, p.repUntil || p.d, p.repRule, (p.repWds || []).slice());
+        if (!dates.length) dates = [p.d];
+        if (p.repCount && dates.length > p.repCount) dates = dates.slice(0, p.repCount);
+      }
+      const gid = dates.length > 1 ? uid('grp') : '';
+      const anchor = dates[0] || p.d;
+      return dates.map(function (ds) {
+        const ev = {
+          id: uid('ev'),
+          d: ds, s: p.s, e: p.e, t: p.title, p: p.p || '', n: '',
+          st: 'todo', cat: p.cat || inferCategoryId(p.title), todos: [], imp: false,
+          rm: p.rm == null ? (state.notify && state.notify.defMin != null ? state.notify.defMin : 10) : p.rm,
+          rmOn: p.rm == null ? !!(state.notify && state.notify.on) : true,
+          al: false
+        };
+        if (gid) {
+          ev.gid = gid;
+          ev.gt = p.title;
+          ev.rr = p.repRule;
+          ev.rw = (p.repRule === 'weekly' || p.repRule === 'biweekly') ? (p.repWds || []).slice() : [];
+          ev.ru = p.repUntil;
+          ev.ga = anchor;
+        }
+        return ev;
+      });
     };
+    list = buildList();
+    const first = list[0];
     const doAdd = function () {
-      state.events.push(ev);
+      state.events = state.events.concat(list);
       saveState();
       closeQuickAdd();
+      weekStart = startOfWeek(fromYMD(first.d));
       renderAll();
-      toast('已添加：' + p.title + ' · ' + p.s, { label: '撤销', fn: function () { deleteEventsWithUndo([ev], '已撤销新建'); } });
+      const msg = list.length > 1
+        ? ('已创建 ' + list.length + ' 项重复日程：' + p.title)
+        : ('已添加：' + p.title + ' · ' + p.s);
+      toast(msg, {
+        label: '撤销',
+        fn: function () {
+          const ids = {};
+          list.forEach(function (x) { ids[x.id] = 1; });
+          state.events = state.events.filter(function (x) { return !ids[x.id]; });
+          (state.meta && state.meta.deletedEvents) && Object.keys(ids).forEach(function (id) {
+            delete state.meta.deletedEvents[id];
+          });
+          saveState();
+          renderAll();
+          toast('已撤销新建');
+        }
+      });
     };
-    const conflicts = findConflicts(ev.d, ev.s, ev.e, []);
+    const conflicts = findConflicts(first.d, first.s, first.e, []);
     if (conflicts.length) {
       const info = conflicts.slice(0, 3).map(function (x) { return x.s + ' – ' + x.e + '  ' + x.t; }).join('\n');
-      const slot = suggestFreeSlot(ev.d, ev.s, Math.max(10, toMin(ev.e) - toMin(ev.s)), []);
+      const slot = suggestFreeSlot(first.d, first.s, Math.max(10, toMin(first.e) - toMin(first.s)), []);
       dlAsk('时间有冲突', '和下面这些日程重叠：\n' + info + (slot ? '\n\n最近的空档：' + slot.s + ' – ' + slot.e : ''),
         '仍然添加', doAdd, '取消',
-        slot ? { label: '改到 ' + slot.s, fn: function () { ev.s = slot.s; ev.e = slot.e; doAdd(); } } : null);
+        slot ? {
+          label: '改到 ' + slot.s,
+          fn: function () {
+            list.forEach(function (ev) { ev.s = slot.s; ev.e = slot.e; });
+            doAdd();
+          }
+        } : null);
       return;
     }
     doAdd();
@@ -14881,6 +15494,11 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       { id: 'theme', t: '切换深浅色', kw: '主题 深色 浅色 theme dark', fn: function () { state.theme = isDarkTheme() ? 'light' : 'dark'; saveState(); applyTheme(); } },
       { id: 'lock', t: '应用锁设置', kw: '锁 密码 pin 隐私 lock', fn: function () { openSettings(); setTimeout(function () { openSetPane('data'); }, 60); } },
       { id: 'share', t: '生成今日分享图', kw: '分享 图片 share poster', fn: shareDayImage },
+      { id: 'trash', t: '打开回收站', kw: '回收站 恢复 删除 trash recycle', fn: openTrash },
+      { id: 'sync', t: '打开同步中心', kw: '同步 冲突 云 局域网 sync conflict', fn: function () { openSyncCenter(); } },
+      { id: 'weekplans', t: '周模板 / 复制上周 / 整周移动', kw: '模板 上周 整周 平移 week template', fn: openWeekTemplates },
+      { id: 'ics', t: '日历订阅（ICS）', kw: '订阅 日历 ics calendar', fn: openIcsManager },
+      { id: 'cats', t: '管理日程分类', kw: '分类 标签 颜色 图标 category tag', fn: openCatManager },
       { id: 'settings', t: '打开设置', kw: '设置 外观 settings', fn: openSettings }
     ];
     out.cmds = cmds.filter(function (c) { return c.t.toLowerCase().indexOf(lower) > -1 || c.kw.indexOf(lower) > -1; });
@@ -15028,7 +15646,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     for (let i = 1; i <= 7; i++) {
       const d = addDays(today, i);
       const ds = toYMD(d);
-      const evs = state.events.filter(function (ev) { return ev.d === ds && ev.st !== 'absent'; }).sort(function (a, b) { return toMin(a.s) - toMin(b.s); });
+      const evs = applyFilters(state.events.filter(function (ev) { return ev.d === ds && ev.st !== 'absent'; })).sort(function (a, b) { return toMin(a.s) - toMin(b.s); });
       if (!evs.length) continue;
       const tag = holidayInfoOf(ds);
       html += '<div class="n7-row"><span class="n7-day">' + (i === 1 ? '明天' : WEEKDAY[d.getDay()]) + '<br>' + (d.getMonth() + 1) + '/' + d.getDate() +
@@ -15340,7 +15958,13 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   }
   window.__dlSyncResult = function (op, ok, data, error) {
     const cb = webdavPending; webdavPending = null;
-    if (!ok) { toast('云同步失败：' + (error || '网络或账号问题')); if (cb) cb(false, data); return; }
+    if (!ok) {
+      syncStatus('cloud', false, (op === 'pull' ? '拉取失败：' : '上传失败：') + (error || '网络或账号问题'));
+      toast('云同步失败：' + (error || '网络或账号问题'));
+      if (cb) cb(false, data);
+      return;
+    }
+    syncStatus('cloud', true, op === 'pull' ? '拉取成功' : '上传成功');
     if (cb) cb(true, data);
   };
   function cloudPush(silent, cb) {
@@ -15348,12 +15972,35 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       webdavCall('push', JSON.stringify(payload), function (ok) {
         if (ok) {
           cloudCfg().lastAt = Date.now();
-          saveState();
+          saveState({ noCloud: true });
           if (!silent) toast('已上传到云端');
         } else if (!silent) toast('上传失败');
         if (cb) cb(ok);
       });
     });
+  }
+  function eventCoreSig(ev) {
+    return [ev.t, ev.d, ev.s, ev.e, ev.p, ev.n, ev.st].join('|');
+  }
+  function slimConflictEvent(ev) {
+    return {
+      id: ev.id, d: ev.d, s: ev.s, e: ev.e, t: ev.t, p: ev.p || '', n: ev.n || '',
+      st: ev.st || 'todo', cat: ev.cat || '', imp: !!ev.imp,
+      rm: ev.rm || 0, rmOn: !!ev.rmOn, al: !!ev.al,
+      todos: (ev.todos || []).map(function (x) { return { id: x.id, t: x.t, done: !!x.done }; })
+    };
+  }
+  function conflictPut(rec) {
+    if (!Array.isArray(state.conflicts)) state.conflicts = [];
+    const sig = rec.kind + '|' + (rec.localId || rec.ds || '') + '|' + (rec.remoteSig || '');
+    const dup = state.conflicts.filter(function (c) {
+      return (c.kind + '|' + (c.localId || c.ds || '') + '|' + (c.remoteSig || '')) === sig;
+    })[0];
+    if (dup) { dup.at = Date.now(); return; }
+    rec.id = rec.id || uid('cf');
+    rec.at = Date.now();
+    state.conflicts.unshift(rec);
+    if (state.conflicts.length > 30) state.conflicts.length = 30;
   }
   function mergeRemotePayload(remote, cb) {
     if (!remote || !remote.state || !Array.isArray(remote.state.events)) { toast('云端文件不是叶历备份'); if (cb) cb(false); return; }
@@ -15366,17 +16013,40 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       /* 1) 先处理删除墓碑：两边都删掉的才算删 */
       Object.keys(dEv).forEach(function (id) {
         if (localById[id]) {
+          const dead = state.events.filter(function (ev) { return ev.id === id; })[0];
+          if (dead) trashPut('event', dead);
           state.events = state.events.filter(function (ev) { return ev.id !== id; });
           removed++;
         }
       });
-      /* 2) 云端独有的日程并进来（按 id 去重，本地已有的保留本地版本） */
-      const localIds = {};
-      state.events.forEach(function (ev) { localIds[ev.id] = 1; });
+      /* 2) 云端独有的日程并进来（按 id 去重，本地已有的保留本地版本）；
+            同 id 但内容不一样时记一条冲突，避免「谁最后拉取谁说了算」。 */
+      const localById2 = {};
+      state.events.forEach(function (ev) { localById2[ev.id] = ev; });
+      let conflictN = 0;
       rs.events.forEach(function (ev) {
-        if (!ev || !ev.id || localIds[ev.id] || dEv[ev.id]) return;
+        if (!ev || !ev.id || dEv[ev.id]) return;
         if (state.meta && state.meta.deletedEvents && state.meta.deletedEvents[ev.id]) return;
+        if (localById2[ev.id]) {
+          const local = localById2[ev.id];
+          if (eventCoreSig(local) !== eventCoreSig(ev)) {
+            conflictPut({
+              kind: 'event',
+              localId: ev.id,
+              title: local.t || ev.t || '冲突日程',
+              localSig: eventCoreSig(local),
+              remoteSig: eventCoreSig(ev),
+              desc: '本机：' + local.d + ' ' + local.s + '–' + local.e + ' ' + local.t +
+                '\n另一版：' + ev.d + ' ' + ev.s + '–' + ev.e + ' ' + ev.t,
+              remote: slimConflictEvent(ev),
+              localSnap: slimConflictEvent(local)
+            });
+            conflictN++;
+          }
+          return;
+        }
         state.events.push(ev);
+        localById2[ev.id] = ev;
         added++;
       });
       /* 3) 记事：按 updatedAt 挑新的 */
@@ -15386,6 +16056,20 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           const remoteU = (remote.notesU && remote.notesU[ds]) || 0;
           const localU = notesU[ds] || 0;
           if (!state.notes[ds] || remoteU > localU) {
+            const localNote = state.notes[ds];
+            if (localNote && JSON.stringify(localNote) !== JSON.stringify(rs.notes[ds])) {
+              conflictPut({
+                kind: 'note',
+                ds: ds,
+                title: ds + ' 的记事冲突',
+                remoteSig: String(remoteU || 0),
+                desc: '本机：' + ((localNote.title || localNote.body || '空').slice(0, 40)) +
+                  '\n另一版：' + ((rs.notes[ds].title || rs.notes[ds].body || '空').slice(0, 40)),
+                localSnap: JSON.parse(JSON.stringify(localNote)),
+                remote: JSON.parse(JSON.stringify(rs.notes[ds]))
+              });
+              conflictN++;
+            }
             state.notes[ds] = rs.notes[ds];
             notesU[ds] = remoteU;
           }
@@ -15395,14 +16079,33 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       ['tags', 'annual'].forEach(function (k) {
         if (rs[k]) state[k] = Object.assign({}, rs[k], state[k] || {});
       });
+      /* 分类 / 周模板 / ICS 订阅：按 id 合并，本地已有的不被覆盖 */
+      if (Array.isArray(rs.categories)) {
+        const have = {};
+        (state.categories || []).forEach(function (c) { have[c.id] = 1; });
+        rs.categories.forEach(function (c) { if (c && c.id && !have[c.id]) state.categories.push(c); });
+      }
+      if (Array.isArray(rs.weekTemplates)) {
+        const haveT = {};
+        (state.weekTemplates || []).forEach(function (t) { haveT[t.id] = 1; });
+        rs.weekTemplates.forEach(function (t) { if (t && t.id && !haveT[t.id]) state.weekTemplates.push(t); });
+        if (state.weekTemplates.length > 20) state.weekTemplates.length = 20;
+      }
+      if (rs.ui && Array.isArray(rs.ui.icsSubs)) {
+        const haveI = {};
+        (state.ui.icsSubs || []).forEach(function (s) { haveI[s.id] = 1; });
+        rs.ui.icsSubs.forEach(function (s) { if (s && s.id && !haveI[s.id]) state.ui.icsSubs.push(s); });
+      }
       if (rs.quotes && rs.quotes.custom) {
         const have = {};
         (state.quotes.custom || []).forEach(function (q) { have[q.id] = 1; });
         rs.quotes.custom.forEach(function (q) { if (q && q.id && !have[q.id]) state.quotes.custom.push(q); });
       }
       saveState(); renderAll();
-      const stats = { added: added, removed: removed };
-      toast('已合并云端数据：新增 ' + added + ' 条' + (removed ? '，删除 ' + removed + ' 条' : ''));
+      renderOrganizePane();
+      const stats = { added: added, removed: removed, conflicts: conflictN };
+      toast('已合并数据：新增 ' + added + ' 条' + (removed ? '，删除 ' + removed + ' 条' : '') +
+        (conflictN ? '，发现 ' + conflictN + ' 处冲突' : ''));
       if (cb) cb(true, stats);
     });
   }
@@ -15415,6 +16118,76 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       mergeRemotePayload(obj);
     });
   }
+  function resolveConflict(id, mode) {
+    const i = (state.conflicts || []).findIndex(function (c) { return c.id === id; });
+    if (i < 0) { renderSyncCenter(); return; }
+    const c = state.conflicts[i];
+    if (mode === 'keep') {
+      if (c.kind === 'note' && c.ds && c.localSnap) {
+        state.notes[c.ds] = c.localSnap;
+        if (state.meta && state.meta.notesU) state.meta.notesU[c.ds] = Date.now();
+      }
+      state.conflicts.splice(i, 1);
+      saveState();
+      renderAll();
+      renderSyncCenter();
+      renderOrganizePane();
+      toast('已保留本机版本');
+      return;
+    }
+    if (c.kind === 'event') {
+      const local = state.events.filter(function (ev) { return ev.id === c.localId; })[0];
+      if (mode === 'use') {
+        if (local && c.remote) {
+          ['d', 's', 'e', 't', 'p', 'n', 'st', 'cat', 'imp', 'rm', 'rmOn', 'al', 'todos'].forEach(function (k) {
+            if (c.remote[k] != null) local[k] = c.remote[k];
+          });
+        }
+        state.conflicts.splice(i, 1);
+        saveState();
+        renderAll();
+        renderSyncCenter();
+        renderOrganizePane();
+        toast(local ? '已采用另一版：' + local.t : '冲突条目已更新');
+        return;
+      }
+      if (mode === 'copy') {
+        if (c.remote) {
+          const copy = Object.assign({}, c.remote, {
+            id: uid('ev'),
+            t: ('【冲突副本】' + (c.remote.t || '日程')).slice(0, 40),
+            st: c.remote.st || 'todo',
+            gid: '', gt: '', xs: []
+          });
+          state.events.push(copy);
+        }
+        state.conflicts.splice(i, 1);
+        saveState();
+        renderAll();
+        renderSyncCenter();
+        renderOrganizePane();
+        toast('已把另一版另存为副本');
+        return;
+      }
+    }
+    if (c.kind === 'note') {
+      if (mode === 'use' && c.ds) {
+        state.notes[c.ds] = c.remote || { title: '', body: '' };
+        if (state.meta && state.meta.notesU) state.meta.notesU[c.ds] = Date.now();
+      }
+      state.conflicts.splice(i, 1);
+      saveState();
+      renderAll();
+      renderSyncCenter();
+      renderOrganizePane();
+      toast('记事冲突已处理');
+      return;
+    }
+    state.conflicts.splice(i, 1);
+    saveState();
+    renderSyncCenter();
+  }
+
   let cloudPushTimer = null;
   function scheduleCloudPush() {
     const cfg = cloudCfg();
@@ -15739,7 +16512,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       .sort(function (a, b) { return a.ts - b.ts; })
       .slice(0, n || 3)
       .map(function (x) {
-        return { title: x.ev.t, time: x.ev.s, body: [x.ev.p, fromYMD(x.ev.d).getMonth() + 1 + '月' + fromYMD(x.ev.d).getDate() + '日'].filter(Boolean).join(' · ') };
+        return {
+          id: x.ev.id,
+          title: x.ev.t,
+          time: x.ev.s,
+          body: [x.ev.p, fromYMD(x.ev.d).getMonth() + 1 + '月' + fromYMD(x.ev.d).getDate() + '日'].filter(Boolean).join(' · ')
+        };
       });
   }
   let statusPushTimer = null;
@@ -15781,10 +16559,116 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   };
   window.__dlShared = function (text) {
     if (!text) return;
-    openQuickAdd(String(text).slice(0, 200));
+    const val = String(text);
+    /* 系统分享图片进来：data URL / file:// 都是图片，不要当成文字塞进快速录入 */
+    if (/^data:image\//i.test(val) || /^file:\/\/.*\.(png|jpe?g|gif|webp|bmp|heic)$/i.test(val)) {
+      openSharedImage(val);
+      return;
+    }
+    openQuickAdd(val.slice(0, 200));
+  };
+  /** 分享进来的图片：可选识别成日程，或直接当配图 */
+  function openSharedImage(src) {
+    const asImage = function () {
+      openEventDialog(null, { img: src, n: '来自系统分享的图片' });
+    };
+    const runOcr = function () {
+      sharedImageToDataUrl(src, function (data) {
+        if (!data) {
+          toast('这张图片读不出来，先放进配图吧');
+          asImage();
+          return;
+        }
+        toast('正在识别图片，首次使用需要联网加载识别引擎…');
+        ocrImage(data).then(function (text) {
+          const clean = String(text || '').trim();
+          if (!clean) {
+            openEventDialog(null, { img: src, n: '来自系统分享的图片（没有识别到文字）' });
+            return;
+          }
+          const r = parseNotice(clean);
+          openEventDialog(null, {
+            d: r.d, s: r.s, e: r.e, t: r.t || '图片日程',
+            p: r.p || '', n: (r.n ? r.n + '\n' : '') + '来自分享图片 · 原文：\n' + clean.slice(0, 400),
+            img: src
+          });
+          toast((r.t || r.s) ? '已识别并填入，请核对后保存' : '没有认出明确时间，原文已放进备注');
+        }).catch(function () {
+          toast('识别失败：首次使用需要联网，已先把图片放进配图');
+          asImage();
+        });
+      });
+    };
+    if (typeof dlAsk === 'function') {
+      dlAsk('收到一张图片', '可以从图片里识别日程，也可以直接把它作为新日程的配图。',
+        '识别成日程', runOcr, '取消', { label: '仅作为配图', fn: asImage });
+    } else runOcr();
+  }
+  /** file:// 或 data URL → dataURL（OCR 和缩略图都只认后者） */
+  function sharedImageToDataUrl(src, cb) {
+    if (/^data:image\//i.test(src)) { cb(src); return; }
+    try {
+      const img = new Image();
+      img.onload = function () {
+        try {
+          const max = 1400;
+          const sc = Math.min(1, max / Math.max(img.width || max, img.height || max));
+          const cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(img.width * sc));
+          cv.height = Math.max(1, Math.round(img.height * sc));
+          cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+          cb(cv.toDataURL('image/jpeg', 0.82));
+        } catch (e) { cb(''); }
+      };
+      img.onerror = function () { cb(''); };
+      img.src = src;
+    } catch (e) { cb(''); }
+  }
+
+  /** 手机通知/小组件点「完成」后同步回页面 */
+  window.__dlNativeDone = function (id) {
+    const eid = String(id || '').replace(/:(?:al|rm)$/, '');
+    const ev = state.events.filter(function (x) { return x.id === eid; })[0];
+    if (!ev) { pushStatusNow(); return; }
+    const before = ev.st;
+    ev.st = 'done';
+    saveState();
+    renderAll();
+    pushStatusNow();
+    toast('已完成「' + ev.t + '」', {
+      label: '撤销',
+      fn: function () { ev.st = before; saveState(); renderAll(); pushStatusNow(); }
+    });
+  };
+  /** 后台全屏闹钟拉起应用：停掉原生铃声，改用应用内全屏面板 */
+  window.__dlNativeAlarm = function (id, title, body) {
+    const nat = nativeBridge();
+    if (nat && nat.stopAlarmRingtone) { try { nat.stopAlarmRingtone(); } catch (e) { /* ignore */ } }
+    const eid = String(id || '').replace(/:(?:al|rm)$/, '');
+    let ev = state.events.filter(function (x) { return x.id === eid; })[0];
+    if (!ev) ev = { t: title || '日程提醒', s: '', e: '', p: body || '' };
+    else if (!ev.p && body) ev = Object.assign({}, ev, { p: body });
+    openAlarm(ev);
+  };
+  window.__dlRingtonePicked = function (ok, name) {
+    const el = $('#ntRingName');
+    if (el && ok) el.textContent = name || '系统默认';
+    if (ok) toast('闹钟铃声已设为：' + (name || '系统默认'));
   };
   window.__dlQuickAdd = function () {
     try { openQuickAdd(); } catch (e) { /* ignore */ }
+  };
+  window.__dlVoiceResult = function (ok, text, err) {
+    const mic = $('#quickVoice');
+    if (mic) mic.classList.remove('rec');
+    if (!ok) { toast(err ? ('语音识别失败：' + err) : '没有听清，再试一次'); return; }
+    const val = String(text || '').trim();
+    if (!val) { toast('没有识别到内容'); return; }
+    const inp = $('#quickInput');
+    if (!inp) { openQuickAdd(val); return; }
+    inp.value = val;
+    quickPreview();
+    toast('已识别，可直接创建或再改改');
   };
 
   /* ---------- 8.16 模块初始化与 UI 接线 ---------- */
@@ -15793,6 +16677,210 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     ensure11Defaults();
     const now = Date.now();
     Object.keys(map || {}).forEach(function (k) { state.meta.deletedEvents[k] = now; });
+  }
+
+
+  /* ---------- 1.1.13 数据：分类 / 回收站 / 冲突 / 周模板 ---------- */
+  function defaultCategories() {
+    return [
+      { id: 'course', name: '课程', icon: '📚', color: '#4C6FFF' },
+      { id: 'homework', name: '作业', icon: '✏️', color: '#F59E0B' },
+      { id: 'club', name: '社团', icon: '🎪', color: '#EC4899' },
+      { id: 'life', name: '生活', icon: '🌿', color: '#16A34A' },
+      { id: 'exam', name: '考试', icon: '🎯', color: '#EF4444' },
+      { id: 'other', name: '其他', icon: '📌', color: '#64748B' }
+    ];
+  }
+  function catById(id) {
+    return (state.categories || []).filter(function (c) { return c.id === id; })[0] || null;
+  }
+  const CAT_PALETTE = ['#4C6FFF', '#8A5CFF', '#EC4899', '#F43F5E', '#F59E0B', '#16A34A', '#06B6D4', '#64748B'];
+  const CAT_ICONS = ['📚', '✏️', '🎪', '🌿', '🎯', '📌', '💼', '🧪', '🎨', '🏃', '🍜', '🎵'];
+  /** 根据标题猜一个默认分类；自定义分类不参与猜测 */
+  function inferCategoryId(title) {
+    const t = String(title || '');
+    if (!t) return '';
+    if (/考试|测验|补考|期末|期中|模拟考|随堂测/.test(t)) return 'exam';
+    if (/作业|论文|复习|预习|实验报告|答辩/.test(t)) return 'homework';
+    if (/社团|活动|比赛|竞赛|聚会|聚餐|志愿|排练|演出|晚会|展览/.test(t)) return 'club';
+    if (/上课|课程|自习|讲座|实验|培训|答疑|班会|课程表|课|数学|英语|物理|化学|语文|历史|地理|生物|编程|Java|Python|微积分|线性代数|概率论|数据结构|算法|经济学|会计|法学|医学/i.test(t)) return 'course';
+    if (/吃饭|早餐|午餐|晚餐|食堂|快递|购物|运动|健身|跑步|洗衣|理发|就医|取件|买菜/.test(t)) return 'life';
+    return '';
+  }
+  function eventCatName(ev) {
+    const c = eventCat(ev);
+    return c ? c.name : '';
+  }
+  function eventCat(ev) {
+    if (!ev || !ev.cat) return null;
+    return catById(ev.cat);
+  }
+  function eventHue(ev) {
+    const cat = eventCat(ev);
+    if (cat && /^#[0-9a-f]{6}$/i.test(cat.color)) {
+      try { return Math.round(hexToHsl(cat.color).h); } catch (e) { /* ignore */ }
+    }
+    return hueOf(ev ? ev.t : '');
+  }
+  function trashAssetKey(tid, part) { return 'trash_' + tid + '_' + part; }
+
+  /**
+   * 放进回收站前把大图挪进 IndexedDB：一条带图的日程动不动几百 KB，
+   * 直接塞 localStorage 会让整个应用的保存配额告急。
+   */
+  function trashPack(type, data, tid) {
+    let copy = data;
+    try { copy = JSON.parse(JSON.stringify(data)); } catch (e) { copy = data; }
+    if (type === 'event' && copy && typeof copy === 'object') {
+      if (copy.img && String(copy.img).length > 1500) {
+        const key = trashAssetKey(tid, 'img');
+        try { AssetDB.put(key, copy.img); } catch (e) { /* 存不进去就忍痛丢图 */ }
+        copy.imgKey = key;
+        copy.img = '';
+      }
+      (copy.att || []).forEach(function (a) {
+        if (a && a.src && String(a.src).length > 1500) a.src = '';
+      });
+    }
+    return copy;
+  }
+
+  function trashPut(type, data) {
+    if (!Array.isArray(state.trash)) state.trash = [];
+    const id = uid('tr');
+    state.trash.unshift({ id: id, type: type, data: trashPack(type, data, id), at: Date.now() });
+    /* 只保留最近 300 条，超出的连资源一起清掉 */
+    while (state.trash.length > 300) {
+      const old = state.trash.pop();
+      trashPurgeAssets(old);
+    }
+    return id;
+  }
+
+  function trashPurgeAssets(entry) {
+    if (!entry || !entry.data) return;
+    const d = entry.data;
+    try {
+      if (d.imgKey) AssetDB.del(d.imgKey);
+      if (entry.type === 'event') {
+        (d.att || []).forEach(function (a) { if (a && a.k) AssetDB.del(a.k); });
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function trashClean() {
+    if (!Array.isArray(state.trash)) { state.trash = []; return; }
+    const cut = Date.now() - 30 * 24 * 3600 * 1000;
+    state.trash = state.trash.filter(function (t) {
+      if (t.at && t.at >= cut) return true;
+      trashPurgeAssets(t);
+      return false;
+    });
+  }
+
+  /** 恢复回收站条目；event 的配图/附件从 IndexedDB 异步补回 */
+  function trashRestore(id, done) {
+    const i = (state.trash || []).findIndex(function (t) { return t.id === id; });
+    if (i < 0) { if (done) done(false); return; }
+    const entry = state.trash[i];
+    const nd = entry.type === 'note' ? (entry.data || {}) : null;
+    if (nd && nd.d && state.notes[nd.d]) {
+      toast('这一天已经有记事，先清空当前内容再恢复，避免覆盖');
+      return;
+    }
+    state.trash.splice(i, 1);
+    const finish = function (ok) {
+      saveState();
+      renderAll();
+      renderOrganizePane();
+      if (done) done(ok);
+    };
+    if (entry.type === 'note') {
+      const d = entry.data || {};
+      if (d.d && !state.notes[d.d]) state.notes[d.d] = d.note || { title: '', body: '' };
+      saveState();
+      renderAll();
+      toast('已恢复 ' + (d.d || '') + ' 的记事');
+      if (done) done(true);
+      return;
+    }
+    if (entry.type !== 'event' || !entry.data) { trashPurgeAssets(entry); finish(false); return; }
+
+    const ev = entry.data;
+    const imgKey = ev.imgKey;
+    delete ev.imgKey;
+    if (state.events.some(function (x) { return x.id === ev.id; })) ev.id = uid('ev');
+    if (state.meta && state.meta.deletedEvents) delete state.meta.deletedEvents[ev.id];
+
+    const missing = [];
+    if (imgKey) missing.push({ key: imgKey, apply: function (val) { ev.img = val || ''; } });
+    (ev.att || []).forEach(function (a) {
+      if (a && a.k && !a.src) missing.push({ key: a.k, apply: function (val) { a.src = val || ''; } });
+    });
+    if (!missing.length) {
+      state.events.push(ev);
+      finish(true);
+      toast('已恢复「' + ev.t + '」');
+      return;
+    }
+    let left = missing.length;
+    const settle = function () {
+      left--;
+      if (left > 0) return;
+      state.events.push(ev);
+      finish(true);
+      toast('已恢复「' + ev.t + '」');
+    };
+    missing.forEach(function (m) {
+      AssetDB.get(m.key).then(function (val) { m.apply(val); settle(); }, settle);
+    });
+  }
+
+  function trashPermanentDelete(id) {
+    const i = (state.trash || []).findIndex(function (t) { return t.id === id; });
+    if (i < 0) return;
+    trashPurgeAssets(state.trash[i]);
+    state.trash.splice(i, 1);
+    saveState();
+  }
+
+  function emptyTrash() {
+    (state.trash || []).forEach(trashPurgeAssets);
+    state.trash = [];
+    saveState();
+    renderOrganizePane();
+  }
+  function syncStatus(kind, ok, msg) {
+    if (!state.ui.syncStatus) state.ui.syncStatus = {};
+    state.ui.syncStatus[kind] = { at: Date.now(), ok: !!ok, msg: msg || '' };
+    saveState({ noCloud: true });
+    try { renderSyncCenter(); renderOrganizePane(); } catch (e) { /* ignore */ }
+  }
+  function eventSig(ev) {
+    return [ev.t, ev.d, ev.s, ev.e, ev.p, ev.n, ev.st, ev.cat || '', JSON.stringify(ev.todos || [])].join('|');
+  }
+  function applyFilters(events) {
+    const f = state.ui.catFilter || '';
+    if (!f) return events;
+    return events.filter(function (ev) { return ev.cat === f; });
+  }
+  function renderCatFilters() {
+    const cats = state.categories || [];
+    const cur = (cats.some(function (c) { return c.id === state.ui.catFilter; })) ? state.ui.catFilter : '';
+    if (cur !== state.ui.catFilter) state.ui.catFilter = cur;
+    ['homeCatFilter', 'gridCatFilter'].forEach(function (id) {
+      const box = $('#' + id);
+      if (!box) return;
+      const counts = {};
+      state.events.forEach(function (ev) { if (ev.cat) counts[ev.cat] = (counts[ev.cat] || 0) + 1; });
+      box.innerHTML = '<button data-cat-filter="" class="' + (cur ? '' : 'on') + '">全部</button>' +
+        cats.map(function (c) {
+          return '<button data-cat-filter="' + esc(c.id) + '" class="' + (cur === c.id ? 'on' : '') + '"' +
+            ' title="' + esc(c.name) + ' · ' + (counts[c.id] || 0) + ' 条">' +
+            (c.icon || '') + ' ' + esc(c.name) + '</button>';
+        }).join('') +
+        '<button type="button" class="cf-manage" data-dl-act="manage-cats" title="管理分类" aria-label="管理分类">⚙</button>';
+    });
   }
 
   function ensure11Defaults() {
@@ -15809,6 +16897,37 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!state.meta.notesU) state.meta.notesU = {};
     deviceId();
     state.meta.updatedAt = state.meta.updatedAt || 0;
+    if (!Array.isArray(state.trash)) state.trash = [];
+    trashClean();
+    if (!Array.isArray(state.categories) || !state.categories.length) state.categories = defaultCategories();
+    state.categories.forEach(function (c) {
+      if (!c.id) c.id = uid('cat');
+      if (!c.name) c.name = '分类';
+      if (!c.icon) c.icon = '📌';
+      if (!/^#[0-9a-f]{6}$/i.test(String(c.color || ''))) c.color = '#64748B';
+    });
+    if (!Array.isArray(state.conflicts)) state.conflicts = [];
+    if (state.conflicts.length > 50) state.conflicts.length = 50;
+    if (!Array.isArray(state.weekTemplates)) state.weekTemplates = [];
+    if (typeof state.ui.catFilter !== 'string') state.ui.catFilter = '';
+    if (!state.ui.syncStatus) state.ui.syncStatus = {};
+    if (!state.ui.syncStatus.cloud) state.ui.syncStatus.cloud = { at: 0, ok: null, msg: '' };
+    if (!state.ui.syncStatus.lan) state.ui.syncStatus.lan = { at: 0, ok: null, msg: '' };
+    if (typeof state.ui.icsUrl !== 'string') state.ui.icsUrl = '';
+    if (!Array.isArray(state.ui.icsSubs)) state.ui.icsSubs = [];
+    if (state.ui.icsUrl && !state.ui.icsSubs.length) {
+      state.ui.icsSubs.push({ id: uid('ics'), url: state.ui.icsUrl, name: '日历订阅', lastAt: 0, count: 0, error: '' });
+      state.ui.icsUrl = '';
+    }
+    /* 兼容旧事件：没分类的按标题猜一个，便于筛选与统计 */
+    state.events.forEach(function (ev) {
+      if (!Array.isArray(ev.todos)) ev.todos = [];
+      ev.todos = ev.todos.filter(function (t) { return t && String(t.t || '').trim(); }).map(function (t) {
+        return { id: t.id || uid('td'), t: String(t.t).slice(0, 80), done: !!t.done };
+      });
+      if (ev.cat && !catById(ev.cat)) ev.cat = '';
+      if (!ev.cat) ev.cat = inferCategoryId(ev.t);
+    });
   }
 
   function init11Features() {
@@ -15862,12 +16981,27 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       if (clRoot) $$('[data-cl-close]', clRoot).forEach(function (el) { el.addEventListener('click', closeChangelog); });
       $('#quickEsc').addEventListener('click', closeQuickAdd);
       $('#quickSave').addEventListener('click', quickSave);
+      (function () {
+        const mic = $('#quickVoice');
+        if (!mic) return;
+        mic.addEventListener('click', function () {
+          const nat = nativeBridge();
+          if (!nat || !nat.startVoiceInput) { toast('语音输入只在手机 App 里可用'); return; }
+          mic.classList.add('rec');
+          try { nat.startVoiceInput(); } catch (e) { mic.classList.remove('rec'); toast('语音输入打不开'); }
+        });
+      })();
       $('#quickFull').addEventListener('click', function () {
         const text = $('#quickInput').value.trim();
         closeQuickAdd();
         if (text) {
           const p = parseQuickText(text);
-          openEventDialog(null, { d: p.d, s: p.s, e: p.e, t: p.title, p: p.p || '', rm: p.rm == null ? undefined : p.rm });
+          openEventDialog(null, {
+            d: p.d, s: p.s, e: p.e, t: p.title, p: p.p || '',
+            rm: p.rm == null ? undefined : p.rm,
+            cat: p.cat || '',
+            repRule: p.repRule || 'none', repWds: p.repWds || [], repUntil: p.repUntil || ''
+          });
         } else openEventDialog(null);
       });
       qRoot.addEventListener('click', function (e) {
@@ -15882,6 +17016,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     /* 启动时的一天快照 + 今日分享图按钮（命令面板里也有） */
     setTimeout(autoSnapshotOnBoot, 4000);
     if (cloudCfg().auto && cloudCfg().url) setTimeout(function () { cloudPull(true); }, 6000);
+    setTimeout(autoRefreshIcsOnBoot, 1200);
 
     /* 分享邮箱/系统设置按钮等委托 */
     document.addEventListener('click', function (e) {
@@ -15941,6 +17076,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       else if (act === 'lock-now') { if (lockOn()) showLock('unlock'); }
       else if (act === 'battery') { const nat = nativeBridge(); if (nat && nat.openBatterySettings) nat.openBatterySettings(); else toast('当前环境不支持'); }
       else if (act === 'sysnotify') { const nat = nativeBridge(); if (nat && nat.openNotificationSettings) nat.openNotificationSettings(); else toast('当前环境不支持'); }
+      else if (act === 'pick-ringtone') { const nat = nativeBridge(); if (nat && nat.pickAlarmRingtone) nat.pickAlarmRingtone(); else toast('当前平台不支持'); }
+      else if (act === 'alarm-channel') { const nat = nativeBridge(); if (nat && nat.openAlarmChannelSettings) nat.openAlarmChannelSettings(); else toast('当前平台不支持'); }
       else if (act === 'changelog') openChangelog();
       else if (act === 'pin-next-widget') { const nat = nativeBridge(); if (nat && nat.pinNextWidget) nat.pinNextWidget(); else toast('当前平台不支持'); }
       else if (act === 'pin-today-widget') { const nat = nativeBridge(); if (nat && nat.pinTodayWidget) nat.pinTodayWidget(); else toast('当前平台不支持'); }
@@ -15951,6 +17088,36 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       else if (act === 'lan-push') lanPush();
       else if (act === 'lan-pull') lanPull();
       else if (act === 'lan-ping') lanPing();
+      else if (act === 'manage-cats') openCatManager();
+      else if (act === 'cat-filter-clear') { state.ui.catFilter = ''; saveState(); renderHome(); renderGrid(); renderNext7(); renderOrganizePane(); toast('已清除分类筛选'); }
+      else if (act === 'open-trash') openTrash();
+      else if (act === 'empty-trash') {
+        if (!(state.trash || []).length) { toast('回收站是空的'); return; }
+        dlAsk('清空回收站？', '这里的内容将无法恢复（共 ' + state.trash.length + ' 项）。', '清空', function () { emptyTrash(); toast('回收站已清空'); });
+      }
+      else if (act === 'open-sync-center') openSyncCenter();
+      else if (act === 'open-conflicts') openSyncCenter('conflicts');
+      else if (act === 'open-week-tpl') openWeekTemplates();
+      else if (act === 'copy-last-week') copyLastWeekToThis();
+      else if (act === 'shift-week-prev') shiftCurrentWeek(-1);
+      else if (act === 'shift-week-next') shiftCurrentWeek(1);
+      else if (act === 'open-ics') openIcsManager();
+      else if (act === 'export-ics-all') exportIcsAll();
+    });
+    /* 分类筛选条：点一下按分类过滤，两个页面共用同一筛选 */
+    document.addEventListener('click', function (e) {
+      const b = e.target.closest ? e.target.closest('[data-cat-filter]') : null;
+      if (!b) return;
+      const val = b.dataset.catFilter || '';
+      if (val && !catById(val)) return;
+      state.ui.catFilter = val;
+      saveState();
+      renderCatFilters();
+      renderHome();
+      renderGrid();
+      renderNext7();
+      renderStats();
+      toast(val ? '只看「' + (catById(val) || {}).name + '」' : '显示全部分类');
     });
     document.addEventListener('change', function (e) {
       if (e.target && e.target.id === 'fullRestoreFile') {
@@ -16028,7 +17195,29 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.12', date: '2026-10-27', latest: true,
+      v: '1.1.13', date: '2026-10-27', latest: true,
+      add: [
+        '新增回收站：删除的日程与记事保留 30 天，可随时恢复或彻底删除；清理过期日程也会先放进回收站。',
+        '新增日程分类：颜色、图标、首页与表格筛选条、按分类统计；旧日程会按标题自动归类。',
+        '日程支持子任务清单：表单里拆步骤，首页与表格显示进度，详情里可直接勾选。',
+        '新增同步中心：集中查看云端/局域网最近结果、失败原因与冲突副本，并可就地重试。',
+        '快捷录入支持自然语言重复（每周一三五、隔周、到12月31日、持续16周等），并支持手机语音输入。',
+        '通知与「下一项」组件增加完成/稍后操作；手机闹钟支持全屏提醒与自定义铃声。',
+        '新增周模板、复制上周到本周、整周前移/后移。',
+        '电脑端新增 Ctrl+Alt+N 全局快速录入；图片可直接拖进窗口，或从「打开方式」分享进来。',
+        '新增 ICS 日历订阅：支持系统日历/教务链接定时刷新、按 UID 更新，并可导出全部 .ics。'
+      ],
+      fix: [
+        '修复分类、回收站、冲突与周模板没有随本地数据正确恢复的问题；同步大图时不再把整张图塞进回收站。',
+        '修复手机启动时开场语录先闪系统字体、字体加载后跳一下的问题：先等自定义字体就绪再显示第一句。',
+        '修复长句开场语录在最后几个字还没浮完时就收场的问题，按实际动画时长延长停留。'
+      ],
+      opt: [
+        '设置新增「整理与同步」分类，把分类、回收站、同步、周计划与 ICS 订阅集中管理。'
+      ]
+    },
+    {
+      v: '1.1.12', date: '2026-10-27', latest: false,
       add: [
         '局域网地址列表会显示网卡名称与类型（Wi‑Fi / 以太网 / 虚拟网卡），192 和 10 开头都可以，不再把 192 当成错误。',
         '手机设置里显示本机 Wi‑Fi IP，并与输入的电脑地址对比网段；跨网段时会直接提示改用热点。'
@@ -16283,6 +17472,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     syncN7Preview();
     syncWidgetUI();
     syncLanUI();
+    renderOrganizePane();
+    (function () {
+      const ring = $('#ntRingName');
+      const nat = nativeBridge();
+      if (!ring || !nat) return;
+      try {
+        if (nat.getAlarmRingtoneName) ring.textContent = nat.getAlarmRingtoneName() || '系统默认';
+      } catch (e) { /* ignore */ }
+    })();
     if (lanHostSupported()) setTimeout(function () { try { nativeBridge().lanInfo && nativeBridge().lanInfo(); } catch (e) { /* ignore */ } }, 120);
     $$('#lockTimeout button').forEach(function (b) {
       b.classList.toggle('on', Number(b.dataset.lockto) === Number(state.lock.timeout || 0));
@@ -16356,6 +17554,853 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     });
   }
 
+
+  /* ---------- 8.19b 整理面板：分类 / 回收站 / 同步中心 / 周模板 / ICS ---------- */
+  function mgrClose() {
+    const root = $('#mgrRoot');
+    if (!root) return;
+    if (root._stacked) { root._stacked = false; popModal(mgrClose); }
+    root.classList.remove('open');
+    root.innerHTML = '';
+  }
+  function mgrOpen(title, sub, body, after) {
+    const root = $('#mgrRoot');
+    if (!root) return;
+    if (root._stacked) { root._stacked = false; popModal(mgrClose); }
+    root.innerHTML =
+      '<div class="mb-back" data-mgr-close></div>' +
+      '<div class="mb-panel mgr-panel" role="dialog" aria-modal="true">' +
+        '<div class="mb-head">' +
+          '<button class="icon-btn round" data-mgr-close aria-label="关闭">' +
+            '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+          '<div class="set-head-tx" style="flex:1;min-width:0">' +
+            '<h3 style="font-size:15px">' + esc(title) + '</h3>' +
+            '<span class="hint" style="margin:0;font-size:10.5px">' + esc(sub || '') + '</span>' +
+          '</div>' +
+          '<span class="mb-head-ph"></span>' +
+        '</div>' +
+        '<div class="mgr-body" id="mgrBody">' + body + '</div>' +
+      '</div>';
+    openLayer(root);
+    root._stacked = true;
+    pushModal(mgrClose);
+    $$('[data-mgr-close]', root).forEach(function (el) { el.addEventListener('click', mgrClose); });
+    if (after) after();
+  }
+
+  function renderOrganizePane() {
+    if (!document.getElementById('setCatSummary')) return;
+    const cats = state.categories || [];
+    const catEl = $('#setCatSummary');
+    if (catEl) {
+      const counts = {};
+      state.events.forEach(function (ev) { if (ev.cat) counts[ev.cat] = (counts[ev.cat] || 0) + 1; });
+      catEl.innerHTML = cats.map(function (c) {
+        return '<span class="pill" style="border-color:' + hexA(c.color, 0.35) + '">' +
+          (c.icon || '📌') + ' ' + esc(c.name) + ' · ' + (counts[c.id] || 0) + '</span>';
+      }).join('') + (state.ui.catFilter
+        ? '<div style="margin-top:4px;color:var(--accent)">正在筛选：' + esc((catById(state.ui.catFilter) || {}).name || '') + '</div>'
+        : '');
+    }
+    const trEl = $('#setTrashSummary');
+    if (trEl) {
+      const n = (state.trash || []).length;
+      trEl.textContent = n
+        ? ('回收站有 ' + n + ' 项，最早一项 ' + fmtAgo(state.trash[state.trash.length - 1].at) + '；30 天内可恢复。')
+        : '回收站是空的。删除的日程和记事会先放到这里。';
+    }
+    const syEl = $('#setSyncSummary');
+    if (syEl) {
+      const c = state.ui.syncStatus.cloud || { at: 0, ok: null, msg: '' };
+      const l = state.ui.syncStatus.lan || { at: 0, ok: null, msg: '' };
+      syEl.innerHTML =
+        '<span class="pill">云端：' + (c.at ? (c.ok ? '正常' : '失败') + ' · ' + fmtAgo(c.at) : '未同步') + '</span>' +
+        '<span class="pill">局域网：' + (l.at ? (l.ok ? '正常' : '失败') + ' · ' + fmtAgo(l.at) : '未使用') + '</span>' +
+        ((state.conflicts || []).length ? '<span class="pill" style="color:#F59E0B">冲突 ' + state.conflicts.length + '</span>' : '');
+    }
+    const icsEl = $('#icsSubList');
+    if (icsEl) {
+      const subs = state.ui.icsSubs || [];
+      icsEl.innerHTML = subs.length
+        ? subs.map(function (s) {
+            return '<div class="mgr-row"><span class="dot" style="background:#06B6D4">📅</span>' +
+              '<span class="tx"><b>' + esc(s.name || '日历订阅') + '</b><span>' +
+                (s.lastAt ? '上次刷新 ' + fmtAgo(s.lastAt) + ' · ' + (s.count || 0) + ' 项' : '还没刷新') +
+                (s.error ? ' · ' + esc(s.error) : '') + '</span></span></div>';
+          }).join('')
+        : '<div class="mgr-tip" style="margin:0">还没有订阅。可以添加学校教务或系统日历的 .ics 链接。</div>';
+    }
+  }
+
+  function fmtAgo(ts) {
+    if (!ts) return '—';
+    const diff = Date.now() - Number(ts);
+    if (diff < 60 * 1000) return '刚刚';
+    if (diff < 3600 * 1000) return Math.floor(diff / 60000) + ' 分钟前';
+    if (diff < 86400 * 1000) return Math.floor(diff / 3600000) + ' 小时前';
+    const d = new Date(Number(ts));
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  /* ---- 分类管理 ---- */
+  let catEditingId = '';
+  function openCatManager() {
+    mgrOpen('日程分类', '颜色与图标会同步到筛选条和统计', '<div id="catMgrBody"></div>', renderCatManager);
+  }
+  function renderCatManager() {
+    const box = $('#catMgrBody');
+    if (!box) return;
+    const editing = catEditingId ? catById(catEditingId) : null;
+    const name = editing ? editing.name : '';
+    const icon = editing ? editing.icon : '📌';
+    const color = editing ? editing.color : '#4C6FFF';
+    const counts = {};
+    state.events.forEach(function (ev) { if (ev.cat) counts[ev.cat] = (counts[ev.cat] || 0) + 1; });
+    box.innerHTML =
+      '<div class="mgr-form">' +
+        '<div class="line"><input type="text" class="inp" id="catName" maxlength="10" placeholder="分类名称，如：科研" value="' + esc(name) + '">' +
+          '<button class="btn primary" id="catSave" style="height:34px;padding:0 13px">' + (editing ? '保存' : '添加') + '</button>' +
+          (editing ? '<button class="mini-btn" id="catCancel">取消</button>' : '') +
+        '</div>' +
+        '<div class="icon-picks" id="catIcons">' + CAT_ICONS.map(function (ic) {
+          return '<button type="button" data-cat-icon="' + ic + '" class="' + (ic === icon ? 'on' : '') + '">' + ic + '</button>';
+        }).join('') + '</div>' +
+        '<div class="swatches" id="catColors">' + CAT_PALETTE.map(function (c) {
+          return '<button type="button" data-cat-color="' + c + '" class="' + (c.toLowerCase() === String(color).toLowerCase() ? 'on' : '') + '" style="background:' + c + '" aria-label="' + c + '"></button>';
+        }).join('') + '<button type="button" id="catColorCustom" style="background:var(--surface);border:1px dashed var(--line2);color:var(--ink2);font-size:11px;width:auto;padding:0 8px">自定义</button></div>' +
+      '</div>' +
+      ((state.categories || []).length
+        ? state.categories.map(function (c) {
+            return '<div class="mgr-row"><span class="dot" style="background:' + c.color + '">' + (c.icon || '📌') + '</span>' +
+              '<span class="tx"><b>' + esc(c.name) + '</b><span>' + (counts[c.id] || 0) + ' 条日程</span></span>' +
+              '<span class="acts"><button data-cat-edit="' + esc(c.id) + '">编辑</button>' +
+                '<button class="danger" data-cat-del="' + esc(c.id) + '">删除</button></span></div>';
+          }).join('')
+        : '<div class="mgr-empty">还没有分类</div>') +
+      '<p class="mgr-tip">删除分类不会删日程，只会把相关日程改回「未分类」。修改颜色后，首页和表格的卡片颜色会一起变。</p>';
+
+    let pickedIcon = icon;
+    let pickedColor = color;
+    $$('[data-cat-icon]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        pickedIcon = b.dataset.catIcon;
+        $$('[data-cat-icon]', box).forEach(function (x) { x.classList.toggle('on', x === b); });
+      });
+    });
+    $$('[data-cat-color]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        pickedColor = b.dataset.catColor;
+        $$('[data-cat-color]', box).forEach(function (x) { x.classList.toggle('on', x === b); });
+      });
+    });
+    const custom = $('#catColorCustom', box);
+    if (custom) {
+      custom.addEventListener('click', function () {
+        openColorPicker(pickedColor, function (hex) {
+          pickedColor = hex;
+          custom.style.background = hex;
+          custom.style.color = '#fff';
+          $$('[data-cat-color]', box).forEach(function (x) { x.classList.remove('on'); });
+        }, null, function () { /* 确认后已经回写到 pickedColor */ });
+      });
+    }
+    const save = $('#catSave', box);
+    if (save) {
+      save.addEventListener('click', function () {
+        const val = ($('#catName', box).value || '').trim();
+        if (!val) { toast('给分类起个名字'); return; }
+        if (catEditingId) {
+          const c = catById(catEditingId);
+          if (c) { c.name = val.slice(0, 10); c.icon = pickedIcon; c.color = pickedColor; }
+          toast('分类已更新');
+        } else {
+          state.categories.push({ id: uid('cat'), name: val.slice(0, 10), icon: pickedIcon, color: pickedColor });
+          toast('已添加分类「' + val + '」');
+        }
+        catEditingId = '';
+        saveState();
+        renderCatManager();
+        renderCatFilters();
+        renderHome();
+        renderGrid();
+        renderStats();
+        renderOrganizePane();
+      });
+    }
+    const cancel = $('#catCancel', box);
+    if (cancel) cancel.addEventListener('click', function () { catEditingId = ''; renderCatManager(); });
+    $$('[data-cat-edit]', box).forEach(function (b) {
+      b.addEventListener('click', function () { catEditingId = b.dataset.catEdit; renderCatManager(); });
+    });
+    $$('[data-cat-del]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const c = catById(b.dataset.catDel);
+        if (!c) return;
+        if ((state.categories || []).length <= 1) { toast('至少保留一个分类'); return; }
+        dlAsk('删除「' + c.name + '」？', '相关日程会变成「未分类」，日程本身不会删除。', '删除', function () {
+          state.categories = state.categories.filter(function (x) { return x.id !== c.id; });
+          state.events.forEach(function (ev) { if (ev.cat === c.id) ev.cat = ''; });
+          if (state.ui.catFilter === c.id) state.ui.catFilter = '';
+          if (catEditingId === c.id) catEditingId = '';
+          saveState();
+          renderCatManager();
+          renderCatFilters();
+          renderAll();
+          renderOrganizePane();
+          toast('已删除分类「' + c.name + '」');
+        });
+      });
+    });
+  }
+
+  /* ---- 回收站 ---- */
+  function openTrash() {
+    mgrOpen('回收站', '保留 30 天，可随时恢复', '<div id="trashBody"></div>', renderTrashList);
+  }
+  function renderTrashList() {
+    const box = $('#trashBody');
+    if (!box) return;
+    const items = state.trash || [];
+    const row = function (t) {
+      const d = t.data || {};
+      let icon = '🗑';
+      let title = '未知内容';
+      let meta = '';
+      if (t.type === 'event') {
+        icon = catById(d.cat) ? (catById(d.cat).icon || '📌') : '📅';
+        title = d.t || '未命名日程';
+        meta = (d.d || '') + ' · ' + (d.s || '') + '–' + (d.e || '') + (d.p ? ' · ' + d.p : '');
+      } else if (t.type === 'note') {
+        icon = '📝';
+        const n = d.note || {};
+        title = (n.title || n.body || '空记事').slice(0, 28);
+        meta = (d.d || '') + ' 的记事';
+      }
+      const days = Math.max(0, 30 - Math.floor((Date.now() - (t.at || Date.now())) / 86400000));
+      return '<div class="mgr-row"><span class="dot" style="background:var(--surface-2)">' + icon + '</span>' +
+        '<span class="tx"><b>' + esc(title) + '</b><span>' + esc(meta) + ' · ' + days + ' 天后过期</span></span>' +
+        '<span class="acts"><button class="ok" data-tr-restore="' + esc(t.id) + '">恢复</button>' +
+          '<button class="danger" data-tr-del="' + esc(t.id) + '">删除</button></span></div>';
+    };
+    box.innerHTML =
+      '<div class="line" style="display:flex;gap:8px;margin-bottom:10px">' +
+        '<span class="mgr-tip" style="flex:1;margin:0">共 ' + items.length + ' 项，回收站最多保留 300 项。</span>' +
+        (items.length ? '<button class="mini-btn" id="trashEmpty">清空</button>' : '') +
+      '</div>' +
+      (items.length ? items.map(row).join('') :
+        '<div class="mgr-empty">回收站是空的。<br>删除日程或记事时会先放到这里，避免手滑。</div>');
+    $$('[data-tr-restore]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        trashRestore(b.dataset.trRestore, function () { renderTrashList(); });
+      });
+    });
+    $$('[data-tr-del]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        trashPermanentDelete(b.dataset.trDel);
+        renderTrashList();
+        renderOrganizePane();
+        toast('已彻底删除');
+      });
+    });
+    const empty = $('#trashEmpty', box);
+    if (empty) {
+      empty.addEventListener('click', function () {
+        dlAsk('清空回收站？', '共 ' + items.length + ' 项，清空后无法恢复。', '清空', function () {
+          emptyTrash();
+          renderTrashList();
+          toast('回收站已清空');
+        });
+      });
+    }
+  }
+
+  /* ---- 同步中心 ---- */
+  function syncCard(kind, title, st, acts) {
+    const dot = st && st.at ? (st.ok ? 'ok' : 'bad') : '';
+    return '<div class="sync-card"><div class="sc-head"><i class="sc-dot ' + dot + '"></i>' + esc(title) + '</div>' +
+      '<div class="sc-meta">' +
+        (st && st.at
+          ? (st.ok ? '上次成功' : '上次失败') + '：' + fmtAgo(st.at) + (st.msg ? ' · ' + esc(st.msg) : '')
+          : '还没有同步记录') +
+      '</div><div class="sc-acts">' + acts + '</div></div>';
+  }
+  function openSyncCenter(focus) {
+    mgrOpen('同步中心', '最近状态、失败原因与冲突副本', '<div id="syncBody"></div>', function () {
+      renderSyncCenter();
+      if (focus === 'conflicts') {
+        const el = $('#syncConflicts');
+        if (el) el.scrollIntoView({ block: 'start' });
+      }
+    });
+  }
+  function renderSyncCenter() {
+    const box = $('#syncBody');
+    if (!box) return;
+    const cfg = cloudCfg();
+    const cst = state.ui.syncStatus.cloud || { at: 0, ok: null, msg: '' };
+    const lst = state.ui.syncStatus.lan || { at: 0, ok: null, msg: '' };
+    const lp = lanPeer || {};
+    const conflicts = state.conflicts || [];
+    box.innerHTML =
+      '<div class="mgr-sec">云端（WebDAV）</div>' +
+      syncCard('cloud', cfg.url ? '已配置 · ' + cfg.url : '未配置云端地址', cst,
+        '<button class="primary" data-sc="cloud-push">上传</button>' +
+        '<button data-sc="cloud-pull">合并云端</button>' +
+        '<button data-sc="cloud-settings">同步设置</button>') +
+      '<div class="mgr-tip">合并规则：按日程 id 去重；删除会同步；同名但内容不同的条目会留成冲突，等你决定。</div>' +
+
+      '<div class="mgr-sec">局域网（同一 Wi-Fi）</div>' +
+      '<div class="sync-card"><div class="sc-head"><i class="sc-dot ' + (lp.at && !lp.bad ? 'ok' : (lp.bad ? 'bad' : '')) + '"></i>' +
+        (lanHostSupported() ? '电脑端正在接收' : (lanState().on ? '正在开启' : '手机端')) + '</div>' +
+        '<div class="sc-meta">' +
+          (lanHostSupported()
+            ? (lanInfoCache && lanInfoCache.running
+                ? '地址 ' + esc(lanInfoCache.ips && lanInfoCache.ips[0] ? 'http://' + (lanInfoCache.ips[0].ip || lanInfoCache.ips[0]) + ':' + (lanInfoCache.port || '') : '—') +
+                  ' · 配对码 ' + esc(lanState().token || '—')
+                : '未开启')
+            : '上次操作：' + (lst.at ? fmtAgo(lst.at) : '—')) +
+          (lp.at ? ' · 最近连接 ' + fmtAgo(lp.at) + (lp.count ? ' · ' + lp.count + ' 条' : '') : '') +
+        '</div><div class="sc-acts">' +
+          (lanHostSupported()
+            ? '<button class="primary" data-sc="lan-toggle">' + (lanState().on ? '关闭局域网' : '开启局域网') + '</button>'
+            : '<button class="primary" data-sc="lan-push">发送到电脑</button><button data-sc="lan-pull">从电脑拉取</button><button data-sc="lan-ping">测试连接</button>') +
+          '<button data-sc="lan-settings">局域网设置</button>' +
+        '</div></div>' +
+      (lst.at ? '<div class="mgr-tip">' + (lst.ok ? '✓ ' : '⚠ ') + esc(lst.msg || '') + '</div>' : '') +
+
+      '<div class="mgr-sec" id="syncConflicts">冲突与异常（' + conflicts.length + '）</div>' +
+      (conflicts.length
+        ? conflicts.map(function (c) {
+            return '<div class="conflict-card"><b>' + esc(c.title || '冲突日程') + '</b>' +
+              '<p>' + esc(c.desc || '两边都改过同一条日程，保留本机内容，同时记下了另一边的版本。') + '</p>' +
+              '<div class="acts">' +
+                '<button data-cf="keep" data-cf-id="' + esc(c.id) + '">保留本机</button>' +
+                (c.kind === 'event'
+                  ? '<button data-cf="use" data-cf-id="' + esc(c.id) + '">采用另一版</button>' +
+                    '<button data-cf="copy" data-cf-id="' + esc(c.id) + '">另存副本</button>'
+                  : '<button data-cf="use" data-cf-id="' + esc(c.id) + '">采用另一版</button>') +
+              '</div></div>';
+          }).join('')
+        : '<div class="mgr-empty">没有冲突。同步正常时这里会一直为空。</div>') +
+      '<p class="mgr-tip">冲突大多来自两台设备同时改了同一条日程。建议先各自上传一次，再回来处理。</p>';
+
+    $$('[data-sc]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const act = b.dataset.sc;
+        if (act === 'cloud-push') { closeSyncPaneToSettings(); cloudPush(false, function (ok) { if (ok) syncStatus('cloud', true, '手动上传成功'); renderSyncCenter(); }); }
+        else if (act === 'cloud-pull') { cloudPull(false); setTimeout(renderSyncCenter, 800); }
+        else if (act === 'lan-push') { lanPush(); setTimeout(renderSyncCenter, 1200); }
+        else if (act === 'lan-pull') { lanPull(); setTimeout(renderSyncCenter, 1200); }
+        else if (act === 'lan-ping') { lanPing(); }
+        else if (act === 'lan-toggle') {
+          if (lanState().on) stopLanHost(); else startLanHost();
+          setTimeout(renderSyncCenter, 300);
+        }
+        else if (act === 'cloud-settings' || act === 'lan-settings') {
+          mgrClose();
+          if (document.getElementById('setPanes')) openSetPane('data');
+          else { openSettings(); setTimeout(function () { openSetPane('data'); }, 60); }
+        }
+      });
+    });
+    $$('[data-cf]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        resolveConflict(b.dataset.cfId, b.dataset.cf);
+      });
+    });
+  }
+  function closeSyncPaneToSettings() { /* 保留同步中心，操作完成后原地刷新 */ }
+
+  /* ---- 周模板 / 复制上周 / 整周平移 ---- */
+  function weekEventsOf(ws) {
+    const from = toYMD(ws), to = toYMD(addDays(ws, 6));
+    return state.events.filter(function (ev) { return ev.d >= from && ev.d <= to; });
+  }
+  function openWeekTemplates() {
+    mgrOpen('周计划', '模板、复制上周与整周平移', '<div id="weekTplBody"></div>', renderWeekTemplates);
+  }
+  function renderWeekTemplates() {
+    const box = $('#weekTplBody');
+    if (!box) return;
+    const ws = weekStart;
+    const range = (ws.getMonth() + 1) + '/' + ws.getDate() + '–' +
+      (addDays(ws, 6).getMonth() + 1) + '/' + addDays(ws, 6).getDate();
+    const tpls = state.weekTemplates || [];
+    box.innerHTML =
+      '<div class="mgr-form"><div class="line">' +
+        '<input type="text" class="inp" id="weekTplName" maxlength="20" placeholder="模板名称，如：大三下课程表">' +
+        '<button class="btn primary" id="weekTplSave" style="height:34px;padding:0 13px">保存本周</button>' +
+      '</div><div class="mgr-tip" style="margin:0">当前周 ' + esc(range) + ' · ' + weekEventsOf(ws).length + ' 项日程。模板只存星期几与时间，不绑定具体日期。</div></div>' +
+      '<div class="mgr-row"><span class="dot" style="background:var(--accent)">↺</span><span class="tx"><b>把上周复制到本周</b><span>补齐漏掉的固定安排</span></span>' +
+        '<span class="acts"><button data-wk="copy-last">复制</button></span></div>' +
+      '<div class="mgr-row"><span class="dot" style="background:var(--accent2)">↔</span><span class="tx"><b>整周平移</b><span>把当前周所有日程整体前移/后移一周</span></span>' +
+        '<span class="acts"><button data-wk="shift-prev">前移</button><button data-wk="shift-next">后移</button></span></div>' +
+      '<div class="mgr-sec">已保存的模板</div>' +
+      (tpls.length
+        ? tpls.map(function (t) {
+            return '<div class="week-tpl-row"><span class="tx"><b>' + esc(t.name) + '</b><span>' +
+              (t.items ? t.items.length : 0) + ' 项 · ' + fmtAgo(t.at) + '</span></span>' +
+              '<button class="primary" data-tpl-apply="' + esc(t.id) + '">套用到本周</button>' +
+              '<button data-tpl-del="' + esc(t.id) + '">删除</button></div>';
+          }).join('')
+        : '<div class="mgr-empty">还没有模板。先把这一周的课表存下来，下周直接套用。</div>');
+
+    const save = $('#weekTplSave', box);
+    if (save) {
+      save.addEventListener('click', function () {
+        const nameEl = $('#weekTplName', box);
+        const name = (nameEl.value || '').trim();
+        if (!name) { toast('给模板起个名字'); nameEl.focus(); return; }
+        const items = weekEventsOf(ws).map(function (ev) {
+          return {
+            wd: fromYMD(ev.d).getDay(),
+            s: ev.s, e: ev.e, t: ev.t, p: ev.p || '', n: ev.n || '',
+            cat: ev.cat || '', imp: !!ev.imp, rmOn: !!ev.rmOn, rm: ev.rm || 0,
+            todos: (ev.todos || []).map(function (x) { return { id: uid('td'), t: x.t, done: false }; })
+          };
+        });
+        if (!items.length) { toast('这一周没有日程可保存'); return; }
+        state.weekTemplates.unshift({ id: uid('tpl'), name: name.slice(0, 20), items: items, at: Date.now() });
+        if (state.weekTemplates.length > 20) state.weekTemplates.length = 20;
+        saveState();
+        renderWeekTemplates();
+        renderOrganizePane();
+        toast('已保存模板「' + name + '」');
+      });
+    }
+    $$('[data-wk]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.dataset.wk === 'copy-last') { copyLastWeekToThis(); renderWeekTemplates(); }
+        else if (b.dataset.wk === 'shift-prev') shiftCurrentWeek(-1);
+        else if (b.dataset.wk === 'shift-next') shiftCurrentWeek(1);
+      });
+    });
+    $$('[data-tpl-apply]', box).forEach(function (b) {
+      b.addEventListener('click', function () { applyWeekTemplate(b.dataset.tplApply); });
+    });
+    $$('[data-tpl-del]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const id = b.dataset.tplDel;
+        dlAsk('删除这个模板？', '只删除模板，不影响已排进日程的内容。', '删除', function () {
+          state.weekTemplates = state.weekTemplates.filter(function (t) { return t.id !== id; });
+          saveState();
+          renderWeekTemplates();
+          toast('模板已删除');
+        });
+      });
+    });
+  }
+  function applyWeekTemplate(id) {
+    const tpl = (state.weekTemplates || []).filter(function (t) { return t.id === id; })[0];
+    if (!tpl) return;
+    const ws = weekStart;
+    const mon = addDays(ws, 0);
+    const existing = {};
+    weekEventsOf(ws).forEach(function (ev) {
+      existing[ev.d + '|' + ev.t + '|' + ev.s + '|' + ev.e] = 1;
+    });
+    const added = [];
+    (tpl.items || []).forEach(function (it) {
+      const offset = (Number(it.wd) + 6) % 7;      // 周一 = 0
+      const ds = toYMD(addDays(mon, offset));
+      const key = ds + '|' + it.t + '|' + it.s + '|' + it.e;
+      if (existing[key]) return;
+      existing[key] = 1;
+      added.push({
+        id: uid('ev'), d: ds, s: it.s, e: it.e, t: it.t, p: it.p || '', n: it.n || '',
+        st: 'todo', cat: it.cat || '', imp: !!it.imp, rmOn: !!it.rmOn, rm: it.rm || 0,
+        al: false, todos: it.todos || []
+      });
+    });
+    if (!added.length) { toast('这一周已经套用过这个模板了'); return; }
+    state.events = state.events.concat(added);
+    saveState();
+    renderAll();
+    renderWeekTemplates();
+    renderOrganizePane();
+    toast('已套用模板，新增 ' + added.length + ' 项', {
+      label: '撤销',
+      fn: function () {
+        const ids = {};
+        added.forEach(function (x) { ids[x.id] = 1; });
+        state.events = state.events.filter(function (x) { return !ids[x.id]; });
+        saveState(); renderAll(); renderWeekTemplates();
+        toast('已撤销模板套用');
+      }
+    });
+  }
+  function copyLastWeekToThis() {
+    const prev = addDays(weekStart, -7);
+    const from = toYMD(prev), to = toYMD(addDays(prev, 6));
+    const src = state.events.filter(function (ev) { return ev.d >= from && ev.d <= to; });
+    if (!src.length) { toast('上周还没有日程'); return; }
+    const existing = {};
+    weekEventsOf(weekStart).forEach(function (ev) { existing[ev.d + '|' + ev.t + '|' + ev.s + '|' + ev.e] = 1; });
+    const added = [];
+    src.forEach(function (ev) {
+      const ds = toYMD(addDays(fromYMD(ev.d), 7));
+      const key = ds + '|' + ev.t + '|' + ev.s + '|' + ev.e;
+      if (existing[key]) return;
+      existing[key] = 1;
+      const copy = JSON.parse(JSON.stringify(ev));
+      copy.id = uid('ev');
+      copy.d = ds;
+      copy.gid = ''; copy.gt = ''; copy.rr = ''; copy.rw = []; copy.ru = ''; copy.ga = ''; copy.xs = [];
+      copy.todos = (copy.todos || []).map(function (t) { t.id = uid('td'); t.done = false; return t; });
+      copy.st = 'todo';
+      added.push(copy);
+    });
+    if (!added.length) { toast('本周已经和上周一样了'); return; }
+    state.events = state.events.concat(added);
+    saveState();
+    renderAll();
+    renderOrganizePane();
+    toast('已复制上周 ' + added.length + ' 项到本周', {
+      label: '撤销',
+      fn: function () {
+        const ids = {};
+        added.forEach(function (x) { ids[x.id] = 1; });
+        state.events = state.events.filter(function (x) { return !ids[x.id]; });
+        saveState(); renderAll();
+        toast('已撤销复制');
+      }
+    });
+  }
+  function shiftCurrentWeek(dir) {
+    const n = Number(dir) || 0;
+    if (!n) return;
+    const list = weekEventsOf(weekStart);
+    if (!list.length) { toast('当前周没有可移动的日程'); return; }
+    const before = list.map(function (ev) { return ev.d; });
+    list.forEach(function (ev, i) {
+      ev.d = toYMD(addDays(fromYMD(before[i]), n * 7));
+      delete ev.gid; delete ev.gt; delete ev.rr; delete ev.rw; delete ev.ru; delete ev.ga;
+    });
+    saveState();
+    weekStart = addDays(weekStart, n * 7);
+    renderAll();
+    renderOrganizePane();
+    toast('已把 ' + list.length + ' 项日程' + (n > 0 ? '后移' : '前移') + '一周', {
+      label: '撤销',
+      fn: function () {
+        list.forEach(function (ev, i) { ev.d = before[i]; });
+        weekStart = addDays(weekStart, -n * 7);
+        saveState(); renderAll();
+        toast('已撤销整周移动');
+      }
+    });
+  }
+
+  /* ---- ICS 订阅 / 导出全部 ---- */
+  function openIcsManager() {
+    mgrOpen('日历订阅', '从 ICS 链接刷新，按 UID 去重', '<div id="icsMgrBody"></div>', renderIcsManager);
+  }
+  function renderIcsManager() {
+    const box = $('#icsMgrBody');
+    if (!box) return;
+    const subs = state.ui.icsSubs || [];
+    box.innerHTML =
+      '<div class="mgr-form"><div class="line">' +
+        '<input type="text" class="inp" id="icsName" maxlength="20" placeholder="订阅名称（可选）">' +
+      '</div><div class="line">' +
+        '<input type="text" class="inp" id="icsUrl" placeholder="https://…/calendar.ics" autocapitalize="off" spellcheck="false">' +
+        '<button class="btn primary" id="icsAdd" style="height:34px;padding:0 13px;flex:0 0 auto">添加</button>' +
+      '</div><div class="mgr-tip" style="margin:0">支持系统日历、学校教务导出的 ICS 链接；也可以直接粘贴以 webcal:// 开头的地址。</div></div>' +
+      (subs.length
+        ? subs.map(function (s) {
+            return '<div class="ics-row"><div class="line"><b>' + esc(s.name || '日历订阅') + '</b>' +
+              '<span>' + (s.lastAt ? fmtAgo(s.lastAt) : '未刷新') + ' · ' + (s.count || 0) + ' 项</span></div>' +
+              '<div class="mgr-tip" style="margin:0;word-break:break-all">' + esc(s.url) + (s.error ? '<br><span style="color:#F43F5E">' + esc(s.error) + '</span>' : '') + '</div>' +
+              '<div class="acts"><button data-ics-refresh="' + esc(s.id) + '">刷新</button>' +
+                '<button data-ics-copy="' + esc(s.id) + '">复制链接</button>' +
+                '<button data-ics-del="' + esc(s.id) + '">删除</button></div></div>';
+          }).join('')
+        : '<div class="mgr-empty">还没有订阅。<br>添加后点「刷新」把课表拉进来。</div>') +
+      '<p class="mgr-tip">刷新会自动更新同一 UID 的日程；订阅中已删除的日程也会从本机移除。你手动改过的标题/时间会在下次刷新时被订阅内容覆盖。</p>';
+
+    const add = $('#icsAdd', box);
+    if (add) {
+      add.addEventListener('click', function () {
+        let url = ($('#icsUrl', box).value || '').trim();
+        if (!url) { toast('先填 ICS 链接'); return; }
+        url = url.replace(/^webcal:\/\//i, 'https://');
+        if (!/^https?:\/\//i.test(url)) { toast('链接要以 http:// 或 https:// 开头'); return; }
+        const name = ($('#icsName', box).value || '').trim() || ('订阅 ' + ((state.ui.icsSubs || []).length + 1));
+        state.ui.icsSubs.push({ id: uid('ics'), name: name.slice(0, 20), url: url, lastAt: 0, count: 0, error: '' });
+        saveState();
+        renderIcsManager();
+        renderOrganizePane();
+        toast('已添加订阅，正在刷新…');
+        setTimeout(refreshIcsSub, 100);
+      });
+    }
+    $$('[data-ics-refresh]', box).forEach(function (b) {
+      b.addEventListener('click', function () { refreshIcsSub(b.dataset.icsRefresh); });
+    });
+    $$('[data-ics-copy]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const s = (state.ui.icsSubs || []).filter(function (x) { return x.id === b.dataset.icsCopy; })[0];
+        if (s) ctxCopy(s.url);
+      });
+    });
+    $$('[data-ics-del]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const id = b.dataset.icsDel;
+        dlAsk('删除这个订阅？', '只会停止更新；已经导入的日程会保留。', '删除', function () {
+          state.ui.icsSubs = (state.ui.icsSubs || []).filter(function (x) { return x.id !== id; });
+          saveState();
+          renderIcsManager();
+          renderOrganizePane();
+          toast('订阅已删除');
+        });
+      });
+    });
+  }
+
+  let httpReqSeq = 0;
+  const httpPending = {};
+  function nativeHttpGet(url, cb) {
+    const nat = nativeBridge();
+    if (nat && nat.httpGet) {
+      const id = 'hg' + (++httpReqSeq);
+      httpPending[id] = cb;
+      try { nat.httpGet(url, id); } catch (e) { delete httpPending[id]; cb(false, '', '调用失败'); }
+      return;
+    }
+    if (window.fetch) {
+      const to = setTimeout(function () { cb(false, '', '请求超时'); }, 15000);
+      fetch(url, { method: 'GET' }).then(function (r) {
+        return r.text();
+      }).then(function (txt) {
+        clearTimeout(to);
+        cb(true, txt, '');
+      }, function (err) {
+        clearTimeout(to);
+        cb(false, '', err && err.message ? err.message : '网络错误');
+      });
+      return;
+    }
+    cb(false, '', '当前环境不支持网络请求');
+  }
+  window.__dlHttpGetResult = function (id, ok, data, err) {
+    const cb = httpPending[id];
+    delete httpPending[id];
+    if (cb) cb(!!ok, data || '', err || '');
+  };
+
+  function refreshIcsSub(id, silent) {
+    const sub = (state.ui.icsSubs || []).filter(function (x) { return x.id === id; })[0];
+    if (!sub) return;
+    sub.error = '';
+    if (!silent) toast('正在刷新「' + (sub.name || '订阅') + '」…');
+    nativeHttpGet(sub.url, function (ok, text, err) {
+      if (!ok) {
+        sub.error = err || '网络错误';
+        syncStatus('ics', false, sub.name + '：' + sub.error);
+        saveState();
+        renderIcsManager();
+        renderOrganizePane();
+        if (!silent) toast('订阅刷新失败：' + sub.error);
+        return;
+      }
+      let events = [];
+      try { events = parseIcsEvents(text); } catch (e) { events = []; }
+      if (!events.length) {
+        sub.error = '链接里没有读到日程';
+        syncStatus('ics', false, sub.name + '：没有日程');
+        saveState();
+        renderIcsManager();
+        if (!silent) toast('这个链接里没有读到日程');
+        return;
+      }
+      const r = mergeIcsEvents(sub, events);
+      sub.lastAt = Date.now();
+      sub.count = events.length;
+      sub.error = '';
+      syncStatus('ics', true, sub.name + ' 更新 ' + r.added + ' 项');
+      saveState();
+      renderAll();
+      renderIcsManager();
+      renderOrganizePane();
+      if (!silent) toast('「' + (sub.name || '订阅') + '」已更新：新增 ' + r.added + '，更新 ' + r.updated + '，移除 ' + r.removed);
+    });
+  }
+
+  function mergeIcsEvents(sub, events) {
+    const existing = {};
+    state.events.forEach(function (ev) {
+      if (ev.icsSub === sub.id) existing[(ev.icsUid || '') + '|' + ev.d] = ev;
+    });
+    const seen = {};
+    let added = 0, updated = 0;
+    events.forEach(function (it) {
+      const key = (it.uid || '') + '|' + it.d;
+      seen[key] = 1;
+      const old = existing[key];
+      if (old) {
+        old.s = it.s; old.e = it.e; old.t = it.t; old.p = it.p; old.n = it.n;
+        updated++;
+      } else {
+        state.events.push({
+          id: uid('ev'), d: it.d, s: it.s, e: it.e, t: it.t, p: it.p || '', n: it.n || '',
+          st: 'todo', imp: false, rm: 0, rmOn: false, al: false,
+          cat: inferCategoryId(it.t), todos: [],
+          icsSub: sub.id, icsUid: it.uid || ''
+        });
+        added++;
+      }
+    });
+    let removed = 0;
+    Object.keys(existing).forEach(function (key) {
+      if (seen[key]) return;
+      state.events = state.events.filter(function (ev) { return ev !== existing[key]; });
+      removed++;
+    });
+    return { added: added, updated: updated, removed: removed };
+  }
+
+  function parseIcsEvents(text) {
+    const src = String(text || '').replace(/\r?\n[ \t]/g, '');
+    const blocks = src.split(/BEGIN:VEVENT/i).slice(1);
+    const out = [];
+    blocks.forEach(function (b) {
+      const body = b.split(/END:VEVENT/i)[0];
+      const get = function (k) {
+        const m = body.match(new RegExp('^' + k + '[^:\r\n]*:(.*)$', 'mi'));
+        return m ? m[1].trim() : '';
+      };
+      const uid = get('UID') || ('ics-' + Math.random().toString(36).slice(2, 10));
+      const title = (get('SUMMARY') || '未命名').replace(/\\,/g, ',').replace(/\\n/gi, ' ').slice(0, 40);
+      const place = (get('LOCATION') || '').replace(/\\,/g, ',');
+      const note = (get('DESCRIPTION') || '').replace(/\\n/gi, ' ').replace(/\\,/g, ',').slice(0, 200);
+      const parseDt = function (v) {
+        const m = String(v).match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
+        if (!m) return null;
+        return { d: m[1] + '-' + m[2] + '-' + m[3], t: m[4] ? (m[4] + ':' + m[5]) : '09:00', dateOnly: !m[4] };
+      };
+      const dsRaw = get('DTSTART');
+      const deRaw = get('DTEND');
+      const s = parseDt(dsRaw), e = parseDt(deRaw);
+      if (!s) return;
+      const st = s.dateOnly ? '00:00' : s.t;
+      const et = e ? (e.dateOnly ? '23:59' : e.t) : toHM(Math.min(23 * 60 + 59, toMin(st) + 60));
+      const rrule = get('RRULE');
+      const exSet = {};
+      String(get('EXDATE') || '').replace(/(\d{4})(\d{2})(\d{2})/g, function (_, y, m2, d2) {
+        exSet[y + '-' + m2 + '-' + d2] = 1;
+        return _;
+      });
+      const dates = expandIcsRule(s.d, rrule).filter(function (d) { return !exSet[d]; });
+      dates.forEach(function (d) {
+        out.push({ uid: uid, d: d, s: st, e: et, t: title, p: place, n: note });
+      });
+    });
+    return out;
+  }
+
+  function expandIcsRule(startYmd, rrule) {
+    const out = [startYmd];
+    if (!rrule) return out;
+    const rule = String(rrule).toUpperCase();
+    const freq = (/FREQ=([A-Z]+)/.exec(rule) || [])[1];
+    if (!freq) return out;
+    const interval = Math.max(1, Number((/INTERVAL=(\d+)/.exec(rule) || [])[1] || 1));
+    const count = Number((/COUNT=(\d+)/.exec(rule) || [])[1] || 0);
+    let until = null;
+    const um = /UNTIL=(\d{4})(\d{2})(\d{2})/.exec(rule);
+    if (um) until = um[1] + '-' + um[2] + '-' + um[3];
+    const byDay = (/BYDAY=([A-Z,]+)/.exec(rule) || [])[1] || '';
+    const WD = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
+    const wds = byDay ? byDay.split(',').map(function (x) { return WD[x.replace(/^[-+]?\d+/, '')]; })
+      .filter(function (x) { return x != null; }) : [];
+    const max = Math.min(400, count || 260);
+    const base = fromYMD(startYmd);
+    if (freq === 'WEEKLY') {
+      const pool = wds.length ? wds : [base.getDay()];
+      let cur = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+      let made = 0;
+      for (let guard = 0; guard < 400 && made < max; guard++) {
+        const ds = toYMD(cur);
+        if (until && ds > until) break;
+        if (pool.indexOf(cur.getDay()) > -1) {
+          out.push(ds); made++;
+          if (count && made >= count) break;
+        }
+        cur = addDays(cur, 1);
+        /* 每次跨过一周才应用 interval：按周起始判断 */
+        if (cur.getDay() === base.getDay()) {
+          /* 已经走完了本组；需要再跳过 interval-1 周 */
+          if (interval > 1) cur = addDays(cur, 7 * (interval - 1));
+        }
+      }
+    } else if (freq === 'DAILY' || freq === 'WEEKDAYS') {
+      let cur = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+      let made = 0;
+      for (let guard = 0; guard < 500 && made < max; guard++) {
+        const ds = toYMD(cur);
+        if (until && ds > until) break;
+        if (freq === 'WEEKDAYS' && (cur.getDay() === 0 || cur.getDay() === 6)) { cur = addDays(cur, 1); continue; }
+        out.push(ds); made++;
+        if (count && made >= count) break;
+        cur = addDays(cur, freq === 'WEEKDAYS' ? 1 : interval);
+      }
+    } else if (freq === 'MONTHLY') {
+      for (let i = 1; i < max; i++) {
+        const d = new Date(base.getFullYear(), base.getMonth() + i * interval, base.getDate());
+        const ds = toYMD(d);
+        if (until && ds > until) break;
+        out.push(ds);
+      }
+    } else if (freq === 'YEARLY') {
+      for (let i = 1; i < Math.min(10, max); i++) {
+        const d = new Date(base.getFullYear() + i * interval, base.getMonth(), base.getDate());
+        out.push(toYMD(d));
+      }
+    }
+    /* 去重 + 排序 */
+    return out.filter(function (x, i, arr) { return arr.indexOf(x) === i; }).sort();
+  }
+
+  function exportIcsAll() {
+    if (!state.events.length) { toast('还没有日程'); return; }
+    const p2 = function (v) { return String(v).padStart(2, '0'); };
+    const stamp = function (d) {
+      return d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + 'T' +
+        p2(d.getHours()) + p2(d.getMinutes()) + '00';
+    };
+    const escTxt = function (s) { return String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n'); };
+    const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//DayLeaf//叶历//ZH', 'CALSCALE:GREGORIAN'];
+    state.events.forEach(function (ev) {
+      const st = new Date(fromYMD(ev.d).getTime() + toMin(ev.s) * 60000);
+      const en = new Date(fromYMD(ev.d).getTime() + toMin(ev.e) * 60000);
+      L.push('BEGIN:VEVENT',
+        'UID:' + ev.id + '@dayleaf',
+        'DTSTAMP:' + stamp(new Date()),
+        'DTSTART:' + stamp(st),
+        'DTEND:' + stamp(en),
+        'SUMMARY:' + escTxt(ev.t),
+        'LOCATION:' + escTxt(ev.p || ''),
+        'DESCRIPTION:' + escTxt(ev.n || ''),
+        'STATUS:' + (ev.st === 'done' ? 'COMPLETED' : 'CONFIRMED'));
+      const cat = catById(ev.cat);
+      if (cat) L.push('CATEGORIES:' + escTxt(cat.name));
+      if (remindOn(ev)) {
+        L.push('BEGIN:VALARM', 'TRIGGER:' + (Number(ev.rm) > 0 ? '-PT' + ev.rm + 'M' : 'PT0M'),
+          'ACTION:DISPLAY', 'DESCRIPTION:' + escTxt(ev.t + ' 提醒'), 'END:VALARM');
+      }
+      L.push('END:VEVENT');
+    });
+    L.push('END:VCALENDAR');
+    saveTextFile('dayleaf-calendar-' + toYMD(new Date()) + '.ics', L.join('\r\n'), 'text/calendar;charset=utf-8');
+    toast('已导出全部 ' + state.events.length + ' 项日程（.ics）');
+  }
+
+  function autoRefreshIcsOnBoot() {
+    const subs = state.ui.icsSubs || [];
+    if (!subs.length) return;
+    const due = subs.filter(function (s) { return !s.lastAt || Date.now() - s.lastAt > 6 * 3600 * 1000; });
+    due.slice(0, 2).forEach(function (s) { setTimeout(function () { refreshIcsSub(s.id, true); }, 3500); });
+  }
 
   /* ---------- 8.20 桌面应用内右键菜单 ---------- */
   function ctxCopy(text) {
@@ -16707,6 +18752,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       const add = stats ? stats.added : 0;
       lanPeer = { at: Date.now(), method: 'PUT', count: n, added: add };
       syncLanUI();
+      syncStatus('lan', true, '收到 ' + n + ' 条，新增 ' + add + ' 条');
       toast('已接收手机数据：' + n + ' 条，合并新增 ' + add + ' 条');
     });
   };
@@ -16760,8 +18806,13 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     try { n.lanPull(u, t); } catch (e) { toast('拉取失败'); }
   }
   window.__dlLanResult = function (op, ok, data, err) {
-    if (!ok) { toast('局域网同步失败：' + (err || '网络问题')); return; }
+    if (!ok) {
+      syncStatus('lan', false, (op === 'push' ? '发送失败：' : '拉取失败：') + (err || '网络问题'));
+      toast('局域网同步失败：' + (err || '网络问题'));
+      return;
+    }
     if (op === 'push') {
+      syncStatus('lan', true, '已发送到电脑');
       const n = window.__lanPushCount || 0;
       toast('发送成功：电脑已确认收到 ' + n + ' 条日程');
       /* 给电脑端一点时间合并，再把合并后的数据拉回来，保证两边一致 */
@@ -16785,6 +18836,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!n) { toast('电脑端还没有日程数据'); return; }
     mergeRemotePayload(obj, function (ok2, stats) {
       const add = stats ? stats.added : 0;
+      syncStatus('lan', true, '拉取 ' + n + ' 条，新增 ' + add + ' 条');
       toast('电脑合并完成：返回 ' + n + ' 条，本机新增 ' + add + ' 条');
     });
   };

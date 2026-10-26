@@ -13,6 +13,7 @@ namespace DayLeaf
     /// <summary>托盘 / 桌面小组件共用的一条「下一项」。</summary>
     internal sealed class WidgetItem
     {
+        public string Id = "";
         public string Title = "";
         public string Time = "";
         public string Body = "";
@@ -97,6 +98,13 @@ namespace DayLeaf
 
         private Rectangle _pinRect;
         private Rectangle _hideRect;
+        private readonly List<Rectangle> _doneRects = new List<Rectangle>();
+        private readonly List<Rectangle> _snoozeRects = new List<Rectangle>();
+
+        /// <summary>点小窗里的「完成」：交给主体页面统一改状态</summary>
+        public event Action<WidgetItem> ItemDone;
+        /// <summary>点小窗里的「+10」：交给主体页面延后提醒</summary>
+        public event Action<WidgetItem> ItemSnooze;
 
         public NextUpForm(bool dark)
         {
@@ -213,6 +221,7 @@ namespace DayLeaf
                     if (d == null) continue;
                     var it = new WidgetItem
                     {
+                        Id = Str(d, "id"),
                         Title = Str(d, "title"),
                         Time = Str(d, "time"),
                         Body = Str(d, "body")
@@ -325,11 +334,29 @@ namespace DayLeaf
                 return;
             }
 
+            _doneRects.Clear();
+            _snoozeRects.Clear();
             for (int i = 0; i < _items.Count; i++)
             {
                 WidgetItem it = _items[i];
                 int top = Px(50) + i * Px(46);
                 Color ac = RowAccents[i % RowAccents.Length];
+
+                Rectangle doneR = new Rectangle(Width - Px(66), top + Px(10), Px(24), Px(24));
+                Rectangle snoozeR = new Rectangle(Width - Px(38), top + Px(10), Px(26), Px(24));
+                _doneRects.Add(doneR);
+                _snoozeRects.Add(snoozeR);
+                using (var bg = new SolidBrush(_bgDark ? Color.FromArgb(0x25, 0x2C, 0x3B) : Color.FromArgb(0xEE, 0xF3, 0xFB)))
+                {
+                    g.FillEllipse(bg, doneR);
+                    g.FillEllipse(bg, snoozeR);
+                }
+                TextRenderer.DrawText(g, "✓", _fontTiny, doneR,
+                    Color.FromArgb(0x16, 0xA3, 0x4A),
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                TextRenderer.DrawText(g, "+10", _fontTiny, snoozeR,
+                    Color.FromArgb(0x8A, 0x5C, 0xFF),
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
 
                 using (var bar = new SolidBrush(ac))
                     g.FillRectangle(bar, new Rectangle(Px(14), top + Px(9), Px(3), Px(28)));
@@ -343,13 +370,13 @@ namespace DayLeaf
 
                 string title = it.Title.Length > 0 ? it.Title : it.Body;
                 TextRenderer.DrawText(g, title, _fontTitle,
-                    new Rectangle(Px(86), top + Px(7), Width - Px(86) - Px(14), Px(22)), text,
+                    new Rectangle(Px(86), top + Px(7), Width - Px(86) - Px(72), Px(22)), text,
                     TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine);
 
                 if (!string.IsNullOrEmpty(it.Body) && it.Body != it.Title)
                 {
                     TextRenderer.DrawText(g, it.Body, _fontBody,
-                        new Rectangle(Px(86), top + Px(27), Width - Px(86) - Px(14), Px(16)), faint,
+                        new Rectangle(Px(86), top + Px(27), Width - Px(86) - Px(72), Px(16)), faint,
                         TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine);
                 }
 
@@ -405,6 +432,21 @@ namespace DayLeaf
             {
                 HideWidget();
                 return;
+            }
+            for (int i = 0; i < _doneRects.Count && i < _items.Count; i++)
+            {
+                if (_doneRects[i].Contains(e.Location))
+                {
+                    Action<WidgetItem> h = ItemDone;
+                    if (h != null) h(_items[i]);
+                    return;
+                }
+                if (_snoozeRects[i].Contains(e.Location))
+                {
+                    Action<WidgetItem> h = ItemSnooze;
+                    if (h != null) h(_items[i]);
+                    return;
+                }
             }
             try
             {

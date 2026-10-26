@@ -15,7 +15,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 
 public class ReminderReceiver extends BroadcastReceiver {
 
@@ -26,8 +32,46 @@ public class ReminderReceiver extends BroadcastReceiver {
     public static final String ACTION_DONE = "com.dayleaf.app.REMINDER_DONE";
     /** 「10 分钟后提醒」：排一个一次性的延后闹钟 */
     public static final String ACTION_SNOOZE = "com.dayleaf.app.REMINDER_SNOOZE";
+    /** 桌面小组件上的「完成」/「稍后」 */
+    public static final String ACTION_WIDGET_DONE = "com.dayleaf.app.WIDGET_DONE";
+    public static final String ACTION_WIDGET_SNOOZE = "com.dayleaf.app.WIDGET_SNOOZE";
 
     private static final long SNOOZE_MS = 10L * 60L * 1000L;
+    private static Ringtone activeRingtone = null;
+    private static Handler ringHandler = null;
+
+    /** 全屏闹钟/完成按钮接管时停掉背景铃声 */
+    public static void stopCustomRingtone() {
+        try {
+            if (ringHandler != null) {
+                ringHandler.removeCallbacksAndMessages(null);
+                ringHandler = null;
+            }
+            if (activeRingtone != null) {
+                try { activeRingtone.stop(); } catch (Exception e) { /* ignore */ }
+                activeRingtone = null;
+            }
+        } catch (Exception e) { /* ignore */ }
+    }
+
+    private static void playCustomRingtone(Context context) {
+        try {
+            String uriStr = context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE)
+                    .getString("alarm_ringtone", "");
+            if (uriStr == null || uriStr.length() == 0) return;
+            Uri uri = Uri.parse(uriStr);
+            Ringtone r = RingtoneManager.getRingtone(context, uri);
+            if (r == null) return;
+            stopCustomRingtone();
+            try { r.setStreamType(AudioManager.STREAM_ALARM); } catch (Exception e) { /* ignore */ }
+            r.play();
+            activeRingtone = r;
+            ringHandler = new Handler(Looper.getMainLooper());
+            ringHandler.postDelayed(new Runnable() {
+                @Override public void run() { stopCustomRingtone(); }
+            }, 30000);
+        } catch (Exception e) { /* 铃声坏了不影响通知 */ }
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -43,18 +87,26 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         String action = intent.getAction();
 
-        if (ACTION_DONE.equals(action)) {
+        if (ACTION_DONE.equals(action) || ACTION_WIDGET_DONE.equals(action)) {
             cancelNotification(context, id);
+            stopCustomRingtone();
+            /* 让前台页面同步把这条标成完成；应用没开就先存着，下次打开补上 */
+            try { MainActivity.notifyNativeDone(context, id); } catch (Exception e) { /* ignore */ }
+            try {
+                NextWidgetProvider.removeItem(context, id);
+                NextWidgetProvider.updateAll(context);
+            } catch (Exception e) { /* ignore */ }
             return;
         }
 
-        if (ACTION_SNOOZE.equals(action)) {
+        if (ACTION_SNOOZE.equals(action) || ACTION_WIDGET_SNOOZE.equals(action)) {
             try {
                 ReminderScheduler.scheduleSnooze(context, id,
                         System.currentTimeMillis() + SNOOZE_MS,
                         title, body, kind);
             } catch (Exception e) { /* 排不上就算了，至少别崩 */ }
             cancelNotification(context, id);
+            stopCustomRingtone();
             return;
         }
 
@@ -122,6 +174,25 @@ public class ReminderReceiver extends BroadcastReceiver {
                 .setContentIntent(pi)
                 .setWhen(System.currentTimeMillis())
                 .setShowWhen(true);
+
+        if (alarm) {
+            try {
+                b.setCategory(Notification.CATEGORY_ALARM);
+                b.setOngoing(false);
+                Intent full = new Intent(context, MainActivity.class);
+                full.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                full.putExtra("alarm", true);
+                full.putExtra("alarm_id", id);
+                full.putExtra("alarm_title", title);
+                full.putExtra("alarm_body", body);
+                PendingIntent fsi = PendingIntent.getActivity(context, notificationId(id) + 7, full,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                b.setFullScreenIntent(fsi, true);
+                b.setContentIntent(fsi);
+                /* 用户自己选过铃声才在后台播放；否则交给通知渠道的默认闹钟声 */
+                playCustomRingtone(context);
+            } catch (Exception e) { /* 全屏入口失败也不影响通知 */ }
+        }
 
         if (withActions) {
             String doneLabel = context.getString(R.string.notif_action_done);

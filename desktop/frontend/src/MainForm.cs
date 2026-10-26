@@ -42,6 +42,7 @@ namespace DayLeaf
         private readonly HashSet<string> _firedReminders = new HashSet<string>();
         private ReminderItem _lastFired;                        // 最近响过的一条，供「稍后提醒」用
         private ToolStripMenuItem _snoozeItem;
+        private ToolStripMenuItem _doneItem;
         private ToolStripMenuItem _widgetMenuItem;
         private NextUpForm _widget;                             // 桌面「下一项」小窗，懒创建
         private List<WidgetItem> _widgetItems = new List<WidgetItem>();
@@ -49,6 +50,13 @@ namespace DayLeaf
         private int _webdavBusy;                                // WebDAV 同时只允许跑一个
         private readonly bool _trayMode;                        // --tray：开机自启静默进托盘
         private string ReminderFile { get { return Path.Combine(AppPaths.Root, "reminders.json"); } }
+
+        /* 全局快捷键 Ctrl+Alt+N：任何窗口在前台都能直接呼出快速录入 */
+        private const int WM_HOTKEY = 0x0312;
+        private const int HOTKEY_QUICK = 0xD1A1;
+        [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+        [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        private string _pendingSharePath = "";
 
         private sealed class ReminderItem
         {
@@ -93,6 +101,25 @@ namespace DayLeaf
             _web.DefaultBackgroundColor = AppPaths.BgColor(_dark);
             Controls.Add(_web);
             ResumeLayout(false);
+
+            /* 从资源管理器拖一张图片进来 / 用「打开方式」启动：都当作分享内容 */
+            try
+            {
+                string[] args = Environment.GetCommandLineArgs();
+                for (int i = 1; i < args.Length; i++)
+                {
+                    if (!string.IsNullOrEmpty(args[i]) && File.Exists(args[i]) && !args[i].StartsWith("--"))
+                    {
+                        _pendingSharePath = args[i];
+                        break;
+                    }
+                }
+            }
+            catch (Exception) { /* ignore */ }
+            AllowDrop = true;
+            DragEnter += OnFileDragEnter;
+            DragDrop += OnFileDragDrop;
+            try { _web.DragEnter += OnFileDragEnter; _web.DragDrop += OnFileDragDrop; } catch (Exception) { /* ignore */ }
 
             RestoreWindowBounds();
             SetupTray();
@@ -172,6 +199,8 @@ namespace DayLeaf
             sb.Append("updateWidget:function(j){post({cmd:'widget',arg:String(j||'{}')});},");
             sb.Append("saveBinary:function(n,b,m){post({cmd:'saveBinary',name:String(n||'dayleaf.bin'),base64:String(b==null?'':b),mime:String(m==null?'':m)});},");
             sb.Append("webdavSync:function(j){post({cmd:'webdav',arg:String(j||'{}')});},");
+            sb.Append("httpGet:function(u,id){post({cmd:'httpGet',url:String(u||''),id:String(id||'')});},");
+            sb.Append("getAlarmRingtoneName:function(){return '';},");
             sb.Append("lanStart:function(t){post({cmd:'lanStart',arg:String(t||'')});},");
             sb.Append("lanStop:function(){post({cmd:'lanStop'});},");
             sb.Append("lanPublish:function(j){post({cmd:'lanPublish',arg:String(j||'{}')});},");
@@ -248,6 +277,12 @@ namespace DayLeaf
             {
                 string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
                 BeginWebDavSync(json);
+            }
+            else if (cmd == "httpGet")
+            {
+                string url = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
+                string reqId = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : "";
+                BeginHttpGet(url, reqId);
             }
             else if (cmd == "desktopWidget")
             {
@@ -615,6 +650,19 @@ namespace DayLeaf
                只有真的发现新版本才打扰用户，且同一版本只提醒一次。 */
             if (!_selfTest)
             {
+                if (e.IsSuccess && !string.IsNullOrEmpty(_pendingSharePath))
+                {
+                    string path = _pendingSharePath;
+                    _pendingSharePath = "";
+                    var timer = new System.Windows.Forms.Timer();
+                    timer.Interval = 1200;
+                    timer.Tick += delegate
+                    {
+                        try { timer.Stop(); timer.Dispose(); } catch (Exception) { }
+                        OpenSharedFile(path);
+                    };
+                    timer.Start();
+                }
                 if (_updatePreview && !_updatePreviewDone)
                 {
                     _updatePreviewDone = true;
@@ -683,6 +731,7 @@ namespace DayLeaf
             }
             catch (Exception) { /* ignore */ }
 
+            _exiting = true;   // 自检结束就退出，不要收进托盘等人来关
             BeginInvoke((Action)Close);
         }
 
@@ -897,6 +946,7 @@ namespace DayLeaf
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
+            try { UnregisterHotKey(Handle, HOTKEY_QUICK); } catch (Exception) { /* ignore */ }
             try { if (_reminderTimer != null) { _reminderTimer.Stop(); _reminderTimer.Dispose(); } } catch (Exception) { }
             try { if (_catchUpTimer != null) { _catchUpTimer.Stop(); _catchUpTimer.Dispose(); } } catch (Exception) { }
             try { if (_tray != null) { _tray.Visible = false; _tray.Dispose(); } } catch (Exception) { }
@@ -927,6 +977,18 @@ namespace DayLeaf
                 open.Click += delegate { ShowFromTray(); };
                 menu.Items.Add(open);
 
+                _doneItem = new ToolStripMenuItem("完成最近提醒");
+                _doneItem.Enabled = false;
+                _doneItem.Click += delegate
+                {
+                    ReminderItem last = _lastFired;
+                    if (last == null) return;
+                    InvokeWeb("window.__dlNativeDone && window.__dlNativeDone(" + QuoteJs(last.Id) + ");");
+                    _lastFired = null;
+                    if (_doneItem != null) _doneItem.Enabled = false;
+                };
+                menu.Items.Add(_doneItem);
+
                 _snoozeItem = new ToolStripMenuItem("稍后提醒 10 分钟");
                 _snoozeItem.Enabled = false;   // 还没有刚响过的提醒
                 _snoozeItem.Click += delegate { SnoozeLastReminder(); };
@@ -936,6 +998,14 @@ namespace DayLeaf
                 _widgetMenuItem.Click += delegate { ToggleWidget(); SyncWidgetMenuCheck(); };
                 menu.Items.Add(_widgetMenuItem);
 
+                var quickItem = new ToolStripMenuItem("快速录入  Ctrl+Alt+N");
+                quickItem.Click += delegate
+                {
+                    ShowFromTray();
+                    InvokeWeb("window.__dlQuickAdd && window.__dlQuickAdd();");
+                };
+                menu.Items.Add(quickItem);
+
                 menu.Items.Add(new ToolStripSeparator());
                 var exit = new ToolStripMenuItem("退出");
                 exit.Click += delegate { ExitFromTray(); };
@@ -944,6 +1014,7 @@ namespace DayLeaf
                 menu.Opening += delegate
                 {
                     if (_snoozeItem != null) _snoozeItem.Enabled = _lastFired != null;
+                    if (_doneItem != null) _doneItem.Enabled = _lastFired != null;
                     SyncWidgetMenuCheck();
                 };
 
@@ -1323,6 +1394,129 @@ namespace DayLeaf
             catch (Exception) { /* ignore */ }
         }
 
+        /// <summary>ICS 订阅等通用 GET：后台线程拉取，再回调网页。</summary>
+        private void BeginHttpGet(string url, string reqId)
+        {
+            if (string.IsNullOrEmpty(url) || (!url.StartsWith("http://") && !url.StartsWith("https://")))
+            {
+                InvokeWeb("window.__dlHttpGetResult && window.__dlHttpGetResult(" +
+                    QuoteJs(reqId) + ",false,'','链接要以 http:// 或 https:// 开头');");
+                return;
+            }
+            var t = new Thread(delegate()
+            {
+                string data = "";
+                string err = "";
+                bool ok = false;
+                try
+                {
+                    ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+                    using (var wc = new WebClient())
+                    {
+                        wc.Encoding = Encoding.UTF8;
+                        wc.Headers[HttpRequestHeader.UserAgent] = "DayLeaf/" + DesktopUpdate.CurrentVersion();
+                        wc.Headers[HttpRequestHeader.Accept] = "text/calendar, text/plain, */*";
+                        data = wc.DownloadString(url);
+                        ok = true;
+                    }
+                }
+                catch (WebException ex)
+                {
+                    var resp = ex.Response as HttpWebResponse;
+                    err = resp != null ? ("服务器返回 HTTP " + (int)resp.StatusCode) : "网络错误：" + ex.Message;
+                }
+                catch (Exception ex) { err = "网络错误：" + ex.Message; }
+                try
+                {
+                    BeginInvoke((Action)delegate
+                    {
+                        InvokeWeb("window.__dlHttpGetResult && window.__dlHttpGetResult(" +
+                            QuoteJs(reqId) + "," + (ok ? "true" : "false") + "," +
+                            QuoteJs(data) + "," + QuoteJs(err) + ");");
+                    });
+                }
+                catch (Exception) { /* 窗口已经关了 */ }
+            });
+            t.IsBackground = true;
+            t.Name = "dayleaf-httpget";
+            t.Start();
+        }
+
+        private string SharedFileToPayload(string path)
+        {
+            try
+            {
+                string ext = Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".webp" || ext == ".bmp")
+                {
+                    byte[] bytes = File.ReadAllBytes(path);
+                    if (bytes.Length > 8 * 1024 * 1024) return "";
+                    string mime = ext == ".png" ? "image/png"
+                        : ext == ".gif" ? "image/gif"
+                        : ext == ".webp" ? "image/webp"
+                        : ext == ".bmp" ? "image/bmp" : "image/jpeg";
+                    return "data:" + mime + ";base64," + Convert.ToBase64String(bytes);
+                }
+                if (ext == ".json" || ext == ".exe" || ext == ".zip" || ext == ".bin" || ext == ".apk") return "";
+                string text = File.ReadAllText(path, Encoding.UTF8);
+                return text.Length > 20000 ? text.Substring(0, 20000) : text;
+            }
+            catch (Exception) { return ""; }
+        }
+
+        private void OpenSharedFile(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+            string payload = SharedFileToPayload(path);
+            if (string.IsNullOrEmpty(payload)) return;
+            InvokeWeb("window.__dlShared && window.__dlShared(" + QuoteJs(payload) + ");");
+        }
+
+        private void OnFileDragEnter(object sender, DragEventArgs e)
+        {
+            try
+            {
+                if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        private void OnFileDragDrop(object sender, DragEventArgs e)
+        {
+            try
+            {
+                var files = e.Data == null ? null : e.Data.GetData(DataFormats.FileDrop) as string[];
+                if (files == null || files.Length == 0) return;
+                OpenSharedFile(files[0]);
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            try
+            {
+                /* MOD_CONTROL=2, MOD_ALT=1；'N'=0x4E */
+                if (!RegisterHotKey(Handle, HOTKEY_QUICK, 3, 0x4E))
+                {
+                    /* 被其他软件占用就算了，不影响主功能 */
+                }
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_HOTKEY && m.WParam.ToInt32() == HOTKEY_QUICK)
+            {
+                ShowFromTray();
+                InvokeWeb("window.__dlQuickAdd && window.__dlQuickAdd();");
+                return;
+            }
+            base.WndProc(ref m);
+        }
+
         private void ApplyWidget(string json)
         {
             _widgetItems = NextUpForm.ParseItems(json);
@@ -1335,7 +1529,44 @@ namespace DayLeaf
         private void EnsureWidget()
         {
             if (_widget != null && !_widget.IsDisposed) return;
-            try { _widget = new NextUpForm(_dark); }
+            try
+            {
+                _widget = new NextUpForm(_dark);
+                _widget.ItemDone += delegate(WidgetItem it)
+                {
+                    if (it == null || string.IsNullOrEmpty(it.Id)) return;
+                    InvokeWeb("window.__dlNativeDone && window.__dlNativeDone(" + QuoteJs(it.Id) + ");");
+                    try
+                    {
+                        _widgetItems.RemoveAll(x => x.Id == it.Id);
+                        if (_widget != null && !_widget.IsDisposed) _widget.SetItems(_widgetItems);
+                    }
+                    catch (Exception) { /* ignore */ }
+                };
+                _widget.ItemSnooze += delegate(WidgetItem it)
+                {
+                    if (it == null) return;
+                    var snoozed = new ReminderItem
+                    {
+                        Id = (string.IsNullOrEmpty(it.Id) ? "widget" : it.Id) + ".ws" + DateTime.Now.Ticks,
+                        At = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 10 * 60 * 1000,
+                        Title = string.IsNullOrEmpty(it.Title) ? "日程提醒" : it.Title,
+                        Body = string.IsNullOrEmpty(it.Body) ? (it.Time + " 的日程") : it.Body,
+                        Kind = "rm"
+                    };
+                    _reminders.Add(snoozed);
+                    PersistReminders();
+                    try
+                    {
+                        if (_tray != null)
+                        {
+                            _tray.Visible = true;
+                            _tray.ShowBalloonTip(3500, snoozed.Title, "已设为 10 分钟后再次提醒", ToolTipIcon.Info);
+                        }
+                    }
+                    catch (Exception) { /* ignore */ }
+                };
+            }
             catch (Exception) { _widget = null; }
         }
 
@@ -1607,6 +1838,17 @@ namespace DayLeaf
             Show();
             Activate();
             BringToFront();
+            try
+            {
+                string share = Path.Combine(AppPaths.Root, "open-share.txt");
+                if (File.Exists(share))
+                {
+                    string path = File.ReadAllText(share);
+                    File.Delete(share);
+                    if (!string.IsNullOrEmpty(path)) OpenSharedFile(path);
+                }
+            }
+            catch (Exception) { /* ignore */ }
         }
     }
 }
