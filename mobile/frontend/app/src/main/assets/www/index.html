@@ -3230,13 +3230,12 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 
 /* 未来 7 天：独立字体/字号/颜色 */
 .next7{--n7-scale:1}
-.next7 .sec-head h2{font-size:calc(14px * var(--n7-scale,1));color:var(--n7-ink,var(--ink2))}
-.next7 .sec-stat{color:var(--n7-ink-2,var(--muted))}
-.next7.n7-custom .sec-stat{opacity:.72}
-.next7 .n7-day{font-size:calc(11.5px * var(--n7-scale,1));color:var(--n7-ink-2,var(--muted))}
-.next7 .n7-t{font-size:calc(13px * var(--n7-scale,1));color:var(--n7-ink,var(--ink))}
-.next7 .n7-meta{font-size:calc(10.5px * var(--n7-scale,1));color:var(--n7-ink-2,var(--muted))}
-.next7.n7-custom .n7-day,.next7.n7-custom .n7-meta{opacity:.72}
+.next7 .sec-head h2{font-size:calc(14px * var(--n7-scale,1));color:var(--n7-title,var(--n7-ink,var(--ink2)))}
+.next7 .sec-stat{color:var(--n7-day,var(--n7-ink-2,var(--muted)))}
+.next7 .n7-day{font-size:calc(11.5px * var(--n7-scale,1));color:var(--n7-day,var(--n7-ink-2,var(--muted)))}
+.next7 .n7-t{font-size:calc(13px * var(--n7-scale,1));color:var(--n7-event,var(--n7-ink,var(--ink)))}
+.next7 .n7-meta{font-size:calc(10.5px * var(--n7-scale,1));color:var(--n7-event,var(--n7-ink-2,var(--muted)));opacity:.72}
+.next7 .n7-day{opacity:.78}
 .n7-style{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line2)}
 .n7-style .type-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
 .n7-style .type-head b{font-size:12.5px;color:var(--ink)}
@@ -3244,11 +3243,12 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 .n7-preview{margin-top:9px;padding:10px 11px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--line);font-family:var(--n7p-font,system-ui);overflow:hidden}
 .n7-preview .n7p-row{display:flex;gap:9px;align-items:flex-start;padding:5px 0;border-bottom:1px dashed var(--line)}
 .n7-preview .n7p-row:last-child{border-bottom:0}
-.n7-preview .n7p-day{flex:0 0 50px;font-size:calc(10px * var(--n7p-scale,1));color:var(--n7p-ink,var(--muted));opacity:.75;line-height:1.5}
+.n7-preview .n7p-title{font-size:calc(12px * var(--n7p-scale,1));font-weight:700;color:var(--n7p-title,var(--n7p-ink,var(--ink)));margin-bottom:2px}
+.n7-preview .n7p-day{flex:0 0 50px;font-size:calc(10px * var(--n7p-scale,1));color:var(--n7p-day,var(--n7p-ink,var(--muted)));opacity:.78;line-height:1.5}
 .n7-preview .n7p-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.n7-preview .n7p-main b{font-size:calc(12px * var(--n7p-scale,1));color:var(--n7p-ink,var(--ink));font-weight:600}
-.n7-preview .n7p-main i{font-style:normal;font-size:calc(10px * var(--n7p-scale,1));color:var(--n7p-ink,var(--muted));opacity:.72}
-.n7-preview .n7p-main em{font-style:normal;font-size:calc(9px * var(--n7p-scale,1));color:var(--n7p-ink,var(--muted));opacity:.6}
+.n7-preview .n7p-main b{font-size:calc(12px * var(--n7p-scale,1));color:var(--n7p-event,var(--n7p-ink,var(--ink)));font-weight:600}
+.n7-preview .n7p-main i{font-style:normal;font-size:calc(10px * var(--n7p-scale,1));color:var(--n7p-event,var(--n7p-ink,var(--muted)));opacity:.72}
+.n7-preview .n7p-main em{font-style:normal;font-size:calc(9px * var(--n7p-scale,1));color:var(--n7p-event,var(--n7p-ink,var(--muted)));opacity:.6}
 
 /* 设置子页视觉层级（v2） */
 .settings-panel{--cat:var(--accent)}
@@ -3277,6 +3277,17 @@ html.dark .set-head{background:var(--bg)}
   .set-group{padding:2px 13px 12px;border-radius:16px}
   .set-group>.sec-line{margin:13px 0 3px}
 }
+
+/* 外观与文字：分页，降低单页密度 */
+.app-tabs{display:flex;gap:6px;padding:4px 0 10px;flex-wrap:wrap;position:sticky;top:var(--set-head-h,86px);z-index:5;background:var(--surface)}
+html.dark .app-tabs{background:var(--bg)}
+@media (max-width:959px){.app-tabs{background:var(--bg)}}
+.app-tabs button{flex:1 1 0;min-width:0;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--surface-soft);font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.15s}
+.app-tabs button.on{background:var(--cat,var(--accent));border-color:transparent;color:#fff;font-weight:600}
+.app-tab-panel{display:none;flex-direction:column;gap:12px}
+.app-tab-panel.on{display:flex}
+.desk-only-group{display:block}
+@media (max-width:959px){ .desk-only-group{display:none!important} }
 /* hidden 必须能盖过 display:grid，否则锁屏/确认框会一直浮在最上层 */
 .dl-lock[hidden],.dl-ask[hidden],.dl-viewer[hidden],.ctx-menu[hidden],#monthRoot[hidden]{display:none!important}
 /* 应用内右键菜单（桌面端替代浏览器菜单） */
@@ -3849,7 +3860,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.2',
+    version: '1.1.3',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -4079,7 +4090,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     quoteFont: { key: 'sys', custom: [] },
     /** 各页面文字外观：color 为空表示跟随主题，size 为倍率，font 为内置 key / 自定义字体 id */
     typeStyle: {
-      home:  { color: '', color2: '', color3: '', secColor: '', taskColor: '', size: 1, font: 'sys', n7Font: 'sys', n7Size: 1, n7Color: '' },
+      home:  { color: '', color2: '', color3: '', secColor: '', taskColor: '', size: 1, font: 'sys', n7Font: 'sys', n7Size: 1, n7Color: '', n7TitleColor: '', n7DayColor: '', n7EventColor: '' },
       grid:  { color: '', color2: '', color3: '', size: 1, font: 'sys' },
       notes: { color: '', color2: '', color3: '', size: 1, font: 'sys' },
       boot:  { font: 'sys' }
@@ -4178,6 +4189,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /** 供原生返回键调用：关最上层弹窗，返回是否已关闭 */
   window.__closeTopModal = function () {
     if (!modalStack.length) return false;
+    if (typeof window.__dlBeforeModalClose === 'function' && window.__dlBeforeModalClose()) return true;
     const close = modalStack.pop();
     syncModalNative();
     if (close) close();
@@ -4257,7 +4269,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           font: (typeof v.font === 'string' && v.font) ? v.font : 'sys',
           n7Font: (typeof v.n7Font === 'string' && v.n7Font) ? v.n7Font : 'sys',
           n7Size: (isFinite(Number(v.n7Size)) && Number(v.n7Size) >= 0.8 && Number(v.n7Size) <= 2) ? Number(v.n7Size) : 1,
-          n7Color: hexOk(v.n7Color)
+          n7Color: hexOk(v.n7Color),
+          n7TitleColor: hexOk(v.n7TitleColor),
+          n7DayColor: hexOk(v.n7DayColor),
+          n7EventColor: hexOk(v.n7EventColor)
         };
       });
       state.typeStyle.boot = {
@@ -7581,7 +7596,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
                 /* 课表已经批量录入，关闭新建表单；单条通知不要走这里 */
                 draftCtx = null;
                 clearDraft();
-                if ($('#modalRoot').classList.contains('open')) closeModal();
+                if ($('#modalRoot').classList.contains('open')) {
+          if (typeof window.__dlBeforeModalClose === 'function' && window.__dlBeforeModalClose()) return;
+          closeModal();
+        }
                 renderAll();
                 toast('已添加 ' + n + ' 项课程日程');
               });
@@ -8026,6 +8044,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     }
     clearTimeout(draftTimer);
 
+    window.__dlBeforeModalClose = null;
+    window.__dlSettingsBack = null;
     const root = $('#modalRoot');
     popModal(closeModal);
     root.classList.remove('open');
@@ -8793,11 +8813,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '</div>' +
         '<p class="hint">关闭模糊铺底和白色柔光罩，让背景图直接清晰显示。页面内卡片也会去掉毛玻璃，透明度可在下方单独调。</p></div>' +
 
-        '<div class="field desk-only"><label>导航栏透明度 <b id="vNavAlpha">' +
+        '<div class="sec-line">侧边栏</div>' +
+        '<div class="field desk-only"><label>背景透明度 <b id="vNavAlpha">' +
           Math.round((state.ui.navAlpha == null ? 1 : state.ui.navAlpha) * 100) + '%</b></label>' +
           '<input type="range" id="fNavAlpha" min="0" max="100" value="' +
             Math.round((state.ui.navAlpha == null ? 1 : state.ui.navAlpha) * 100) + '">' +
-        '<p class="hint">侧边栏/底栏背景的透明度。这里不做毛玻璃，文字和图标始终清晰；调低会更多露出背景图。</p></div>' +
+        '<p class="hint">电脑端左侧导轨背景的透明度。这里不做毛玻璃，文字和图标始终清晰；调低会更多露出背景图。</p></div>' +
 
         '<div class="field"><label>侧边栏文字与图标</label>' +
           (function () {
@@ -8830,7 +8851,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
                 row('iconColor', '图标颜色', ns.iconColor || themeColorFor('color2')) +
               '</div>';
           })() +
-        '<p class="hint">改的是侧边栏（手机上是底栏）的文字与图标；「导航栏透明度」只管背景。</p></div>' +
+        '<p class="hint">只影响电脑端左侧导轨；「背景透明度」只管背景。手机端不显示这些设置。</p></div>' +
 
         '<div class="adv-section">' +
         /* 实时预览：与真实背景层用同一套 cover + position + scale + blur + opacity */
@@ -8931,11 +8952,20 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
                       '<div class="type-slider"><input type="range" id="fN7Size" min="80" max="200" step="5" value="' +
                         Math.round((Number(ts.n7Size) || 1) * 100) + '"><b id="vN7Size">' +
                         Math.round((Number(ts.n7Size) || 1) * 100) + '%</b></div></div>' +
-                    '<div class="type-color-row"><span>文字颜色</span>' +
-                      '<button type="button" class="type-color type-color-btn" id="n7ColorPick" style="--c:' +
-                        (ts.n7Color || themeColorFor('color')) + '"></button>' +
-                      '<button class="type-auto' + (ts.n7Color ? '' : ' on') + '" id="n7ColorAuto">自动</button></div>' +
+                    (function () {
+                      const n7row = function (slot, name, id) {
+                        const val = ts[slot] || ts.n7Color || '';
+                        return '<div class="type-color-row"><span>' + name + '</span>' +
+                            '<button type="button" class="type-color type-color-btn" id="' + id + 'Pick" style="--c:' +
+                              (val || themeColorFor(slot === 'n7DayColor' ? 'color2' : 'color')) + '"></button>' +
+                            '<button class="type-auto' + (val ? '' : ' on') + '" id="' + id + 'Auto">自动</button></div>';
+                      };
+                      return n7row('n7TitleColor', '标题文字', 'n7Title') +
+                        n7row('n7DayColor', '星期日期', 'n7Day') +
+                        n7row('n7EventColor', '日程名称', 'n7Event');
+                    })() +
                     '<div class="n7-preview" id="n7Preview">' +
+                      '<div class="n7p-title">未来 7 天</div>' +
                       '<div class="n7p-row"><span class="n7p-day">明天<br>10/27</span><span class="n7p-main">' +
                         '<b>09:00 高等数学</b><i>14:00 项目评审 · 3F 会议室</i><em>还有 2 条</em></span></div>' +
                       '<div class="n7p-row"><span class="n7p-day">周三<br>10/28</span><span class="n7p-main">' +
@@ -9391,8 +9421,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       '</div>';
 
     groupSettingsSections(root);
+    buildAppearanceTabs(root);
     openLayer(root);
     pushModal(closeModal);
+    const settingsDepth = modalStack.length;
+    window.__dlBeforeModalClose = function () {
+      if (!root.classList.contains('open')) return false;
+      /* 只有设置面板在最上层时才拦截；取色器等其它弹层照常关闭 */
+      if (modalStack.length !== settingsDepth) return false;
+      if (typeof window.__dlSettingsBack === 'function' && window.__dlSettingsBack()) return true;
+      return false;
+    };
     renderTypeFontLib();
     applyModuleAlpha();
     try { sync11SettingsUI(); } catch (e) { /* ignore */ }
@@ -9412,6 +9451,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       const catOf = function (key) {
         return SETTINGS_CATS.filter(function (c) { return c.key === key; })[0];
       };
+      const syncHeadH = function () {
+        const h = $('.set-head', root);
+        if (h) root.style.setProperty('--set-head-h', h.offsetHeight + 'px');
+      };
       const setHeadIcon = function (cat) {
         const ico = $('#setHeadIco', root);
         if (!ico) return;
@@ -9426,6 +9469,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         if (headDesc) headDesc.textContent = '按类别整理，常用功能一眼找到';
         panes.forEach(function (p) { p.classList.remove('on'); });
         if (panel) panel.scrollTop = 0;
+        syncHeadH();
       };
       const openPane = function (key) {
         const cat = catOf(key);
@@ -9441,6 +9485,14 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         if (headDesc) headDesc.textContent = cat.desc;
         panes.forEach(function (p) { p.classList.toggle('on', p.dataset.setpane === key); });
         if (panel) panel.scrollTop = 0;
+        syncHeadH();
+      };
+      /* 手机返回键 / 手势：子页先回设置首页，再按一次才关闭 */
+      window.__dlSettingsBack = function () {
+        if (!currentPane) return false;
+        showHome();
+        if (panel) panel.scrollTop = 0;
+        return true;
       };
       const applyMode = function (mode, persist) {
         const simple = mode === 'simple';
@@ -10407,7 +10459,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
           state.typeStyle = Object.assign(state.typeStyle, obj.typeStyle || {});
           ['home', 'grid', 'notes'].forEach(function (k) {
-            state.typeStyle[k] = Object.assign({ color: '', color2: '', color3: '', secColor: '', taskColor: '', size: 1, font: 'sys', n7Font: 'sys', n7Size: 1, n7Color: '' }, state.typeStyle[k] || {});
+            state.typeStyle[k] = Object.assign({ color: '', color2: '', color3: '', secColor: '', taskColor: '', size: 1, font: 'sys', n7Font: 'sys', n7Size: 1, n7Color: '', n7TitleColor: '', n7DayColor: '', n7EventColor: '' }, state.typeStyle[k] || {});
             ['color', 'color2', 'color3', 'secColor', 'taskColor'].forEach(function (slot) {
               if (!/^#[0-9a-f]{6}$/i.test(String(state.typeStyle[k][slot] || ''))) state.typeStyle[k][slot] = '';
             });
@@ -15739,6 +15791,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         state.home.imgY = Math.max(0, Math.min(100, Number(state.home.imgY || 50) - dy));
         applyHomeLook();
         syncHeroControls();
+        syncHeroPreview();
       }
     });
     const end = function () {
@@ -15755,7 +15808,19 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.2', date: '2026-10-26', latest: true,
+      v: '1.1.3', date: '2026-10-26', latest: true,
+      add: [
+        '「未来 7 天」的标题、星期日期、日程名称可分别设置颜色，设置里带三行实时预览。'
+      ],
+      opt: [
+        '「外观与文字」拆成「主题与背景 / 文字与字体 / 模块与侧栏」三页，减少单页拥挤；侧边栏相关设置仅在电脑端出现。'
+      ],
+      fix: [
+        '主卡背景图在设置预览里拖动时，预览图不跟随移动。'
+      ]
+    },
+    {
+      v: '1.1.2', date: '2026-10-26', latest: false,
       add: [
         '局域网同步：电脑开启后，手机在同一个 Wi-Fi 下填地址与 6 位配对码，就能直接互传数据，不依赖云盘或账号。',
         '手机系统闹钟：保存带「闹钟」的日程时可同时写入系统时钟；重复日程会按星期几设成每周闹钟，详情/编辑里也能单独写入。',
@@ -16332,9 +16397,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!block) return;
     block.style.fontFamily = fontStackForKey(st.n7Font || 'sys');
     block.style.setProperty('--n7-scale', String(Math.max(0.8, Math.min(2, Number(st.n7Size) || 1))));
-    const col = /^#[0-9a-f]{6}$/i.test(String(st.n7Color || '')) ? st.n7Color : '';
-    if (col) { block.style.setProperty('--n7-ink', col); block.classList.add('n7-custom'); }
-    else { block.style.removeProperty('--n7-ink'); block.classList.remove('n7-custom'); }
+    const legacy = /^#[0-9a-f]{6}$/i.test(String(st.n7Color || '')) ? st.n7Color : '';
+    const pick = function (v) { return /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : legacy; };
+    const title = pick(st.n7TitleColor);
+    const day = pick(st.n7DayColor);
+    const evt = pick(st.n7EventColor);
+    if (title) block.style.setProperty('--n7-title', title); else block.style.removeProperty('--n7-title');
+    if (day) block.style.setProperty('--n7-day', day); else block.style.removeProperty('--n7-day');
+    if (evt) block.style.setProperty('--n7-event', evt); else block.style.removeProperty('--n7-event');
+    block.classList.toggle('n7-custom', !!(title || day || evt));
     syncN7Preview();
   }
   function syncN7Preview() {
@@ -16343,19 +16414,27 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const st = (state.typeStyle && state.typeStyle.home) || {};
     pv.style.fontFamily = fontStackForKey(st.n7Font || 'sys');
     pv.style.setProperty('--n7p-scale', String(Math.max(0.8, Math.min(2, Number(st.n7Size) || 1))));
-    const col = /^#[0-9a-f]{6}$/i.test(String(st.n7Color || '')) ? st.n7Color : '';
-    if (col) pv.style.setProperty('--n7p-ink', col);
-    else pv.style.removeProperty('--n7p-ink');
+    const legacy = /^#[0-9a-f]{6}$/i.test(String(st.n7Color || '')) ? st.n7Color : '';
+    const pick = function (v) { return /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : legacy; };
+    const vals = { title: pick(st.n7TitleColor), day: pick(st.n7DayColor), event: pick(st.n7EventColor) };
+    ['title', 'day', 'event'].forEach(function (k) {
+      if (vals[k]) pv.style.setProperty('--n7p-' + k, vals[k]);
+      else pv.style.removeProperty('--n7p-' + k);
+    });
     const range = $('#fN7Size');
     if (range) range.value = Math.round((Number(st.n7Size) || 1) * 100);
     const lv = $('#vN7Size');
     if (lv) lv.textContent = Math.round((Number(st.n7Size) || 1) * 100) + '%';
     const sel = $('[data-n7font]');
     if (sel) sel.value = st.n7Font || 'sys';
-    const pick = $('#n7ColorPick');
-    if (pick) pick.style.setProperty('--c', col || themeColorFor('color'));
-    const auto = $('#n7ColorAuto');
-    if (auto) auto.classList.toggle('on', !col);
+    const map = [['n7Title', 'n7TitleColor'], ['n7Day', 'n7DayColor'], ['n7Event', 'n7EventColor']];
+    map.forEach(function (m) {
+      const b = $('#' + m[0] + 'Pick');
+      const v = pick(st[m[1]]);
+      if (b) b.style.setProperty('--c', v || themeColorFor(m[1] === 'n7DayColor' ? 'color2' : 'color'));
+      const a = $('#' + m[0] + 'Auto');
+      if (a) a.classList.toggle('on', !v);
+    });
   }
   let n7SaveTimer = null;
   function n7SaveSoon() {
@@ -16385,21 +16464,88 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     });
     document.addEventListener('click', function (e) {
       if (!e.target) return;
-      if (e.target.id === 'n7ColorPick') {
-        const was = state.typeStyle.home.n7Color || '';
-        openColorPicker(was || themeColorFor('color'),
-          function (hex) { state.typeStyle.home.n7Color = hex; applyNext7Style(); syncN7Preview(); n7SaveSoon(); },
-          function () { state.typeStyle.home.n7Color = was; applyNext7Style(); syncN7Preview(); saveState(); },
+      const colorMap = { n7TitlePick: 'n7TitleColor', n7DayPick: 'n7DayColor', n7EventPick: 'n7EventColor' };
+      const colorSlot = colorMap[e.target.id];
+      if (colorSlot) {
+        const bag = state.typeStyle.home;
+        const was = bag[colorSlot] || '';
+        openColorPicker(was || themeColorFor(colorSlot === 'n7DayColor' ? 'color2' : 'color'),
+          function (hex) { bag[colorSlot] = hex; applyNext7Style(); syncN7Preview(); n7SaveSoon(); },
+          function () { bag[colorSlot] = was; applyNext7Style(); syncN7Preview(); saveState(); },
           function () { saveState(); });
         return;
       }
-      if (e.target.id === 'n7ColorAuto') {
-        state.typeStyle.home.n7Color = '';
+      const autoMap = { n7TitleAuto: 'n7TitleColor', n7DayAuto: 'n7DayColor', n7EventAuto: 'n7EventColor' };
+      const autoSlot = autoMap[e.target.id];
+      if (autoSlot) {
+        state.typeStyle.home[autoSlot] = '';
         applyNext7Style();
         syncN7Preview();
         saveState();
       }
     });
+  }
+
+
+  /* ---------- 8.25 「外观与文字」分页，降低单页信息密度 ---------- */
+  let appearanceTab = 'bg';
+  function buildAppearanceTabs(root) {
+    const pane = root.querySelector('.set-pane[data-setpane="appearance"]');
+    if (!pane || pane.__appTabs) return;
+    pane.__appTabs = 1;
+    const groups = Array.prototype.slice.call(pane.children).filter(function (el) {
+      return el.classList && el.classList.contains('set-group');
+    });
+    if (!groups.length) return;
+    const titleOf = function (g) {
+      const sl = g.querySelector('.sec-line');
+      return sl ? sl.textContent.trim() : '';
+    };
+    groups.forEach(function (g) {
+      if (titleOf(g).indexOf('侧边栏') >= 0) g.classList.add('desk-only-group');
+    });
+    const tabs = [
+      { key: 'bg', label: '主题与背景' },
+      { key: 'type', label: '文字与字体' },
+      { key: 'more', label: isMobileView() ? '模块透明度' : '模块与侧栏' }
+    ];
+    const bar = document.createElement('div');
+    bar.className = 'app-tabs';
+    bar.innerHTML = tabs.map(function (t) {
+      return '<button type="button" data-apptab="' + t.key + '">' + t.label + '</button>';
+    }).join('');
+    const panels = {};
+    tabs.forEach(function (t) {
+      const p = document.createElement('div');
+      p.className = 'app-tab-panel';
+      p.dataset.apptab = t.key;
+      pane.appendChild(p);
+      panels[t.key] = p;
+    });
+    groups.forEach(function (g) {
+      const tx = titleOf(g);
+      let key = 'bg';
+      if (tx.indexOf('文字外观') >= 0 || tx.indexOf('字体库') >= 0) key = 'type';
+      else if (tx.indexOf('模块透明度') >= 0 || tx.indexOf('侧边栏') >= 0) key = 'more';
+      panels[key].appendChild(g);
+    });
+    pane.insertBefore(bar, pane.firstChild);
+    const activate = function (key) {
+      appearanceTab = key;
+      Array.prototype.forEach.call(bar.querySelectorAll('button'), function (b) {
+        b.classList.toggle('on', b.dataset.apptab === key);
+      });
+      Object.keys(panels).forEach(function (k) { panels[k].classList.toggle('on', k === key); });
+    };
+    bar.addEventListener('click', function (e) {
+      const b = e.target.closest ? e.target.closest('[data-apptab]') : null;
+      if (!b) return;
+      activate(b.dataset.apptab);
+      const p = pane.closest('.settings-panel');
+      if (p) p.scrollTop = 0;
+      if (b.dataset.apptab === 'type') { syncN7Preview(); }
+    });
+    activate(appearanceTab || 'bg');
   }
 
   /* __DL11_MODULE_END__ */

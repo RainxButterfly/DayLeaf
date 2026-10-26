@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 21,
-  "versionName": "1.1.2",
+  "versionCode": 22,
+  "versionName": "1.1.3",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.3/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.2/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.3/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.3/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.3/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 984370,
-  "sha256": "e150dedbf50da31134b5afa2fdb1999d9b79b5f80c58e87a6d1b81e408a3769b",
-  "notes": "局域网同步（同 Wi-Fi 地址+配对码直接互传）、手机系统闹钟写入、未来 7 天独立字体/字号/颜色与实时预览；设置子页视觉层级重做（分类图标与主题色、吸顶标题、统一提示），并保留 1.1.1 的移动端 UI 修复。",
+  "size": 985623,
+  "sha256": "8f2a47cae19b8c4aca8eb27105bf032af9341706f224054c1273dfba0a7ef4a3",
+  "notes": "未来 7 天的标题、星期日期、日程名称可分别设置颜色并实时预览；外观与文字拆成主题与背景/文字与字体/模块与侧栏三页，侧栏设置仅电脑显示；修复主卡预览拖动不同步；手机返回键/手势在设置子页先回设置首页。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }
