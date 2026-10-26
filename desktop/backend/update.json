@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 19,
-  "versionName": "1.2.0",
+  "versionCode": 20,
+  "versionName": "1.2.1",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.0/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.0/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.0/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.2.0/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.2.1/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 982980,
-  "sha256": "ef23e8b750f1ac161013f0db05db2da087c734e833aea014240c5a3a380782f7",
-  "notes": "新增局域网同步：电脑开启后手机在同一 Wi-Fi 下填地址和 6 位配对码即可直接互传数据，不依赖云盘或账号；新增手机系统闹钟：带闹钟的日程可写入系统时钟，重复日程按星期几设成每周闹钟，详情/编辑里都能单独写入。",
+  "size": 984545,
+  "sha256": "61380b0a27d2f0b459d591f40a774d5bf6d0f38f354839d78db14c41142c43ab",
+  "notes": "新增「未来 7 天」独立外观：字体、字号、文字颜色都可单独设置，并带实时预览；设置子页重新梳理视觉层级：分类图标与主题色、吸顶标题栏、卡片渐变、统一标题与提示样式，减少拥挤感。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }
