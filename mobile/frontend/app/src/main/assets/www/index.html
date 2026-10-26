@@ -2899,6 +2899,126 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
   font-size:11px;color:var(--ink2);cursor:pointer;
 }
 .anniv-leap input{width:16px;height:16px;accent-color:var(--accent)}
+
+/* 文件选择控件只覆盖自己的标签，避免全屏隐形 input 抢走点击 */
+.qb-add{position:relative;overflow:hidden}
+.type-font-add{position:relative;overflow:hidden;display:block}
+
+/* 文字外观：实时预览 + 模块切换 + 字号滑杆 + 三级文字颜色 */
+.type-preview{
+  padding:14px 15px;border-radius:15px;margin:2px 0 12px;
+  background:var(--surface-soft);border:1px solid var(--line2);
+  font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  display:flex;flex-direction:column;gap:4px;overflow:hidden;
+}
+.type-preview .tp-tag{
+  align-self:flex-start;font-size:9.5px;padding:2px 7px;border-radius:6px;
+  color:var(--accent);background:rgba(76,111,255,.1);margin-bottom:1px;
+}
+.type-preview b{font-size:calc(17px * var(--tp-scale,1));line-height:1.35;color:var(--tp-ink,var(--ink));letter-spacing:-.2px}
+.type-preview .tp-meta{font-size:calc(11.5px * var(--tp-scale,1));color:var(--tp-ink2,var(--ink2))}
+.type-preview .tp-body{margin:2px 0 0;font-size:calc(12.5px * var(--tp-scale,1));line-height:1.55;color:var(--tp-muted,var(--muted))}
+.type-mod-seg{margin:0 0 10px}
+.type-mod-seg button{flex:1;height:34px;font-size:12px;border-radius:10px}
+.type-mod-panel{display:none}
+.type-mod-panel.on{display:block}
+.type-line .type-slider{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+.type-slider input[type=range]{flex:1;min-width:0;width:auto}
+.type-slider b{flex:0 0 44px;text-align:right;font-size:11.5px;color:var(--accent);font-variant-numeric:tabular-nums}
+.type-colors{display:flex;flex-direction:column;gap:8px;margin-top:11px;padding-top:10px;border-top:1px dashed var(--line2)}
+.type-color-row{display:flex;align-items:center;gap:9px}
+.type-color-row>span{flex:0 0 58px;font-size:11px;color:var(--muted)}
+.type-color-row .type-color{width:28px;height:28px;flex:0 0 auto}
+.type-color-row .type-auto{margin-left:auto}
+@media (max-width:959px){
+  .type-color-row>span{flex-basis:56px}
+}
+
+/* 背景清晰模式：去掉模糊铺底、柔光罩与页面内的毛玻璃 */
+html.bg-clear #bgBlur, html.bg-clear #bgVeil{display:none!important}
+html.bg-clear #bgImage{filter:none!important;opacity:1!important}
+html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-notes *{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+.bg-preview.is-clear .bg-prev-veil{display:none}
+.bg-preview.is-clear .bg-prev-img{opacity:1!important;filter:none!important}
+/* 记事模块透明度 */
+#view-notes .cal-card{background:rgba(var(--card-rgb),var(--notes-cal-a,.78))}
+#view-notes .note-editor{background:rgba(var(--card-rgb),var(--notes-editor-a,.92))}
+/* 表格顶栏隐藏 + 悬浮周导航 */
+#view-grid{position:relative}
+#view-grid.grid-chrome-hide .gv-head,
+#view-grid.grid-chrome-hide .grid-head,
+#view-grid.grid-chrome-hide .grid-hint{display:none}
+.grid-mini{
+  display:none;position:absolute;top:8px;right:12px;z-index:35;
+  align-items:center;gap:5px;padding:5px 7px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--line);
+  box-shadow:0 8px 22px -12px rgba(10,14,24,.45);
+}
+#view-grid.grid-chrome-hide .grid-mini{display:flex}
+.grid-mini button{
+  height:28px;min-width:28px;padding:0 7px;border-radius:8px;
+  font-size:11px;color:var(--ink2);background:var(--surface-soft);
+}
+.grid-mini button:active{transform:scale(.95)}
+.grid-mini button svg{width:14px;height:14px;display:block;margin:auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.grid-mini span{font-size:11px;color:var(--ink2);padding:0 3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:959px){ .grid-mini{top:6px;right:8px} }
+
+/* 设置首页 / 分类卡片 / 子页面 */
+.mb-panel.settings-panel{overflow-y:auto}
+@media (min-width:960px){ .mb-panel.settings-panel{width:680px;max-height:88vh} }
+.set-head{gap:10px;align-items:flex-start;margin-bottom:12px}
+.set-head-tx{flex:1;min-width:0;padding-top:1px}
+.set-head-tx h3{font-size:17px;font-weight:750;letter-spacing:-.2px}
+.set-head-tx span{display:block;margin-top:3px;font-size:10.5px;line-height:1.45;color:var(--muted)}
+.set-back{display:none;flex:0 0 auto}
+.settings-panel.pane-open .set-back{display:grid}
+.set-home{display:flex;flex-direction:column;gap:14px}
+.settings-panel.pane-open .set-home{display:none}
+.set-hero{display:flex;align-items:center;gap:12px;padding:2px 0}
+.set-hero-mark{
+  width:42px;height:42px;flex:0 0 auto;border-radius:13px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 10px 24px -12px rgba(76,111,255,.8);
+}
+.set-hero-mark svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.set-hero b{display:block;font-size:16px;font-weight:750;letter-spacing:-.2px}
+.set-hero small{display:block;margin-top:2px;font-size:10.5px;color:var(--muted)}
+.set-mode-card{padding:13px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--surface-soft)}
+.set-mode-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.set-mode-top b{font-size:12.5px;font-weight:700}
+.set-mode-top span{font-size:10.5px;color:var(--muted);line-height:1.5}
+#setModeSeg{width:100%}
+#setModeSeg button{flex:1;height:36px;font-size:12px;border-radius:10px}
+.set-cats{display:flex;flex-direction:column;gap:8px}
+.set-cat{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:12px;border-radius:15px;border:1px solid var(--line2);
+  background:var(--surface-soft);transition:background .15s,border-color .15s,transform .15s;
+}
+.set-cat:hover{background:var(--surface);border-color:rgba(76,111,255,.28)}
+.set-cat:active{transform:scale(.995)}
+.set-cat-ico{
+  width:38px;height:38px;flex:0 0 auto;border-radius:12px;display:grid;place-items:center;
+  color:#fff;background:var(--c,var(--accent));box-shadow:0 8px 18px -10px var(--c,var(--accent));
+}
+.set-cat-ico svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.set-cat-tx{flex:1;min-width:0}
+.set-cat-tx b{display:block;font-size:13px;font-weight:700;letter-spacing:-.1px}
+.set-cat-tx small{display:block;margin-top:2px;font-size:10.5px;line-height:1.45;color:var(--muted)}
+.set-cat-arrow{flex:0 0 auto;color:var(--muted);font-size:18px;line-height:1}
+.set-simple-note{display:none;margin:2px 2px 0;font-size:10.5px;line-height:1.55;color:var(--muted)}
+.mb-panel.set-simple .set-simple-note{display:block}
+.mb-panel.set-simple .set-cat[data-simple-hide]{display:none}
+.set-panes{display:block}
+.set-pane{display:none}
+.set-pane.on{display:block}
+@media (min-width:960px){
+  .set-cats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .set-cat{padding:13px}
+}
 </style>
 </head>
 
@@ -3078,6 +3198,14 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         <span>轻点空白处快速新建 · 长按日程可拖动改时间</span>
       </div>
+      <div class="grid-mini" id="gridMini" aria-label="周切换">
+        <button id="gmSearch" aria-label="搜索日程"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg></button>
+        <button id="gmStretch" aria-label="调整时间块"><svg viewBox="0 0 24 24"><path d="M12 4v16"/><path d="M9 7l3-3 3 3"/><path d="M9 17l3 3 3-3"/></svg></button>
+        <button id="gmPrev" aria-label="上一周">‹</button>
+        <span id="gmRange">—</span>
+        <button id="gmToday">今天</button>
+        <button id="gmNext" aria-label="下一周">›</button>
+      </div>
       <div class="grid-wrap" id="gridWrap">
         <div class="grid-head" id="gridHead"></div>
         <div class="grid-body" id="gridBody"></div>
@@ -3214,7 +3342,7 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.13',
+    version: '1.0.14',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3270,6 +3398,22 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
 
   /** 纪念日可选图标 */
   const ANNIV_ICONS = ['🎂', '🎉', '❤️', '🎁', '📌', '🌿'];
+
+  /** 设置首页的分类；key 同时对应子页面 data-setpane */
+  const SETTINGS_CATS = Object.freeze([
+    { key: 'appearance', label: '外观与文字', desc: '主题、背景、透明度、文字与字体库', color: '#4C6FFF',
+      icon: '<path d="M4 20c3.9-1.2 6.9-4.3 8.6-8.3l2.8 2.8C11.4 16.4 8.4 19 4.9 20Z"/><path d="m14.7 6.3 3 3"/><path d="M15.5 3.7a2.1 2.1 0 0 1 3 3l-1.7 1.7-3-3Z"/>' },
+    { key: 'home', label: '主页与语录', desc: '主卡、每日一句、开场动画与语料库', color: '#8A5CFF', simpleHide: true,
+      icon: '<path d="M3.2 10.6 12 3.4l8.8 7.2"/><path d="M5.6 9.6V20h12.8V9.6"/><path d="M10 20v-5h4v5"/>' },
+    { key: 'schedule', label: '日程与表格', desc: '时间步长、睡眠折叠、日程清理与表格顶栏', color: '#F59E0B', simpleHide: true,
+      icon: '<rect x="3" y="4.2" width="18" height="15.6" rx="2.6"/><path d="M3 9.4h18M9 9.4V20M15 9.4V20"/>' },
+    { key: 'notify', label: '提醒与通知', desc: '系统通知、提醒时间与手机闹钟', color: '#F43F5E',
+      icon: '<path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4 1.5 5.2 2.5 6H4c1-.8 2.5-2 2.5-6"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>' },
+    { key: 'data', label: '数据与备份', desc: '导入导出、清理与本地存储', color: '#16A34A',
+      icon: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>' },
+    { key: 'about', label: '关于与更新', desc: '版本、作者、许可与检查更新', color: '#06B6D4',
+      icon: '<circle cx="12" cy="12" r="8.4"/><path d="M12 10.6V17M12 7.4v.2"/>' }
+  ]);
 
   /**
    * 内置语录库（原创短句，id 用于单独开关）
@@ -3413,14 +3557,20 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
    *   dtStep 开始/结束时间 ± 按钮的微调步长（分钟），1–120，默认 15
    *   sleep  睡眠时段：on 为 true 时表格折叠 from–to 之间的时段（默认关闭 = 始终显示完整 24 小时）
    */
-  ui: { dtStep: 15, sleep: { on: false, from: '23:00', to: '07:00' } },
+  ui: {
+    dtStep: 15,
+    sleep: { on: false, from: '23:00', to: '07:00' },
+    /** 记事页模块透明度：日历卡 / 编辑卡；gridHeadHide=隐藏表格顶部黑色日期栏 */
+    notesAlpha: { cal: 0.78, editor: 0.92 },
+    gridHeadHide: false
+  },
     /** 语录字体：内置 key 或自定义字体 id */
     quoteFont: { key: 'sys', custom: [] },
     /** 各页面文字外观：color 为空表示跟随主题，size 为倍率，font 为内置 key / 自定义字体 id */
     typeStyle: {
-      home:  { color: '', size: 1, font: 'sys' },
-      grid:  { color: '', size: 1, font: 'sys' },
-      notes: { color: '', size: 1, font: 'sys' },
+      home:  { color: '', color2: '', color3: '', size: 1, font: 'sys' },
+      grid:  { color: '', color2: '', color3: '', size: 1, font: 'sys' },
+      notes: { color: '', color2: '', color3: '', size: 1, font: 'sys' },
       boot:  { font: 'sys' }
     },
     /**
@@ -3452,7 +3602,7 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
      * fit = 'contain' 整张图完整显示（默认，周围用模糊铺底补边）
      *       'cover'   铺满整屏（会裁掉超出部分）
      */
-    bg: { data: '', opacity: 0.45, blur: 0, scale: 1, x: 50, y: 50, fit: 'contain' },
+    bg: { data: '', opacity: 0.45, blur: 0, scale: 1, x: 50, y: 50, fit: 'contain', clear: false },
     /**
      * 过期日程自动清理。
      * @type {{on:boolean, days:number, lastRun:string}}
@@ -3579,9 +3729,12 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       const ts = obj.typeStyle || {};
       ['home', 'grid', 'notes'].forEach(function (k) {
         const v = ts[k] || {};
+        const size = Number(v.size);
         state.typeStyle[k] = {
           color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? v.color : '',
-          size: [0.92, 1, 1.08, 1.16].indexOf(Number(v.size)) > -1 ? Number(v.size) : 1,
+          color2: /^#[0-9a-f]{6}$/i.test(String(v.color2 || '')) ? v.color2 : '',
+          color3: /^#[0-9a-f]{6}$/i.test(String(v.color3 || '')) ? v.color3 : '',
+          size: (isFinite(size) && size >= 0.8 && size <= 1.5) ? size : 1,
           font: (typeof v.font === 'string' && v.font) ? v.font : 'sys'
         };
       });
@@ -3589,6 +3742,7 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         font: (ts.boot && typeof ts.boot.font === 'string' && ts.boot.font) ? ts.boot.font : 'sys'
       };
       state.bg = Object.assign(state.bg, obj.bg || {});
+      state.bg.clear = !!state.bg.clear;
       /* 取景方式只有两种，手改坏了就回退到默认 */
       if (state.bg.fit !== 'cover') state.bg.fit = 'contain';
       if (state.home.fit !== 'contain') state.home.fit = 'cover';
@@ -3598,6 +3752,11 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       });
       state.ui = Object.assign(state.ui, obj.ui || {});
       state.ui.settingsMode = (obj.ui && obj.ui.settingsMode === 'simple') ? 'simple' : 'standard';
+      const na = Object.assign({ cal: 0.78, editor: 0.92 }, state.ui.notesAlpha || {});
+      na.cal = Math.max(0, Math.min(1, Number(na.cal)));
+      na.editor = Math.max(0, Math.min(1, Number(na.editor)));
+      state.ui.notesAlpha = na;
+      state.ui.gridHeadHide = !!state.ui.gridHeadHide;
       /* 微调步长夹到 1–120，手改坏了也不至于一步跳一天 */
       let st = Math.round(Number(state.ui.dtStep));
       if (!isFinite(st) || st < 1) st = 15;
@@ -4783,7 +4942,10 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     const lineBg = hourLinesCss(geo);
 
     /* ---- 周区间标题 ---- */
-    $('#gridRange').textContent = weekRangeText();
+    const rangeText = weekRangeText();
+    $('#gridRange').textContent = rangeText;
+    const gmRange = document.getElementById('gmRange');
+    if (gmRange) gmRange.textContent = rangeText;
 
     /* ---- 表头：日期 / 星期 ---- */
     let head = '<div class="gh-gutter"></div>';
@@ -7822,6 +7984,7 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     const qs = state.quoteStyle;
     const nt = state.notify;
     const slp = state.ui.sleep;
+    const na = state.ui.notesAlpha || { cal: 0.78, editor: 0.92 };
     const pct = function (v) { return Math.round(v * 100); };
     const root = $('#modalRoot');
     const nat = nativeBridge();
@@ -7830,25 +7993,54 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
 
     root.innerHTML =
       '<div class="mb-back" data-close></div>' +
-      '<div class="mb-panel" role="dialog" aria-modal="true">' +
-        '<div class="mb-head"><h3>个性化</h3>' +
-          '<button class="icon-btn sm" data-close aria-label="关闭">✕</button></div>' +
-
-        '<div class="set-modes">' +
-          '<div class="chips" id="setModeSeg">' +
-            '<button data-setmode="standard" class="on">普通模式</button>' +
-            '<button data-setmode="simple">简洁模式</button>' +
+      '<div class="mb-panel settings-panel" role="dialog" aria-modal="true">' +
+        '<div class="mb-head set-head">' +
+          '<button class="icon-btn sm set-back" id="setBack" aria-label="返回设置首页">' +
+            '<svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg>' +
+          '</button>' +
+          '<div class="set-head-tx">' +
+            '<h3 id="setTitle">设置</h3>' +
+            '<span id="setHeadDesc">按类别整理，常用功能一眼找到</span>' +
           '</div>' +
-          '<p class="set-mode-desc" id="setModeDesc">完整的外观、主页、语录、表格与清理设置。</p>' +
+          '<button class="icon-btn sm" data-close aria-label="关闭">✕</button>' +
         '</div>' +
-        '<div class="set-nav" id="setNav">' +
-          '<button data-jump="setAppearance" class="on">外观与文字</button>' +
-          '<button data-jump="setSchedule" data-simple-hide>日程与表格</button>' +
-          '<button data-jump="setNotify">提醒</button>' +
-          '<button data-jump="setData">数据</button>' +
-          '<button data-jump="setAbout">关于</button>' +
+
+        '<div class="set-home" id="setHome">' +
+          '<div class="set-hero">' +
+            '<span class="set-hero-mark">' +
+              '<svg viewBox="0 0 24 24"><path d="M4.6 19.4c-.6-8.3 5.2-14.6 15.2-15.2.4 9.9-5.9 15.8-14.2 15.2"/><path d="M4.6 19.4 13.4 10.6"/></svg>' +
+            '</span>' +
+            '<div><b>DayLeaf 设置</b><small>外观、日程、提醒与数据都在这里</small></div>' +
+          '</div>' +
+          '<div class="set-mode-card">' +
+            '<div class="set-mode-top"><b>设置模式</b>' +
+              '<span id="setModeDesc">' + (state.ui.settingsMode === 'simple' ? '精简常用项，减少打扰' : '完整功能，适合细调每个细节') + '</span>' +
+            '</div>' +
+            '<div class="chips" id="setModeSeg">' +
+              '<button data-setmode="standard" class="' + (state.ui.settingsMode === 'simple' ? '' : 'on') + '">普通模式</button>' +
+              '<button data-setmode="simple" class="' + (state.ui.settingsMode === 'simple' ? 'on' : '') + '">简洁模式</button>' +
+            '</div>' +
+            '<p class="hint" id="setModeHint" style="margin:8px 0 0">' +
+              (state.ui.settingsMode === 'simple'
+                ? '只保留主题、背景、文字、提醒和备份；进阶项已隐藏。'
+                : '完整的外观、主页、语录、表格与清理设置。') +
+            '</p>' +
+          '</div>' +
+          '<div class="set-cats" id="setCats">' +
+            SETTINGS_CATS.map(function (c) {
+              return '<button class="set-cat" data-setpane="' + c.key + '"' +
+                  (c.simpleHide ? ' data-simple-hide' : '') + ' style="--c:' + c.color + '">' +
+                  '<span class="set-cat-ico"><svg viewBox="0 0 24 24">' + c.icon + '</svg></span>' +
+                  '<span class="set-cat-tx"><b>' + c.label + '</b><small>' + c.desc + '</small></span>' +
+                  '<span class="set-cat-arrow">›</span>' +
+                '</button>';
+            }).join('') +
+          '</div>' +
+          '<p class="set-simple-note">简洁模式已隐藏「主页与语录」「日程与表格」的进阶项；切回普通模式即可恢复。</p>' +
         '</div>' +
-        '<div class="set-anchor" id="setAppearance"></div>' +
+
+        '<div class="set-panes" id="setPanes">' +
+          '<div class="set-pane" data-setpane="appearance">' +
 
         '<div class="sec-line">外观</div>' +
         '<div class="field"><label>主题</label>' +
@@ -7871,6 +8063,13 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
           '</div>' +
         '</div>' +
 
+        '<div class="field"><div class="row-sw">' +
+          '<span>背景清晰模式</span>' +
+          '<button class="sw' + (bg.clear ? ' on' : '') + '" id="fBgClearMode" aria-label="背景清晰模式"></button>' +
+        '</div>' +
+        '<p class="hint">关闭模糊铺底和白色柔光罩，让背景图直接清晰显示。页面内卡片也会去掉毛玻璃，透明度可在下方单独调。</p></div>' +
+
+        '<div class="adv-section">' +
         /* 实时预览：与真实背景层用同一套 cover + position + scale + blur + opacity */
         '<div class="field"><label>效果预览</label>' +
           '<div class="bg-preview" id="bgPrev">' +
@@ -7896,33 +8095,58 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
           '<div class="field"><label>垂直位置 <b id="vY">' + bg.y + '%</b></label>' +
             '<input type="range" id="fY" min="0" max="100" value="' + bg.y + '"></div>' +
         '</div>' +
+        '</div>' +
+
+        '<div class="sec-line">模块透明度</div>' +
+        '<div class="field"><label>主页内容卡 <b id="vCardA">' + pct(hm.cardAlpha) + '%</b></label>' +
+          '<input type="range" id="fCardA" min="0" max="100" value="' + pct(hm.cardAlpha) + '"></div>' +
+        '<div class="field"><label>记事日历卡 <b id="vNotesCal">' + pct(na.cal) + '%</b></label>' +
+          '<input type="range" id="fNotesCal" min="0" max="100" value="' + pct(na.cal) + '"></div>' +
+        '<div class="field"><label>记事编辑卡 <b id="vNotesEd">' + pct(na.editor) + '%</b></label>' +
+          '<input type="range" id="fNotesEd" min="0" max="100" value="' + pct(na.editor) + '"></div>' +
+        '<p class="hint">越低越能透出背景图；0% 时卡片完全透明，只剩文字。</p>' +
 
         '<div class="sec-line">文字外观</div>' +
-        '<p class="hint">主页、表格、记事可以分别设置文字颜色、字号和字体，适合换了背景图后单独调清晰度。「跟随主题」不会覆盖原配色。</p>' +
-        '<div class="type-list">' +
-          ['home', 'grid', 'notes'].map(function (k) {
-            const label = { home: '主页', grid: '表格', notes: '记事' }[k];
-            const ts = state.typeStyle[k];
-            const fallbackColor = isDarkTheme() ? '#E8EBF3' : '#11141C';
-            const sizes = [{ v: 0.92, l: '小' }, { v: 1, l: '标准' }, { v: 1.08, l: '大' }, { v: 1.16, l: '特大' }];
-            return '<div class="type-row" data-type-mod="' + k + '">' +
-                '<div class="type-head"><b>' + label + '</b>' +
-                  '<button class="type-auto' + (ts.color ? '' : ' on') + '" data-typecolor-reset="' + k + '">跟随主题</button>' +
-                  '<input type="color" class="type-color" data-typecolor="' + k + '" value="' +
-                    (ts.color || fallbackColor) + '" aria-label="' + label + '文字颜色">' +
-                '</div>' +
-                '<div class="type-line"><span>字号</span><div class="chips type-sizes" data-typesize="' + k + '">' +
-                  sizes.map(function (z) {
-                    return '<button data-size="' + z.v + '" class="' +
-                      (Math.abs(Number(ts.size) - z.v) < 0.01 ? 'on' : '') + '">' + z.l + '</button>';
-                  }).join('') +
-                '</div></div>' +
-                '<div class="type-line"><span>字体</span>' +
-                  '<select class="inp type-font" data-typefont="' + k + '">' + fontOptionsHtml(ts.font) + '</select>' +
-                '</div>' +
-              '</div>';
+        '<p class="hint">主页、表格、记事分别设置；主文字、次要文字、弱化文字都可单独取色，不确定就点「自动」。字号 80%–150%，上方是实时预览。</p>' +
+        '<div class="type-preview" id="typePreview">' +
+          '<span class="tp-tag" id="tpTag">主页</span>' +
+          '<b id="tpTitle">今天有 3 件事在等你</b>' +
+          '<span class="tp-meta" id="tpMeta">14:00 项目评审 · 3F 会议室</span>' +
+          '<p class="tp-body" id="tpBody">还有 2 小时 12 分开始。把今天过完，明天自然会来。</p>' +
+        '</div>' +
+        '<div class="chips type-mod-seg" id="typeModSeg">' +
+          [{ key: 'home', label: '主页' }, { key: 'grid', label: '表格' }, { key: 'notes', label: '记事' }].map(function (m, i) {
+            return '<button data-typemod="' + m.key + '" class="' + (i === 0 ? 'on' : '') + '">' + m.label + '</button>';
           }).join('') +
         '</div>' +
+        ['home', 'grid', 'notes'].map(function (k) {
+          const label = { home: '主页', grid: '表格', notes: '记事' }[k];
+          const ts = state.typeStyle[k];
+          const pct = Math.round(Number(ts.size) * 100);
+          const colorRow = function (slot, name) {
+            const val = ts[slot] || '';
+            return '<div class="type-color-row"><span>' + name + '</span>' +
+                '<input type="color" class="type-color" data-typecolor="' + k + '" data-slot="' + slot + '" value="' +
+                  (val || themeColorFor(slot)) + '" aria-label="' + label + name + '">' +
+                '<button class="type-auto' + (val ? '' : ' on') + '" data-typecolor-reset="' + k + '" data-slot="' + slot + '">自动</button>' +
+              '</div>';
+          };
+          return '<div class="type-mod-panel' + (k === 'home' ? ' on' : '') + '" data-typepanel="' + k + '">' +
+              '<div class="type-line"><span>字号</span>' +
+                '<div class="type-slider">' +
+                  '<input type="range" class="type-range" data-typeslider="' + k + '" min="80" max="150" step="1" value="' + pct + '">' +
+                  '<b data-typesizeval="' + k + '">' + pct + '%</b>' +
+                '</div></div>' +
+              '<div class="type-line"><span>字体</span>' +
+                '<select class="inp type-font" data-typefont="' + k + '">' + fontOptionsHtml(ts.font) + '</select>' +
+              '</div>' +
+              '<div class="type-colors">' +
+                colorRow('color', '主文字') +
+                colorRow('color2', '次要文字') +
+                colorRow('color3', '弱化文字') +
+              '</div>' +
+            '</div>';
+        }).join('') +
         '<div class="type-row type-boot">' +
           '<div class="type-head"><b>启动页语录</b><span class="type-sub">只影响开场动画</span></div>' +
           '<div class="type-line"><span>字体</span>' +
@@ -7933,7 +8157,8 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         '<div class="sec-line">字体库</div>' +
         '<div id="typeFontLib"></div>' +
 
-        '<div class="adv-section">' +
+        '</div>' +
+        '<div class="set-pane" data-setpane="home">' +
         '<div class="sec-line">主页外观</div>' +
         '<div class="field"><label>主卡背景图</label>' +
           '<div class="hero-prev' + (hm.alpha < 0.62 ? ' is-faint' : '') + '" id="heroPrev" style="--hp-a:' +
@@ -7963,10 +8188,6 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         '<div class="field"><label>主卡不透明度 <b id="vHeroA">' + pct(hm.alpha) + '%</b></label>' +
           '<input type="range" id="fHeroA" min="0" max="100" value="' + pct(hm.alpha) + '"></div>' +
         '<p class="hint">调低后会透出页面背景；底色淡到一半以下时文字自动转深色。</p>' +
-
-        '<div class="field"><label>其他模块不透明度 <b id="vCardA">' + pct(hm.cardAlpha) + '%</b></label>' +
-          '<input type="range" id="fCardA" min="0" max="100" value="' + pct(hm.cardAlpha) + '"></div>' +
-        '<p class="hint">作用于今日日程、本周概览、纪念日三处的白色底。</p>' +
 
         '<div class="field"><div class="row-sw">' +
           '<span>主卡描边</span>' +
@@ -8061,8 +8282,7 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
           '</div></div>' +
 
         '</div>' +
-        '<div class="set-anchor" id="setSchedule"></div>' +
-        '<div class="adv-section">' +
+        '<div class="set-pane" data-setpane="schedule">' +
         '<div class="sec-line">日程清理</div>' +
         '<div class="field"><div class="row-sw">' +
           '<span>自动清理过期日程</span>' +
@@ -8126,8 +8346,14 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         '</div>' +
         '<p class="hint" id="fSleepHint"></p>' +
 
+        '<div class="field"><div class="row-sw">' +
+          '<span>隐藏表格顶栏</span>' +
+          '<button class="sw' + (state.ui.gridHeadHide ? ' on' : '') + '" id="fGridChrome" aria-label="隐藏表格顶栏"></button>' +
+        '</div></div>' +
+        '<p class="hint">隐藏上方工具栏和星期栏，改用右上角的悬浮周切换，让背景图更完整；不影响点格子新建和拖动日程。</p>' +
+
         '</div>' +
-        '<div class="set-anchor" id="setNotify"></div>' +
+        '<div class="set-pane" data-setpane="notify">' +
         '<div class="sec-line">通知与闹钟</div>' +
         '<div class="field"><div class="row-sw">' +
           '<span>开启提醒</span>' +
@@ -8167,7 +8393,8 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
             '浏览器写不了系统闹钟，想要手机真正响铃：点「导出 .ics」把带提醒的日程导进系统日历' +
             '（含提前提醒与到点响铃）。另外，提醒只在软件打开着的时候触发。') + '</p>' +
 
-        '<div class="set-anchor" id="setData"></div>' +
+        '</div>' +
+        '<div class="set-pane" data-setpane="data">' +
         '<div class="sec-line">数据</div>' +
         '<div class="field"><label>备份与恢复</label>' +
           '<div class="data-pick">' +
@@ -8175,7 +8402,8 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
             '<label class="btn ghost file">导入 JSON<input type="file" id="fImport" accept=".json,application/json"></label>' +
           '</div></div>' +
 
-        '<div class="set-anchor" id="setAbout"></div>' +
+        '</div>' +
+        '<div class="set-pane" data-setpane="about">' +
         (nat
           ? '<div class="sec-line">关于与更新</div>' +
             '<div class="field"><label>当前版本</label>' +
@@ -8189,6 +8417,8 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
           '维护邮箱 <a href="mailto:' + APP.email + '?subject=DayLeaf%20反馈">' + APP.email + '</a><br>' +
           APP.license + ' License · 图片与字体只存在本机（IndexedDB），不会上传；导出备份不含这些文件</div>' +
 
+        '</div>' +
+        '</div>' +
         '<div class="mb-foot"><button class="btn primary" data-close>完成</button></div>' +
       '</div>';
 
@@ -8196,49 +8426,70 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     pushModal(closeModal);
     renderTypeFontLib();
 
-    /* ---- 设置分类导航 + 普通/简洁模式 ---- */
+    /* ---- 设置首页 / 分类子页面 / 普通与简洁模式 ---- */
     (function () {
       const panel = $('.mb-panel', root);
-      const desc = $('#setModeDesc', root);
-      const nav = $('#setNav', root);
+      const back = $('#setBack', root);
+      const title = $('#setTitle', root);
+      const headDesc = $('#setHeadDesc', root);
+      const panes = $$('.set-pane', root);
       const modes = $$('#setModeSeg button', root);
-      const setActiveNav = function (key) {
-        if (!nav) return;
-        $$('button', nav).forEach(function (b) { b.classList.toggle('on', b.dataset.jump === key); });
+      const modeDesc = $('#setModeDesc', root);
+      const modeHint = $('#setModeHint', root);
+      const cats = $$('.set-cat', root);
+      let currentPane = '';
+      const catOf = function (key) {
+        return SETTINGS_CATS.filter(function (c) { return c.key === key; })[0];
+      };
+      const showHome = function () {
+        currentPane = '';
+        if (panel) panel.classList.remove('pane-open');
+        if (title) title.textContent = '设置';
+        if (headDesc) headDesc.textContent = '按类别整理，常用功能一眼找到';
+        panes.forEach(function (p) { p.classList.remove('on'); });
+        if (panel) panel.scrollTop = 0;
+      };
+      const openPane = function (key) {
+        const cat = catOf(key);
+        if (!cat) return;
+        if (panel && panel.classList.contains('set-simple') && cat.simpleHide) return;
+        currentPane = key;
+        if (panel) panel.classList.add('pane-open');
+        if (title) title.textContent = cat.label;
+        if (headDesc) headDesc.textContent = cat.desc;
+        panes.forEach(function (p) { p.classList.toggle('on', p.dataset.setpane === key); });
+        if (panel) panel.scrollTop = 0;
       };
       const applyMode = function (mode, persist) {
         const simple = mode === 'simple';
         state.ui.settingsMode = simple ? 'simple' : 'standard';
         if (panel) panel.classList.toggle('set-simple', simple);
-        modes.forEach(function (b) { b.classList.toggle('on', b.dataset.setmode === state.ui.settingsMode); });
-        if (desc) {
-          desc.textContent = simple
-            ? '只保留主题、背景、文字、提醒和备份等常用项；高级外观与表格细节已收起。'
+        modes.forEach(function (b) {
+          b.classList.toggle('on', b.dataset.setmode === state.ui.settingsMode);
+        });
+        if (modeDesc) {
+          modeDesc.textContent = simple ? '精简常用项，减少打扰' : '完整功能，适合细调每个细节';
+        }
+        if (modeHint) {
+          modeHint.textContent = simple
+            ? '只保留主题、背景、文字、提醒和备份；进阶项已隐藏。'
             : '完整的外观、主页、语录、表格与清理设置。';
         }
-        if (simple) {
-          const active = nav && $('button.on', nav);
-          if (active && active.dataset.jump === 'setSchedule') {
-            setActiveNav('setAppearance');
-            if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
-          }
+        if (simple && currentPane) {
+          const cur = catOf(currentPane);
+          if (cur && cur.simpleHide) showHome();
         }
         if (persist) saveState();
       };
       modes.forEach(function (b) {
         b.addEventListener('click', function () { applyMode(b.dataset.setmode, true); });
       });
-      if (nav) {
-        nav.addEventListener('click', function (e) {
-          const btn = e.target.closest('[data-jump]');
-          if (!btn) return;
-          if (panel && panel.classList.contains('set-simple') && btn.hasAttribute('data-simple-hide')) return;
-          const target = document.getElementById(btn.dataset.jump);
-          setActiveNav(btn.dataset.jump);
-          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
+      cats.forEach(function (b) {
+        b.addEventListener('click', function () { openPane(b.dataset.setpane); });
+      });
+      if (back) back.addEventListener('click', showHome);
       applyMode(state.ui.settingsMode || 'standard', false);
+      showHome();
     })();
 
     /* ---- 检查更新（App 内手动入口） ---- */
@@ -8287,6 +8538,17 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       applyBg();
       saveState();
     });
+
+    /* 背景清晰模式：去掉模糊铺底 / 柔光罩 / 页面毛玻璃 */
+    const bgClearMode = $('#fBgClearMode');
+    if (bgClearMode) {
+      bgClearMode.addEventListener('click', function () {
+        state.bg.clear = !state.bg.clear;
+        bgClearMode.classList.toggle('on', state.bg.clear);
+        applyBg();
+        saveState();
+      });
+    }
 
     /* ---- 滑块：实时预览 ---- */
     function bindRange(id, labelId, fmt, apply) {
@@ -8340,6 +8602,21 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     bindHomeRange('fHy', 'vHy', function (v) { return v + '%'; }, function (v) { state.home.imgY = v; });
     bindHomeRange('fHeroA', 'vHeroA', function (v) { return v + '%'; }, function (v) { state.home.alpha = v / 100; });
     bindHomeRange('fCardA', 'vCardA', function (v) { return v + '%'; }, function (v) { state.home.cardAlpha = v / 100; });
+
+    /* 记事模块透明度：日历卡 / 编辑卡 */
+    function bindNotesAlpha(id, labelId, key) {
+      const el = $('#' + id);
+      if (!el) return;
+      el.addEventListener('input', function () {
+        const v = Number(el.value);
+        $('#' + labelId).textContent = v + '%';
+        state.ui.notesAlpha[key] = v / 100;
+        applyModuleAlpha();
+      });
+      el.addEventListener('change', function () { saveState(); });
+    }
+    bindNotesAlpha('fNotesCal', 'vNotesCal', 'cal');
+    bindNotesAlpha('fNotesEd', 'vNotesEd', 'editor');
 
     /* 选图：压到 1000px 再存，主卡是整屏宽度但只需要中等清晰度 */
     $('#fHeroFile').addEventListener('change', function () {
@@ -8744,6 +9021,17 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
 
     paintSleepTip();
 
+    /* 隐藏表格顶栏：上方工具栏 + 星期栏，改用悬浮周切换 */
+    const gridChrome = $('#fGridChrome');
+    if (gridChrome) {
+      gridChrome.addEventListener('click', function () {
+        state.ui.gridHeadHide = !state.ui.gridHeadHide;
+        gridChrome.classList.toggle('on', state.ui.gridHeadHide);
+        applyModuleAlpha();
+        saveState();
+      });
+    }
+
     /* ---- 通知与闹钟 ---- */
     const ntOnBtn = $('#ntOn');
     if (ntOnBtn) {
@@ -8939,10 +9227,12 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
           state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
           state.typeStyle = Object.assign(state.typeStyle, obj.typeStyle || {});
           ['home', 'grid', 'notes'].forEach(function (k) {
-            state.typeStyle[k] = Object.assign({ color: '', size: 1, font: 'sys' }, state.typeStyle[k] || {});
+            state.typeStyle[k] = Object.assign({ color: '', color2: '', color3: '', size: 1, font: 'sys' }, state.typeStyle[k] || {});
           });
           state.typeStyle.boot = Object.assign({ font: 'sys' }, state.typeStyle.boot || {});
           state.ui = Object.assign(state.ui, obj.ui || {});
+          state.ui.notesAlpha = Object.assign({ cal: 0.78, editor: 0.92 }, state.ui.notesAlpha || {});
+          state.ui.gridHeadHide = !!state.ui.gridHeadHide;
           state.clean = Object.assign(state.clean, obj.clean || {});
           state.notify = Object.assign(state.notify, obj.notify || {});
       state.notify = Object.assign(state.notify, obj.notify || {});
@@ -8963,34 +9253,74 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
 
     /* ---- 文字外观 / 字体库 ---- */
     let typeSaveTimer = null;
-    const saveTypeSoon = function () {
+    let activeTypeMod = 'home';
+    const TYPE_SAMPLES = {
+      home: { tag: '主页', title: '今天有 3 件事在等你', meta: '14:00 项目评审 · 3F 会议室', body: '还有 2 小时 12 分开始。把今天过完，明天自然会来。' },
+      grid: { tag: '表格', title: '项目评审', meta: '14:00 – 15:00 · 3F 会议室', body: '周一 · 10 月 26 日 · 待办' },
+      notes: { tag: '记事', title: '整理下周的方案', meta: '10 月 26 日 · 周一', body: '把三份稿子合并，重点核对时间线。' }
+    };
+    const typeSaveSoon = function () {
       clearTimeout(typeSaveTimer);
       typeSaveTimer = setTimeout(function () { saveState(); }, 220);
     };
-    const setTypeColor = function (mod, color) {
+    const refreshTypePreview = function () {
+      const pv = $('#typePreview', root);
+      if (!pv) return;
+      const st = state.typeStyle[activeTypeMod] || {};
+      const sample = TYPE_SAMPLES[activeTypeMod] || TYPE_SAMPLES.home;
+      const bg = themeBgHex();
+      pv.style.fontFamily = fontStackForKey(st.font);
+      pv.style.setProperty('--tp-scale', String(Number(st.size) || 1));
+      pv.style.setProperty('--tp-ink', st.color || themeColorFor('color'));
+      pv.style.setProperty('--tp-ink2', st.color2 || (st.color ? mixHex(st.color, bg, 0.22) : themeColorFor('color2')));
+      pv.style.setProperty('--tp-muted', st.color3 || (st.color ? mixHex(st.color, bg, 0.42) : themeColorFor('color3')));
+      const tag = $('#tpTag', root), title = $('#tpTitle', root), meta = $('#tpMeta', root), body = $('#tpBody', root);
+      if (tag) tag.textContent = sample.tag;
+      if (title) title.textContent = sample.title;
+      if (meta) meta.textContent = sample.meta;
+      if (body) body.textContent = sample.body;
+    };
+    const setTypeSlot = function (mod, slot, value) {
       if (!state.typeStyle[mod]) return;
-      state.typeStyle[mod].color = color || '';
-      const auto = $('[data-typecolor-reset="' + mod + '"]', root);
-      if (auto) auto.classList.toggle('on', !color);
+      state.typeStyle[mod][slot] = value || '';
+      const auto = $('[data-typecolor-reset="' + mod + '"][data-slot="' + slot + '"]', root);
+      if (auto) auto.classList.toggle('on', !value);
       applyTypeStyle(mod);
+      refreshTypePreview();
     };
 
     root.addEventListener('input', function (e) {
+      const range = e.target.closest ? e.target.closest('[data-typeslider]') : null;
+      if (range) {
+        const mod = range.dataset.typeslider;
+        const pct = Number(range.value);
+        state.typeStyle[mod].size = pct / 100;
+        const val = $('[data-typesizeval="' + mod + '"]', root);
+        if (val) val.textContent = pct + '%';
+        applyTypeStyle(mod);
+        refreshTypePreview();
+        typeSaveSoon();
+        return;
+      }
       const color = e.target.closest ? e.target.closest('[data-typecolor]') : null;
       if (color) {
-        setTypeColor(color.dataset.typecolor, color.value);
-        saveTypeSoon();
+        setTypeSlot(color.dataset.typecolor, color.dataset.slot, color.value);
+        typeSaveSoon();
       }
     });
+
     root.addEventListener('change', function (e) {
+      const range = e.target.closest ? e.target.closest('[data-typeslider]') : null;
+      if (range) { saveState(); return; }
       const color = e.target.closest ? e.target.closest('[data-typecolor]') : null;
-      if (color) { setTypeColor(color.dataset.typecolor, color.value); saveState(); return; }
+      if (color) { setTypeSlot(color.dataset.typecolor, color.dataset.slot, color.value); saveState(); return; }
 
       const font = e.target.closest ? e.target.closest('[data-typefont]') : null;
       if (font) {
         state.typeStyle[font.dataset.typefont].font = font.value;
         saveState();
         applyTypeStyle(font.dataset.typefont);
+        refreshTypePreview();
         return;
       }
       const bootFont = e.target.closest ? e.target.closest('[data-bootfont]') : null;
@@ -9007,29 +9337,32 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
           refreshTypeFontSelects();
           renderTypeFontLib();
           applyTypeStyle();
+          refreshTypePreview();
         });
       }
     });
+
     root.addEventListener('click', function (e) {
+      const modBtn = e.target.closest ? e.target.closest('[data-typemod]') : null;
+      if (modBtn) {
+        activeTypeMod = modBtn.dataset.typemod;
+        $$('#typeModSeg button', root).forEach(function (b) {
+          b.classList.toggle('on', b === modBtn);
+        });
+        $$('[data-typepanel]', root).forEach(function (p) {
+          p.classList.toggle('on', p.dataset.typepanel === activeTypeMod);
+        });
+        refreshTypePreview();
+        return;
+      }
       const auto = e.target.closest ? e.target.closest('[data-typecolor-reset]') : null;
       if (auto) {
         const mod = auto.dataset.typecolorReset;
-        setTypeColor(mod, '');
-        const input = $('[data-typecolor="' + mod + '"]', root);
-        if (input) input.value = isDarkTheme() ? '#E8EBF3' : '#11141C';
+        const slot = auto.dataset.slot || 'color';
+        setTypeSlot(mod, slot, '');
+        const input = $('[data-typecolor="' + mod + '"][data-slot="' + slot + '"]', root);
+        if (input) input.value = themeColorFor(slot);
         saveState();
-        return;
-      }
-      const sizeBtn = e.target.closest ? e.target.closest('[data-typesize] button') : null;
-      if (sizeBtn) {
-        const mod = sizeBtn.parentNode.dataset.typesize;
-        const v = Number(sizeBtn.dataset.size);
-        state.typeStyle[mod].size = v;
-        $$('[data-typesize="' + mod + '"] button', root).forEach(function (b) {
-          b.classList.toggle('on', Number(b.dataset.size) === v);
-        });
-        saveState();
-        applyTypeStyle(mod);
         return;
       }
       const del = e.target.closest ? e.target.closest('[data-typefontdel]') : null;
@@ -9038,8 +9371,10 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         refreshTypeFontSelects();
         renderTypeFontLib();
         applyTypeStyle();
+        refreshTypePreview();
       }
     });
+    refreshTypePreview();
 
     /* 面板建好后先把当前参数画进预览 */
     syncBgPreview();
@@ -9062,12 +9397,14 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       return;
     }
     box.classList.add('has-img');
+    const clear = !!bg.clear;
+    box.classList.toggle('is-clear', clear);
     img.style.backgroundImage = 'url("' + bg.data + '")';
     img.style.backgroundSize = bg.fit === 'cover' ? 'cover' : 'contain';
     img.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
     img.style.transform = 'scale(' + bg.scale + ')';
-    img.style.filter = bg.blur > 0 ? 'blur(' + bg.blur + 'px)' : 'none';
-    img.style.opacity = String(bg.opacity);
+    img.style.filter = (!clear && bg.blur > 0) ? 'blur(' + bg.blur + 'px)' : 'none';
+    img.style.opacity = String(clear ? 1 : bg.opacity);
   }
 
   /** 把 state.bg 应用到背景层 */
@@ -9077,6 +9414,8 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     const layer = $('#bgImage');
     const back = $('#bgBlur');
     if (!layer) return;
+    const clear = !!bg.clear && !!bg.data;
+    document.documentElement.classList.toggle('bg-clear', clear);
 
     if (bg.data) {
       /* 只有换图才重设 backgroundImage；拖滑块时只改 opacity / blur / scale / position，
@@ -9087,12 +9426,13 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
         if (back) back.style.backgroundImage = url;
         _lastBgSrc = bg.data;
       }
-      layer.style.opacity = String(bg.opacity);
+      layer.style.opacity = String(clear ? 1 : bg.opacity);
       layer.style.backgroundSize = bg.fit === 'cover' ? 'cover' : 'contain';
       layer.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
       layer.style.transform = 'scale(' + bg.scale + ')';
-      layer.style.filter = bg.blur > 0 ? 'blur(' + bg.blur + 'px)' : 'none';
+      layer.style.filter = (!clear && bg.blur > 0) ? 'blur(' + bg.blur + 'px)' : 'none';
       if (back) {
+        back.style.display = clear ? 'none' : '';
         back.style.opacity = String(Math.min(1, bg.opacity * 0.9 + 0.15));
       }
       document.body.classList.add('has-bg');
@@ -9106,6 +9446,19 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     }
     /* 预览与背景层永远同源，任何参数变化都走这里 */
     syncBgPreview();
+    applyModuleAlpha();
+  }
+
+  /** 记事模块透明度 & 表格顶栏显示 */
+  function applyModuleAlpha() {
+    const notes = $('#view-notes');
+    if (notes) {
+      const na = state.ui.notesAlpha || { cal: 0.78, editor: 0.92 };
+      notes.style.setProperty('--notes-cal-a', String(na.cal));
+      notes.style.setProperty('--notes-editor-a', String(na.editor));
+    }
+    const grid = $('#view-grid');
+    if (grid) grid.classList.toggle('grid-chrome-hide', !!state.ui.gridHeadHide);
   }
 
   /**
@@ -10448,10 +10801,14 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       '.today-item .t-main b', '.today-item .t-sub', '.today-item .t-time',
       '.wk-day .wk-wd', '.wk-day .wk-dn',
       '.anniv-item .tt b', '.anniv-item .tt span', '.anniv-item .cd',
-      '.st-row', '.st-row b', '.st-note', '.st-d-row'
+      '.anniv-bar .tx b', '.anniv-bar .tx span', '.anniv-bar .tag',
+      '.st-row', '.st-row b', '.st-note', '.st-d-row',
+      '.q-src', '.q-act', '.home-fold summary'
     ],
-    grid: ['.gh-wd', '.gh-dt', '.hl', '.ev-t', '.ev-hm', '.ev-loc', '.grid-hint', '.gv-title', '.gv-nav button'],
-    notes: ['.cal-head', '.cal-wd span', '.cal-cell .cc-num', '.ne-date', '.ne-title', '.ne-body', '.ne-tagrow .lbl', '.ne-empty', '.ne-saved']
+    grid: ['.grid-range', '.gh-wd', '.gh-dt', '.hl', '.ev-t', '.ev-hm', '.ev-loc', '.grid-hint', '.gv-title', '.gv-nav button'],
+    notes: ['.cal-title', '.cal-head', '.cal-tools .chip-btn', '.cal-wd span', '.cal-cell .cc-num',
+      '.ne-date', '.ne-date small', '.ne-title', '.ne-body', '.ne-tagrow .lbl', '.ne-empty', '.ne-saved',
+      '.ne-hint', '.anniv-cal-row > span', '.anniv-lunar select']
   };
 
   function hexToRgb(hex) {
@@ -10472,6 +10829,13 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       b: ca.b + (cb.b - ca.b) * t
     });
   }
+  /** 文字颜色「自动」时的主题色：主/次/弱 */
+  function themeColorFor(slot) {
+    const dark = isDarkTheme();
+    if (slot === 'color2') return dark ? '#B9C0D0' : '#3A4050';
+    if (slot === 'color3') return dark ? '#8B93A7' : '#767E90';
+    return dark ? '#E8EBF3' : '#11141C';
+  }
   function themeBgHex() {
     try {
       const v = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
@@ -10480,23 +10844,33 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
     return '#FFFFFF';
   }
 
-  /** 把自定义文字颜色换算成主/次/弱三级，作用在页面容器上 */
-  function applyViewInk(view, color) {
+  /** 把自定义文字颜色作用在页面容器上：主文字 / 次要 / 弱化可分别指定 */
+  function applyViewInk(view, st) {
     if (!view) return;
-    if (color && /^#[0-9a-f]{6}$/i.test(color)) {
-      const bg = themeBgHex();
-      view.style.setProperty('--ink', color);
-      view.style.setProperty('--ink2', mixHex(color, bg, 0.22));
-      view.style.setProperty('--muted', mixHex(color, bg, 0.42));
-      view.style.setProperty('--ink-soft', mixHex(color, bg, 0.58));
-      view.style.setProperty('--type-custom-ink', color);
+    const bg = themeBgHex();
+    const c1 = st && /^#[0-9a-f]{6}$/i.test(String(st.color || '')) ? st.color : '';
+    const c2 = st && /^#[0-9a-f]{6}$/i.test(String(st.color2 || '')) ? st.color2 : '';
+    const c3 = st && /^#[0-9a-f]{6}$/i.test(String(st.color3 || '')) ? st.color3 : '';
+
+    if (c1) {
+      view.style.setProperty('--ink', c1);
+      view.style.setProperty('--type-custom-ink', c1);
       view.classList.add('type-custom-ink');
     } else {
-      ['--ink', '--ink2', '--muted', '--ink-soft', '--type-custom-ink'].forEach(function (k) {
-        view.style.removeProperty(k);
-      });
+      view.style.removeProperty('--ink');
+      view.style.removeProperty('--type-custom-ink');
       view.classList.remove('type-custom-ink');
     }
+    if (c2) view.style.setProperty('--ink2', c2);
+    else if (c1) view.style.setProperty('--ink2', mixHex(c1, bg, 0.22));
+    else view.style.removeProperty('--ink2');
+
+    if (c3) view.style.setProperty('--muted', c3);
+    else if (c1) view.style.setProperty('--muted', mixHex(c1, bg, 0.42));
+    else view.style.removeProperty('--muted');
+
+    if (c1) view.style.setProperty('--ink-soft', mixHex(c1, bg, 0.58));
+    else view.style.removeProperty('--ink-soft');
   }
 
   /** 按当前倍率缩放某个页面的文字；倍率 1 时清掉内联字号，恢复原样式 */
@@ -10594,7 +10968,7 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       if (!view) return;
       const st = (state.typeStyle && state.typeStyle[key]) || {};
       view.style.fontFamily = fontStackForKey(st.font);
-      applyViewInk(view, st.color);
+      applyViewInk(view, st);
       applyTypeScale(key);
     });
     if (!onlyKey) {
@@ -11277,6 +11651,16 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
       renderGrid();
       scrollGridTo(defaultGridHour());
     });
+    const gmPrev = document.getElementById('gmPrev');
+    if (gmPrev) gmPrev.addEventListener('click', function () { document.getElementById('wkPrev').click(); });
+    const gmNext = document.getElementById('gmNext');
+    if (gmNext) gmNext.addEventListener('click', function () { document.getElementById('wkNext').click(); });
+    const gmToday = document.getElementById('gmToday');
+    if (gmToday) gmToday.addEventListener('click', function () { document.getElementById('wkToday').click(); });
+    const gmSearch = document.getElementById('gmSearch');
+    if (gmSearch) gmSearch.addEventListener('click', function () { document.getElementById('btnSearchGrid').click(); });
+    const gmStretch = document.getElementById('gmStretch');
+    if (gmStretch) gmStretch.addEventListener('click', function () { document.getElementById('btnStretch').click(); });
 
     /* ---- 表格页：时间块拉伸 ---- */
     $('#btnStretch').addEventListener('click', openStretch);

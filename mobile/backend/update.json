@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 14,
-  "versionName": "1.0.13",
+  "versionCode": 15,
+  "versionName": "1.0.14",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.13/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.14/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.13/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.13/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.13/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.14/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.14/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.14/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 485465,
-  "sha256": "f1f393c05c8dd24c0de922ad331e9dde3c2be9f8546e8c9ae0aa4e7ccf43809c",
-  "notes": "新增：主页/表格/记事分别设置文字颜色、字号、字体，并加入字体库（可导入字体、分配给各页面）；设置分类导航 + 简洁模式；表格点击先看详情，可修改/删除，卡片补充地点；重复日程支持整组修改、编辑时可改重复规则、可仅改单条；每年纪念日支持农历/闰月；时间微调新增 10 分钟；启动页语录可单独选字体；OCR 结果改为独立可关闭弹层，通知直接填表、课表按周展开。",
+  "size": 491137,
+  "sha256": "0b1d18995e08eae6a63a208875b1ef44bbf43904c4450cfc55605e05e5369e44",
+  "notes": "设置重做为分类首页与子页，新增普通/简洁模式；修复设置里点击某些区域和简洁模式按钮会误开文件选择；文字外观支持每个页面独立调整字号滑杆、字体和主/次/弱三种颜色，并提供实时预览；新增背景清晰模式（去掉模糊铺底、柔光罩和页面毛玻璃）、记事日历卡与编辑卡透明度、表格顶栏隐藏和悬浮周导航。",
   "publishedAt": "2026-10-26"
 }
