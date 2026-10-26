@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 26,
-  "versionName": "1.1.7",
+  "versionCode": 27,
+  "versionName": "1.1.8",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.7/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.8/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.7/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.7/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.7/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.8/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.8/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.8/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 891042,
-  "sha256": "eb3907b16d60be8eea1fd0590d12c613dcc1d5e671c7a4e0773aea0ac76f033d",
-  "notes": "手机新增「快速新建」组件并重做下一项/今日日程组件（渐变卡片、预览、启动器可见），电脑小窗重做（可拖动、可钉住置顶、可隐藏）；局域网同步修复手机推送后被原样回显的问题，发送后自动拉取合并并显示条数，电脑端实时显示手机已连接；通知权限长文案不再截断。",
+  "size": 925702,
+  "sha256": "997b75aca7167d6d73b241ebd89bafde7bee851ac9b839201ff12d0fe56402fc",
+  "notes": "组件重做：手机新增快速新建组件，下一项/今日日程改为渐变卡片并带预览；电脑小窗可拖动、可钉住置顶、可隐藏。局域网同步修复“连接成功但无数据”（不再回显手机自己的包，发送后自动拉取合并并显示条数，电脑实时显示手机已连接）。修复通知权限按钮截断、长错误提示超出屏幕宽度。",
   "publishedAt": "2026-10-26"
 }

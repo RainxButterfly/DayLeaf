@@ -10,8 +10,8 @@ android {
         applicationId "com.dayleaf.app"
         minSdk 23
         targetSdk 34
-        versionCode 26
-        versionName "1.1.7"
+        versionCode 27
+        versionName "1.1.8"
     }
 
     // 可选签名：把 DAYLEAF_KEYSTORE / DAYLEAF_STORE_PASSWORD /

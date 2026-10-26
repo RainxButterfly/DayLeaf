@@ -1949,8 +1949,10 @@ html.dark .st-note.warn{color:#F0B95A}
   position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom,0px));
   transform:translate(-50%,14px);
   z-index:120; padding:11px 17px; border-radius:13px;
-  display:inline-flex; align-items:center; gap:10px;
-  font-size:12.5px; line-height:1; color:#fff; white-space:nowrap;
+  display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;
+  max-width:calc(100vw - 32px); box-sizing:border-box;
+  font-size:12.5px; line-height:1.5; color:#fff; white-space:normal;
+  text-align:left; overflow-wrap:anywhere;
   background:rgba(20,24,34,.9);
   -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
   box-shadow:0 12px 30px -10px rgba(16,20,30,.55);
@@ -1959,6 +1961,7 @@ html.dark .st-note.warn{color:#F0B95A}
 }
 #toast.show{opacity:1;transform:translate(-50%,0)}
 /* 提示条里的动作按钮（撤销删除等），只在传了动作时才出现 */
+#toast>span{min-width:0;overflow-wrap:anywhere}
 #toast .t-act{
   -webkit-appearance:none; appearance:none;
   border:0; margin:0; padding:5px 11px; border-radius:9px;
@@ -3885,7 +3888,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.7',
+    version: '1.1.8',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -15948,7 +15951,13 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.7', date: '2026-10-26', latest: true,
+      v: '1.1.8', date: '2026-10-26', latest: true,
+      fix: [
+        '局域网/同步等长错误提示不再超过屏幕宽度，提示条会自动换行并限制在屏幕内。'
+      ]
+    },
+    {
+      v: '1.1.7', date: '2026-10-26', latest: false,
       add: [
         '手机桌面组件重做：新增「快速新建 2×1」，重做「下一项 2×1」和「今日日程 4×2」的样式与内容，并带组件预览，便于在启动器里找到。',
         '电脑桌面小窗重做：可拖动、右上角可钉住/取消置顶、可隐藏，并换成渐变卡片样式，不再只是一块贴右下角的列表。'
