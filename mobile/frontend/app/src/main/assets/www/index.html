@@ -3195,6 +3195,29 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 .quote-card.has-bg .q-src{color:var(--quote-ink2,rgba(255,255,255,.8))}
 .quote-card.has-bg .q-act{color:var(--quote-muted,#fff)}
 
+
+/* ---- 1.1.0 UI 修正：移动端设置按钮不挤成多行 ---- */
+@media (max-width:700px){
+  .set-group .data-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .set-group .data-pick>*{width:100%;min-width:0}
+  .set-group .data-pick .btn,.set-group .data-pick label.btn{
+    padding:0 10px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+}
+/* 桌面专属设置（手机端没有侧边栏） */
+@media (max-width:959px){ .desk-only{display:none!important} }
+
+/* 字体导入卡片 */
+.font-import{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:14px;background:var(--surface-soft);border:1px dashed var(--line2);margin-top:8px}
+.font-import .fi-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.font-import .fi-tx b{font-size:12.5px;color:var(--ink)}
+.font-import .fi-tx span{font-size:10.5px;color:var(--muted);line-height:1.55}
+.font-import .fi-btn{position:relative;overflow:hidden;flex:0 0 auto;height:36px;padding:0 12px;font-size:12px}
+@media (max-width:700px){
+  .font-import{flex-direction:column;align-items:stretch;gap:10px}
+  .font-import .fi-btn{width:100%;justify-content:center}
+}
 /* hidden 必须能盖过 display:grid，否则锁屏/确认框会一直浮在最上层 */
 .dl-lock[hidden],.dl-ask[hidden],.dl-viewer[hidden],.ctx-menu[hidden],#monthRoot[hidden]{display:none!important}
 /* 应用内右键菜单（桌面端替代浏览器菜单） */
@@ -3767,7 +3790,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.0',
+    version: '1.1.1',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -8675,7 +8698,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '</div>' +
         '<p class="hint">关闭模糊铺底和白色柔光罩，让背景图直接清晰显示。页面内卡片也会去掉毛玻璃，透明度可在下方单独调。</p></div>' +
 
-        '<div class="field"><label>导航栏透明度 <b id="vNavAlpha">' +
+        '<div class="field desk-only"><label>导航栏透明度 <b id="vNavAlpha">' +
           Math.round((state.ui.navAlpha == null ? 1 : state.ui.navAlpha) * 100) + '%</b></label>' +
           '<input type="range" id="fNavAlpha" min="0" max="100" value="' +
             Math.round((state.ui.navAlpha == null ? 1 : state.ui.navAlpha) * 100) + '">' +
@@ -8740,9 +8763,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           '<input type="range" id="fSc" min="100" max="200" value="' + Math.round(bg.scale * 100) + '"></div>' +
 
         '<div class="field-row two">' +
-          '<div class="field"><label>水平位置 <b id="vX">' + bg.x + '%</b></label>' +
+          '<div class="field"><label>水平位置 <b id="vX">' + Math.round(bg.x) + '%</b></label>' +
             '<input type="range" id="fX" min="0" max="100" value="' + bg.x + '"></div>' +
-          '<div class="field"><label>垂直位置 <b id="vY">' + bg.y + '%</b></label>' +
+          '<div class="field"><label>垂直位置 <b id="vY">' + Math.round(bg.y) + '%</b></label>' +
             '<input type="range" id="fY" min="0" max="100" value="' + bg.y + '"></div>' +
         '</div>' +
         '</div>' +
@@ -8865,9 +8888,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '</div>' +
 
         '<div class="field-row two">' +
-          '<div class="field"><label>图片水平 <b id="vHx">' + hm.imgX + '%</b></label>' +
+          '<div class="field"><label>图片水平 <b id="vHx">' + Math.round(hm.imgX) + '%</b></label>' +
             '<input type="range" id="fHx" min="0" max="100" value="' + hm.imgX + '"></div>' +
-          '<div class="field"><label>图片垂直 <b id="vHy">' + hm.imgY + '%</b></label>' +
+          '<div class="field"><label>图片垂直 <b id="vHy">' + Math.round(hm.imgY) + '%</b></label>' +
             '<input type="range" id="fHy" min="0" max="100" value="' + hm.imgY + '"></div>' +
         '</div>' +
 
@@ -9142,10 +9165,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '<div class="sec-line">导入与工具</div>' +
         '<div class="field"><label>课表 / 日历导入</label>' +
           '<div class="data-pick">' +
-            '<button class="btn ghost" data-dl-act="import">Excel / CSV / ICS 导入</button>' +
+            '<button class="btn ghost" data-dl-act="import">课表导入</button>' +
             '<button class="btn ghost" data-dl-act="month">月视图</button>' +
             '<button class="btn ghost" data-dl-act="review">周复盘</button>' +
-            '<button class="btn ghost" data-dl-act="share-day">生成今日分享图</button>' +
+            '<button class="btn ghost" data-dl-act="share-day">今日分享图</button>' +
           '</div>' +
           '<p class="hint">Excel 课表按「周一到周日为列、节次为行」识别，先预览再导入。</p></div>' +
 
@@ -9455,8 +9478,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       return v > 0 ? v + 'px' : v < 0 ? '锐化 ' + Math.abs(v) : '0';
     }, function (v) { state.bg.blur = v; });
     bindRange('fSc', 'vSc', function (v) { return v + '%'; }, function (v) { state.bg.scale = v / 100; });
-    bindRange('fX', 'vX', function (v) { return v + '%'; }, function (v) { state.bg.x = v; });
-    bindRange('fY', 'vY', function (v) { return v + '%'; }, function (v) { state.bg.y = v; });
+    bindRange('fX', 'vX', function (v) { return Math.round(v) + '%'; }, function (v) { state.bg.x = v; });
+    bindRange('fY', 'vY', function (v) { return Math.round(v) + '%'; }, function (v) { state.bg.y = v; });
 
     /* ---- 主题切换 ---- */
     $('#themeSeg').addEventListener('click', function (e) {
@@ -11203,14 +11226,14 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       if (el) el.value = val;
     };
     set('fSc', Math.round(state.bg.scale * 100));
-    set('fX', state.bg.x);
-    set('fY', state.bg.y);
+    set('fX', Math.round(state.bg.x));
+    set('fY', Math.round(state.bg.y));
     const l1 = document.getElementById('vSc');
     const l2 = document.getElementById('vX');
     const l3 = document.getElementById('vY');
     if (l1) l1.textContent = Math.round(state.bg.scale * 100) + '%';
-    if (l2) l2.textContent = state.bg.x + '%';
-    if (l3) l3.textContent = state.bg.y + '%';
+    if (l2) l2.textContent = Math.round(state.bg.x) + '%';
+    if (l3) l3.textContent = Math.round(state.bg.y) + '%';
   }
 
   /**
@@ -12272,11 +12295,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       });
       h += '</div>';
     }
-    h += '<label class="qb-add type-font-add">+ 导入字体文件' +
-      '<input type="file" id="typeFontFile" accept=".ttf,.otf,.woff,.woff2,font/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
-      '</label>' +
-      '<p class="hint">导入后可在上面为每个页面单独选择；字体只存在本机，不会上传。' +
-      '单个不超过 ' + Math.round(ASSET_LIMIT.fontSize / 1048576) + ' MB，最多 ' + ASSET_LIMIT.fontCount + ' 个。</p>';
+    h += '<div class="font-import">' +
+        '<div class="fi-tx"><b>导入自己的字体</b>' +
+          '<span>支持 .ttf / .otf / .woff / .woff2 · 单个 ≤ ' + Math.round(ASSET_LIMIT.fontSize / 1048576) + ' MB · 最多 ' + ASSET_LIMIT.fontCount + ' 个</span>' +
+          '<span>导入后在「字体」下拉里选择；文件只保存在本机。</span>' +
+        '</div>' +
+        '<label class="btn ghost fi-btn">选择字体文件' +
+          '<input type="file" id="typeFontFile" accept=".ttf,.otf,.woff,.woff2,font/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
+        '</label>' +
+      '</div>';
     box.innerHTML = h;
   }
 
@@ -14260,7 +14287,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   function renderSnapList(box) {
     if (!box) return;
     const list = snapIndex();
-    if (!list.length) { box.innerHTML = '<p class="hint">还没有本机快照。开启后每天首次打开会自动留一份。</p>'; return; }
+    if (!list.length) { box.innerHTML = '<p class="hint">还没有本机快照，点「立即备份」留一份。</p>'; return; }
     box.innerHTML = list.map(function (x) {
       const d = new Date(x.at);
       const when = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
@@ -15562,7 +15589,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.0', date: '2026-10-26', latest: true,
+      v: '1.1.1', date: '2026-10-26', latest: true,
+      fix: [
+        '手机端设置里的「课表导入 / 今日分享图」等按钮不再被挤成多行，文字不再截断（数据页按钮改为两列自适应）。',
+        '字体导入改为独立卡片：支持格式、单个大小与数量说明更清楚，按钮不再和说明文字挤在一起。',
+        '「导航栏透明度」只在电脑端显示；手机端没有侧边栏，不再出现这一项。',
+        '取景 / 主卡 / 背景位置在重新打开设置后不再显示一长串小数，统一为整数百分比。',
+        '设置子页的分组间距、分隔线与提示文案统一，去掉重复说明。'
+      ]
+    },
+    {
+      v: '1.1.0', date: '2026-10-26', latest: false,
       add: [
         '后台提醒闭环：通知上可直接「完成」或「10 分钟后提醒」；重启 / 改时间 / 换时区自动重排，错过 12 小时内补提醒。',
         '快捷录入：手机悬浮按钮、电脑 Ctrl+K，输入「明天下午3点 开会 1小时 在3F会议室 提前10分钟」即可创建；支持系统分享文本到叶历。',

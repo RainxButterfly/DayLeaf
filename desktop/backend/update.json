@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 17,
-  "versionName": "1.1.0",
+  "versionCode": 18,
+  "versionName": "1.1.1",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.0/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.1/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 977161,
-  "sha256": "96431f5a1e10200c6b1710c24ad8ff4b2ffbac7d17f0803443118cd700eef7ae",
-  "notes": "新增后台提醒闭环（通知可直接完成/稍后 10 分钟、重启与改时间自动重排、错过 12 小时内补提醒）、快捷录入与中文自然语言解析、全局搜索与命令面板、完整备份与每日快照、手机与电脑 WebDAV 云同步、节假日与调休（2025–2026）、Excel/CSV 课表导入与 ICS 导入、月视图与未来 7 天、应用锁（PIN）、周复盘、今日分享图、事件附件与 OCR 批量识别、桌面应用内右键菜单；优化设置子页排版、侧边栏文字图标可调、语料库字号上限 300% 与左中右对齐、星期栏与记事日历顶条可透明/纯色/图片、图片预览支持直接拖拽（两个方向）、主页分区标题与任务文字颜色可调、删除可撤销与首页滑动操作、新建日程冲突检测与空档建议。",
+  "size": 977147,
+  "sha256": "20c9e20b9be6ba8208e5092773b701ce23f073885ab59e1da77f92f4357c26a2",
+  "notes": "修复手机端设置页按钮被挤成多行/文字截断（数据页改为两列自适应）；字体导入改为独立卡片并重写说明；导航栏透明度只在电脑端显示；重新打开设置后背景、主卡、取景位置不再显示长小数；设置分组间距与提示统一并去掉重复说明。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

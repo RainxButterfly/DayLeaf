@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 17,
-  "versionName": "1.1.0",
+  "versionCode": 18,
+  "versionName": "1.1.1",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.0/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.1/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 868115,
-  "sha256": "40bf76193dd46378c50e15142a2e7e432d0d2f2e34fdcc2849757ae3ee1e7137",
-  "notes": "新增后台提醒闭环（通知可直接完成/稍后 10 分钟、重启与改时间自动重排、错过 12 小时内补提醒）、快捷录入与中文自然语言解析、全局搜索与命令面板、完整备份与每日快照、手机与电脑 WebDAV 云同步、节假日与调休（2025–2026）、Excel/CSV 课表导入与 ICS 导入、月视图与未来 7 天、应用锁（PIN）、周复盘、今日分享图、事件附件与 OCR 批量识别、桌面应用内右键菜单；优化设置子页排版、侧边栏文字图标可调、语料库字号上限 300% 与左中右对齐、星期栏与记事日历顶条可透明/纯色/图片、图片预览支持直接拖拽（两个方向）、主页分区标题与任务文字颜色可调、删除可撤销与首页滑动操作、新建日程冲突检测与空档建议。",
+  "size": 868726,
+  "sha256": "4d79286db4327be1c7afe81ff2b0bbe0fe765c1b93dcbf4462e2938fb42a9c8b",
+  "notes": "修复手机端设置页按钮被挤成多行/文字截断（数据页改为两列自适应）；字体导入改为独立卡片并重写说明；导航栏透明度只在电脑端显示；重新打开设置后背景、主卡、取景位置不再显示长小数；设置分组间距与提示统一并去掉重复说明。",
   "publishedAt": "2026-10-26"
 }
