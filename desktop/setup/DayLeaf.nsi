@@ -91,7 +91,14 @@ Function CloseRunningApp
   FindWindow $0 "" "${APP_NAME}"
   ${If} $0 != 0
     SendMessage $0 ${WM_CLOSE} 0 0
-    Sleep 800
+    Sleep 1200
+    FindWindow $0 "" "${APP_NAME}"
+    ; 开了后台提醒的旧版本会把关闭拦成「收进托盘」，这里兜底强制结束，
+    ; 否则覆盖安装后旧进程仍占着单实例，新版本一启动就退出。
+    ${If} $0 != 0
+      nsExec::Exec 'taskkill /IM DayLeaf.exe /F'
+      Sleep 600
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 
@@ -158,7 +165,12 @@ Function un.CloseRunningApp
   FindWindow $0 "" "${APP_NAME}"
   ${If} $0 != 0
     SendMessage $0 ${WM_CLOSE} 0 0
-    Sleep 800
+    Sleep 1200
+    FindWindow $0 "" "${APP_NAME}"
+    ${If} $0 != 0
+      nsExec::Exec 'taskkill /IM DayLeaf.exe /F'
+      Sleep 600
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 

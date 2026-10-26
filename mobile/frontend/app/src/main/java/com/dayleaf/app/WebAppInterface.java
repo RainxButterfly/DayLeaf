@@ -351,6 +351,12 @@ public class WebAppInterface {
         lanRequest("pull", url, token, "");
     }
 
+    /** 只检查「这个地址是不是这台叶历电脑端」，不校验配对码 */
+    @JavascriptInterface
+    public void lanPing(final String url) {
+        lanRequest("ping", url, "", "");
+    }
+
     private void lanRequest(final String op, final String url, final String token, final String body) {
         if (!SYNCING.compareAndSet(false, true)) {
             finishLan(op, false, "", "同步进行中，请稍后再试");
@@ -367,14 +373,25 @@ public class WebAppInterface {
                     if (!u.startsWith("http://") && !u.startsWith("https://")) {
                         err = "地址要以 http:// 开头";
                     } else {
-                        if (u.indexOf("/sync") < 0) u = u.replaceAll("/+$", "") + "/sync";
+                        if ("ping".equals(op)) {
+                            u = u.replaceAll("/sync$", "").replaceAll("/+$", "") + "/ping";
+                        } else if (u.indexOf("/sync") < 0) {
+                            u = u.replaceAll("/+$", "") + "/sync";
+                        }
                         conn = (HttpURLConnection) new URL(u).openConnection();
                         conn.setConnectTimeout(6000);
                         conn.setReadTimeout(20000);
                         conn.setUseCaches(false);
                         conn.setRequestProperty("Accept", "application/json");
                         conn.setRequestProperty("X-DayLeaf-Token", token == null ? "" : token);
-                        if ("push".equals(op)) {
+                        if ("ping".equals(op)) {
+                            conn.setRequestMethod("GET");
+                            int code = conn.getResponseCode();
+                            if (code >= 200 && code < 300) {
+                                data = readLimited(conn.getInputStream());
+                                ok = true;
+                            } else err = code == 404 ? "这个地址不是叶历电脑端" : lanError(code);
+                        } else if ("push".equals(op)) {
                             conn.setRequestMethod("PUT");
                             conn.setDoOutput(true);
                             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");

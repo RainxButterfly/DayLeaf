@@ -3888,7 +3888,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.10',
+    version: '1.1.11',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -9419,9 +9419,11 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           '<div class="field" style="margin-top:10px"><label>配对码</label>' +
             '<input class="inp" id="lanToken" inputmode="numeric" maxlength="6" placeholder="电脑上显示的 6 位数字"></div>' +
           '<div class="data-pick" style="margin-top:10px">' +
+            '<button class="btn ghost" data-dl-act="lan-ping">测试连接</button>' +
             '<button class="btn ghost" data-dl-act="lan-push">发送到电脑</button>' +
             '<button class="btn ghost" data-dl-act="lan-pull">从电脑拉取</button>' +
           '</div>' +
+          '<p class="hint" id="lanProbe" style="margin-top:8px;display:none"></p>' +
           '<p class="hint">电脑端在「数据与备份 → 局域网同步」里开启后，会显示地址与配对码。数据只在内网传输。</p>' +
         '</div>' +
         '<p class="hint" id="lanUnsupported" style="display:none">当前环境不支持局域网同步；请使用手机/电脑 App，或改用 WebDAV。</p>' +
@@ -15947,6 +15949,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       else if (act === 'lan-copy-code') { const a = $('#lanCode'); if (a) ctxCopy(a.textContent); }
       else if (act === 'lan-push') lanPush();
       else if (act === 'lan-pull') lanPull();
+      else if (act === 'lan-ping') lanPing();
     });
     document.addEventListener('change', function (e) {
       if (e.target && e.target.id === 'fullRestoreFile') {
@@ -16024,7 +16027,18 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.10', date: '2026-10-27', latest: true,
+      v: '1.1.11', date: '2026-10-27', latest: true,
+      add: [
+        '局域网新增「测试连接」：不校验配对码，直接显示连到的是哪台电脑、端口是多少，先确认地址是否有效。',
+        '电脑端会记录局域网请求日志（lan.log），并在状态栏区分「手机已连接」「配对码不对」；同时兼容 Android 的 100-continue 上传。'
+      ],
+      fix: [
+        '修复电脑更新后仍运行旧版本：旧版开着后台提醒会把关闭拦成收进托盘，安装器现在会真正结束旧进程，新版本不再被单实例机制弹回。',
+        '修复电脑一直显示等待手机、本机 0 条：旧进程占用 17890 时新服务无法启动，更新安装后会自动清掉旧进程。'
+      ]
+    },
+    {
+      v: '1.1.10', date: '2026-10-27', latest: false,
       add: [
         '快捷录入支持中文数字与时间区间：例如「明天下午两点到六点上JAVA课 提前三十分钟提醒」可直接识别为 14:00–18:00、提前 30 分钟。',
         '快捷录入支持补录：昨天 / 前天 / 上周三 / 上上周三 等过去日期也能直接创建日程。'
@@ -16573,11 +16587,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           box.innerHTML = ipHtml +
             '<div class="lan-line"><span class="k">配对码</span><b id="lanCode">' + esc(st.token) + '</b>' +
             '<button class="lan-copy" data-dl-act="lan-copy-code">复制</button></div>' +
+            '<div class="lan-line"><span class="k">电脑</span><span style="font-size:11.5px">' + esc((lanInfoCache && lanInfoCache.device) || '—') + '</span></div>' +
             '<div class="lan-line"><span class="k">提示</span><span class="hint" style="margin:0;font-size:10.5px">优先用推荐地址；连不上就换备用地址（有线/Wi‑Fi 网卡），不要用 192.168.x.1 这类虚拟网卡/网关。</span></div>' +
             '<div class="lan-line"><span class="k">状态</span><span style="color:var(--done);font-size:11.5px">● ' +
               (lanPeer.at
-                ? '手机已连接 · 最近 ' + pad2(new Date(lanPeer.at).getHours()) + ':' + pad2(new Date(lanPeer.at).getMinutes()) +
-                  (lanPeer.count ? ' · 收到 ' + lanPeer.count + ' 条（新增 ' + lanPeer.added + '）' : '')
+                ? (lanPeer.bad ? '手机已连到电脑，但配对码不对' : '手机已连接 · 最近 ' + pad2(new Date(lanPeer.at).getHours()) + ':' + pad2(new Date(lanPeer.at).getMinutes()) +
+                  (lanPeer.count ? ' · 收到 ' + lanPeer.count + ' 条（新增 ' + lanPeer.added + '）' : ''))
                 : '正在等待手机连接') +
               ' · 本机 ' + state.events.length + ' 条</span></div>' +
             '<div class="lan-line"><span class="k">注意</span><span class="hint" style="margin:0;font-size:10.5px">手机点「发送到电脑」后这里会立刻更新；手机和电脑必须在同一 Wi‑Fi/子网，校园网隔离或不同网段时请改用手机热点。</span></div>';
@@ -16658,8 +16673,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     });
   };
   window.__dlLanTouch = function (method) {
+    const m = String(method || '');
     lanPeer.at = Date.now();
-    lanPeer.method = method || '';
+    lanPeer.method = m;
+    lanPeer.bad = m.indexOf('|bad') >= 0;
     syncLanUI();
   };
   function lanPayload(cb) {
@@ -16681,6 +16698,16 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         n.lanPush(u, t, payload);
       } catch (e) { toast('发送失败'); }
     });
+  }
+  function lanPing() {
+    const st = lanState();
+    const u = ($('#lanUrl') || {}).value || st.url || '';
+    if (!/^https?:\/\//.test(u)) { toast('地址要以 http:// 开头'); return; }
+    const n = nativeBridge();
+    if (!n || !n.lanPing) { toast('当前环境不支持测试连接'); return; }
+    const probe = $('#lanProbe');
+    if (probe) { probe.style.display = ''; probe.textContent = '正在连接电脑…'; }
+    try { n.lanPing(u); } catch (e) { toast('测试失败'); }
   }
   function lanPull() {
     const st = lanState();
@@ -16706,6 +16733,16 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!data) { toast('电脑端还没有数据，先在电脑上确认已开启并等待同步'); return; }
     let obj = null;
     try { obj = JSON.parse(data); } catch (e) { toast('电脑返回的数据无法解析'); return; }
+    if (op === 'ping') {
+      if (obj && obj.app === 'DayLeaf') {
+        const probe = $('#lanProbe');
+        if (probe) { probe.style.display = ''; probe.textContent = '已连到电脑：' + (obj.device || '叶历') + '（端口 ' + (obj.port || '') + '）'; }
+        toast('连接正常：这台就是叶历电脑端');
+      } else {
+        toast('这个地址返回的不是叶历电脑端');
+      }
+      return;
+    }
     const n = (obj && obj.state && Array.isArray(obj.state.events)) ? obj.state.events.length : 0;
     if (!n) { toast('电脑端还没有日程数据'); return; }
     mergeRemotePayload(obj, function (ok2, stats) {

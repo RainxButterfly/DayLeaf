@@ -667,6 +667,11 @@ namespace DayLeaf
 
             try
             {
+                /* 安装器会向主窗口发 WM_CLOSE；开了后台提醒时程序默认收进托盘，
+                   旧进程不退，安装器覆盖文件后单实例会让新版本一启动就退出。
+                   这里先放一个安装标记，MainForm 看到它会真正退出。 */
+                try { File.WriteAllText(Path.Combine(AppPaths.Root, "install.flag"),
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")); } catch (Exception) { /* ignore */ }
                 var psi = new ProcessStartInfo(_finalPath) { UseShellExecute = true };
                 Process.Start(psi);
             }

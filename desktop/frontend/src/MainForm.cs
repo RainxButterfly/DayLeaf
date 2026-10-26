@@ -842,6 +842,26 @@ namespace DayLeaf
 
         private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
+            /* 安装器发来的关闭：即使开了后台提醒也要真正退出，否则新版本起不来 */
+            try
+            {
+                string flag = Path.Combine(AppPaths.Root, "install.flag");
+                if (File.Exists(flag))
+                {
+                    DateTime t = File.GetLastWriteTime(flag);
+                    if ((DateTime.Now - t).TotalMinutes < 10)
+                    {
+                        try { File.Delete(flag); } catch (Exception) { /* ignore */ }
+                        _exiting = true;
+                    }
+                    else
+                    {
+                        try { File.Delete(flag); } catch (Exception) { /* ignore */ }
+                    }
+                }
+            }
+            catch (Exception) { /* ignore */ }
+
             try
             {
                 Rectangle r = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
@@ -1217,6 +1237,8 @@ namespace DayLeaf
                 _lanServer.Incoming += OnLanIncoming;
                 _lanServer.Touched -= OnLanTouched;
                 _lanServer.Touched += OnLanTouched;
+                _lanServer.Debug -= OnLanDebug;
+                _lanServer.Debug += OnLanDebug;
                 int port;
                 string err;
                 if (_lanServer.Start(token, out port, out err))
@@ -1253,8 +1275,20 @@ namespace DayLeaf
             data["port"] = port;
             data["token"] = _lanServer != null ? _lanServer.Token : "";
             data["ips"] = ips;
+            try { data["device"] = Environment.MachineName; } catch (Exception) { data["device"] = "PC"; }
             string json = new JavaScriptSerializer().Serialize(data);
             InvokeWeb("window.__dlLanInfo && window.__dlLanInfo(" + json + ");");
+        }
+
+        private void OnLanDebug(string line)
+        {
+            try
+            {
+                AppPaths.Ensure();
+                File.AppendAllText(Path.Combine(AppPaths.Root, "lan.log"),
+                    line + Environment.NewLine, new UTF8Encoding(false));
+            }
+            catch (Exception) { /* ignore */ }
         }
 
         private void OnLanTouched(string method)

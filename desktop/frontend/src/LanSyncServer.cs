@@ -38,8 +38,11 @@ namespace DayLeaf
         /// <summary>手机推来数据时触发（在后台线程），参数是完整 JSON 文本。</summary>
         public event Action<string> Incoming;
 
-        /// <summary>任何通过配对码的请求都会触发，用来在电脑端显示「手机已连接」。</summary>
+        /// <summary>任何请求都会触发：method|ok / method|bad / PING。</summary>
         public event Action<string> Touched;
+
+        /// <summary>诊断日志（请求来源、方法、配对码是否正确）。</summary>
+        public event Action<string> Debug;
 
         public bool Start(string token, out int port, out string error)
         {
@@ -120,6 +123,23 @@ namespace DayLeaf
                     int q = path.IndexOf('?');
                     string query = q >= 0 ? path.Substring(q + 1) : "";
                     path = (q >= 0 ? path.Substring(0, q) : path);
+
+                    string remote = "";
+                    try { remote = client.Client.RemoteEndPoint == null ? "" : client.Client.RemoteEndPoint.ToString(); }
+                    catch (Exception) { /* ignore */ }
+                    Log("request " + method + " " + path + " from " + remote);
+
+                    /* /ping 不校验配对码，只确认「手机连到的是这台叶历」 */
+                    if (path.IndexOf("/ping", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        var t = Touched;
+                        if (t != null) { try { t("PING"); } catch (Exception) { /* ignore */ } }
+                        string dev;
+                        try { dev = Environment.MachineName; } catch (Exception) { dev = "PC"; }
+                        Write(ns, 200, "{\"app\":\"DayLeaf\",\"device\":\"" + EscapeJson(dev) + "\",\"port\":" + Port + "}");
+                        return;
+                    }
+
                     if (path.IndexOf("/sync", StringComparison.OrdinalIgnoreCase) < 0)
                     {
                         Write(ns, 404, "not found");
@@ -130,11 +150,23 @@ namespace DayLeaf
                     if (string.IsNullOrEmpty(token)) token = QueryValue(query, "t");
                     if (!string.Equals(token, _token, StringComparison.Ordinal))
                     {
+                        var tb = Touched;
+                        if (tb != null) { try { tb(method + "|bad"); } catch (Exception) { /* ignore */ } }
+                        Log("bad token from " + remote);
                         Write(ns, 401, "bad token");
                         return;
                     }
                     Action<string> touch = Touched;
-                    if (touch != null) { try { touch(method); } catch (Exception) { /* ignore */ } }
+                    if (touch != null) { try { touch(method + "|ok"); } catch (Exception) { /* ignore */ } }
+
+                    /* 部分 Android HttpURLConnection 会带 Expect: 100-continue，
+                       不回 100 会一直等；这里先回一个继续响应。 */
+                    if (HeaderValue(lines, "Expect").IndexOf("100-continue", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        byte[] cont = Encoding.ASCII.GetBytes("HTTP/1.1 100 Continue\r\n\r\n");
+                        ns.Write(cont, 0, cont.Length);
+                        ns.Flush();
+                    }
 
                     int len = 0;
                     string cl = HeaderValue(lines, "Content-Length");
@@ -162,6 +194,7 @@ namespace DayLeaf
                         /* 不把手机推来的包直接当成电脑端最新数据：
                            否则手机随后拉取会拿到自己刚发的副本，看起来“同步成功但没变化”。
                            先交给网页合并，合并后再由 JS 调 lanPublish 回写。 */
+                        Log("PUT body " + text.Length + " chars from " + remote);
                         Action<string> h = Incoming;
                         if (h != null) { try { h(text); } catch (Exception) { /* ignore */ } }
                         Write(ns, 200, "{\"ok\":true}");
@@ -175,6 +208,17 @@ namespace DayLeaf
             {
                 /* 单个请求失败不影响服务 */
             }
+        }
+
+        private void Log(string line)
+        {
+            Action<string> d = Debug;
+            if (d != null) { try { d(DateTime.Now.ToString("HH:mm:ss") + " " + line); } catch (Exception) { /* ignore */ } }
+        }
+
+        private static string EscapeJson(string s)
+        {
+            return (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
 
         private static string ReadHeaders(NetworkStream ns)

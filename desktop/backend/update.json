@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 29,
-  "versionName": "1.1.10",
+  "versionCode": 30,
+  "versionName": "1.1.11",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.11/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.10/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.11/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.11/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.11/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 991408,
-  "sha256": "43d5de39b808a0756d40b26ce6d045dd33d70d36b631bd8334cc4522a97b2749",
-  "notes": "快捷录入支持中文数字、时间区间与过去日期补录（如“明天下午两点到六点上JAVA课 提前三十分钟提醒”“上上周三”）；局域网发送会先提示电脑确认收到，再显示电脑合并回传结果；组件更新后请移除旧组件重新添加以看到新样式。",
+  "size": 999256,
+  "sha256": "5fc707bd9ca1df85800c936ed94ffbd2d45e5620b73f12dbd12a3178709e3ea6",
+  "notes": "局域网新增测试连接（显示电脑名/端口，先确认地址有效）；电脑端记录请求日志并区分已连接/配对码错误，兼容 100-continue；修复电脑更新后仍运行旧版（安装器会结束占用端口的旧进程），解决一直等待手机和本机0条。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-27"
 }
