@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 27,
-  "versionName": "1.1.8",
+  "versionCode": 28,
+  "versionName": "1.1.9",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.8/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.8/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.8/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.8/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.9/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 989992,
-  "sha256": "f39a159de722b720ae6f07e86647190c8bb62a156163d54a448c2247f875969a",
-  "notes": "组件重做：手机新增快速新建组件，下一项/今日日程改为渐变卡片并带预览；电脑小窗可拖动、可钉住置顶、可隐藏。局域网同步修复“连接成功但无数据”（不再回显手机自己的包，发送后自动拉取合并并显示条数，电脑实时显示手机已连接）。修复通知权限按钮截断、长错误提示超出屏幕宽度。",
+  "size": 990306,
+  "sha256": "600e7cb526e62f5de58a8bc14ac5cd0a67f62ec4ec5583403024474349714b0f",
+  "notes": "重做更新弹窗：版本胶囊、顶部光晕、底部 SHA-256 提示；修复高 DPI/远程桌面下二次缩放导致的控件重叠；键盘只响应 Esc/Enter，其它按键不会打乱排版。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

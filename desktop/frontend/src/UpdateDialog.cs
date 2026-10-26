@@ -115,6 +115,9 @@ namespace DayLeaf
             _fontClose6 = MakeFont(12f, FontStyle.Regular);
 
             FormBorderStyle = FormBorderStyle.None;
+            /* 所有控件尺寸已经按 DPI 用 Px() 算过，绝不能再让 WinForms 自动缩放一次，
+               否则 125%/150% 下标题、版本和按钮会互相压住。 */
+            AutoScaleMode = AutoScaleMode.None;
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
             MaximizeBox = false;
@@ -228,18 +231,21 @@ namespace DayLeaf
             Controls.Add(_error);
 
             _secondary = new PillButton(this, false, "稍后");
+            _secondary.TabStop = false;
             _secondary.Font = _fontButtonSmall;
             _secondary.Bounds = new Rectangle(Px(212), Px(424), Px(100), Px(44));
             _secondary.Click += delegate { SecondaryClick(); };
             Controls.Add(_secondary);
 
             _primary = new PillButton(this, true, "立即更新");
+            _primary.TabStop = false;
             _primary.Font = _fontButton;
             _primary.Bounds = new Rectangle(Px(324), Px(424), Px(152), Px(44));
             _primary.Click += delegate { PrimaryClick(); };
             Controls.Add(_primary);
 
             _close = new PillButton(this, false, "×");
+            _close.TabStop = false;
             _close.Font = _fontClose6;
             _close.Bounds = new Rectangle(Px(444), Px(24), Px(32), Px(32));
             _close.RadiusBase = 8;
@@ -333,6 +339,28 @@ namespace DayLeaf
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
+            /* 顶部一层很淡的主题光晕，让大卡片不至于死板 */
+            var glow = new Rectangle(0, 0, Width, Px(150));
+            using (var lg = new LinearGradientBrush(glow,
+                Color.FromArgb(_dark ? 34 : 22, _accent), Color.FromArgb(0, _accent), 90f))
+                g.FillRectangle(lg, glow);
+
+            /* 版本号做成胶囊，当前 / 最新一眼分开 */
+            if (_versionOld != null && _versionNew != null)
+            {
+                int x1 = _versionOld.Left - Px(8);
+                int x2 = _versionNew.Right + Px(8);
+                var chip = new Rectangle(x1, _versionOld.Top - Px(4),
+                    Math.Max(Px(20), x2 - x1), _versionOld.Height + Px(8));
+                using (GraphicsPath cp = RoundPath(chip, Px(9)))
+                using (var fill = new SolidBrush(Color.FromArgb(_dark ? 150 : 200, _card2)))
+                using (var pen = new Pen(_border))
+                {
+                    g.FillPath(fill, cp);
+                    g.DrawPath(pen, cp);
+                }
+            }
+
             using (var pen = new Pen(_border))
             {
                 using (GraphicsPath p = RoundPath(new Rectangle(0, 0, Width - 1, Height - 1), Px(16)))
@@ -345,6 +373,13 @@ namespace DayLeaf
             {
                 g.DrawLine(pen, Px(24), Px(104), Width - Px(24), Px(104));
             }
+            using (var pen = new Pen(_border))
+            {
+                g.DrawLine(pen, Px(24), Px(410), Width - Px(24), Px(410));
+            }
+            TextRenderer.DrawText(g, "安装包会校验大小与 SHA-256 · 数据不会丢失", _fontMeta,
+                new Rectangle(Px(26), Px(414), Px(280), Px(18)), _faint,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
 
             DrawAppIcon(g);
         }
@@ -677,6 +712,7 @@ namespace DayLeaf
             _status.Visible = false;
             _error.Visible = false;
             _meta.Visible = true;
+            try { PerformLayout(); Invalidate(true); } catch { /* ignore */ }
         }
 
         private void FailAll(string title, string raw)
@@ -700,6 +736,7 @@ namespace DayLeaf
             _error.Detail = detail;
             _error.Visible = true;
             _meta.Visible = false;
+            try { PerformLayout(); Invalidate(true); } catch { /* ignore */ }
         }
 
         private void CleanPart()
@@ -788,12 +825,19 @@ namespace DayLeaf
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            /* 更新弹窗只接受 Esc 和 Enter；其它键一律吞掉，避免焦点框、
+               方向键或输入法把自绘布局搅乱。 */
             if (keyData == Keys.Escape)
             {
                 if (!_downloading) Close();
                 return true;
             }
-            return base.ProcessCmdKey(ref msg, keyData);
+            if (keyData == Keys.Enter)
+            {
+                if (!_downloading && _primary != null && _primary.Enabled) _primary.PerformClick();
+                return true;
+            }
+            return true;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

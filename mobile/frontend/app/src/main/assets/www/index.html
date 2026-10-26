@@ -3888,7 +3888,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.8',
+    version: '1.1.9',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -15951,7 +15951,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.8', date: '2026-10-26', latest: true,
+      v: '1.1.9', date: '2026-10-26', latest: true,
+      opt: [
+        '重做更新弹窗：版本号做成胶囊、顶部主题光晕、底部增加 SHA-256 校验提示，按钮与错误卡片重新留白。'
+      ],
+      fix: [
+        '修复高 DPI/远程桌面下更新弹窗控件二次缩放，导致版本号与按钮文字重叠的问题。',
+        '更新弹窗锁定键盘行为：只响应 Esc 与 Enter，其它按键不会移动焦点或打乱排版。'
+      ]
+    },
+    {
+      v: '1.1.8', date: '2026-10-26', latest: false,
       fix: [
         '局域网/同步等长错误提示不再超过屏幕宽度，提示条会自动换行并限制在屏幕内。'
       ]
