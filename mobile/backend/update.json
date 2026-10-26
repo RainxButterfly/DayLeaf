@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 32,
-  "versionName": "1.1.13",
+  "versionCode": 33,
+  "versionName": "1.1.14",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.13/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.14/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.13/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.13/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.13/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.14/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.14/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.14/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 960594,
-  "sha256": "1dc5ab3f59e8e4a370756aa5d87ae2f07b9eee3fe7bf885064c58bfd42074488",
+  "size": 960611,
+  "sha256": "a85e0d6559c299ce1212d96ff22f5aeebca4e69cbbffd1e03bf68926f6d3479f",
   "notes": "新增回收站（30 天恢复）、日程分类与筛选统计、子任务清单、同步中心与冲突副本；快捷录入支持自然语言重复与语音；通知/组件可完成或稍后，手机闹钟支持全屏提醒与自定义铃声；新增周模板、复制上周与整周移动、ICS 日历订阅与全部导出；电脑端支持 Ctrl+Alt+N 与图片分享。修复手机启动时开场语录先闪系统字体、长句未浮完就收场的问题。",
   "publishedAt": "2026-10-27"
 }
