@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 20,
-  "versionName": "1.2.1",
+  "versionCode": 21,
+  "versionName": "1.1.2",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.2.1/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.2/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 984545,
-  "sha256": "61380b0a27d2f0b459d591f40a774d5bf6d0f38f354839d78db14c41142c43ab",
-  "notes": "新增「未来 7 天」独立外观：字体、字号、文字颜色都可单独设置，并带实时预览；设置子页重新梳理视觉层级：分类图标与主题色、吸顶标题栏、卡片渐变、统一标题与提示样式，减少拥挤感。",
+  "size": 984370,
+  "sha256": "e150dedbf50da31134b5afa2fdb1999d9b79b5f80c58e87a6d1b81e408a3769b",
+  "notes": "局域网同步（同 Wi-Fi 地址+配对码直接互传）、手机系统闹钟写入、未来 7 天独立字体/字号/颜色与实时预览；设置子页视觉层级重做（分类图标与主题色、吸顶标题、统一提示），并保留 1.1.1 的移动端 UI 修复。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

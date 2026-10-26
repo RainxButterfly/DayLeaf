@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 20,
-  "versionName": "1.2.1",
+  "versionCode": 21,
+  "versionName": "1.1.2",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.1/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.2.1/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.2/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.2/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 875958,
-  "sha256": "58e7970e9befc74944dfea5e08f6ae8370672ba18f1007d5ba1c2e7fcda2d4f8",
-  "notes": "新增「未来 7 天」独立外观：字体、字号、文字颜色都可单独设置，并带实时预览；设置子页重新梳理视觉层级：分类图标与主题色、吸顶标题栏、卡片渐变、统一标题与提示样式，减少拥挤感。",
+  "size": 876002,
+  "sha256": "6205dfdf8949b9f2b75f37af703a036b2356f13a4c101c5be0639ba4337564a7",
+  "notes": "局域网同步（同 Wi-Fi 地址+配对码直接互传）、手机系统闹钟写入、未来 7 天独立字体/字号/颜色与实时预览；设置子页视觉层级重做（分类图标与主题色、吸顶标题、统一提示），并保留 1.1.1 的移动端 UI 修复。",
   "publishedAt": "2026-10-26"
 }
