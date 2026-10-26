@@ -3252,7 +3252,7 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 
 /* 设置子页视觉层级（v2） */
 .settings-panel{--cat:var(--accent)}
-.set-head{position:sticky;top:0;z-index:6;padding:14px 18px 12px;border-bottom:1px solid var(--line);background:var(--surface)}
+.set-head{position:relative;z-index:1;padding:14px 18px 12px;border-bottom:1px solid var(--line);background:var(--surface)}
 html.dark .set-head{background:var(--bg)}
 @media (max-width:959px){
   .settings-panel{padding-top:0}
@@ -3279,7 +3279,7 @@ html.dark .set-head{background:var(--bg)}
 }
 
 /* 外观与文字：分页，降低单页密度 */
-.app-tabs{display:flex;gap:6px;padding:4px 0 10px;flex-wrap:wrap;position:sticky;top:var(--set-head-h,86px);z-index:5;background:var(--surface)}
+.app-tabs{display:flex;gap:6px;padding:4px 0 10px;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--surface)}
 html.dark .app-tabs{background:var(--bg)}
 @media (max-width:959px){.app-tabs{background:var(--bg)}}
 .app-tabs button{flex:1 1 0;min-width:0;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--surface-soft);font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.15s}
@@ -3288,6 +3288,16 @@ html.dark .app-tabs{background:var(--bg)}
 .app-tab-panel.on{display:flex}
 .desk-only-group{display:block}
 @media (max-width:959px){ .desk-only-group{display:none!important} }
+
+/* 设置面板：头部/底部固定，中间独立滚动，滚动时不会在顶部漏出内容 */
+.settings-panel{overflow:hidden;padding:0}
+.settings-panel .set-head{margin-bottom:0}
+.settings-panel .set-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px 12px}
+.settings-panel .mb-foot{position:relative;margin:0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);box-shadow:0 -12px 26px -16px rgba(16,20,30,.45);z-index:2}
+@media (max-width:959px){
+  .settings-panel .set-scroll{padding:0 18px 10px}
+  .settings-panel .mb-foot{padding:10px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg)}
+}
 /* hidden 必须能盖过 display:grid，否则锁屏/确认框会一直浮在最上层 */
 .dl-lock[hidden],.dl-ask[hidden],.dl-viewer[hidden],.ctx-menu[hidden],#monthRoot[hidden]{display:none!important}
 /* 应用内右键菜单（桌面端替代浏览器菜单） */
@@ -3316,7 +3326,7 @@ html.dark .app-tabs{background:var(--bg)}
 .cl-sec li{margin:4px 0;line-height:1.7}
 .cl-more{font-size:11px;color:var(--muted);margin-top:8px}
 /* 设置子页：更整齐的分组卡片 */
-.set-pane.on{display:flex;flex-direction:column;gap:12px;padding:12px 2px 6px}
+.set-pane.on{display:flex;flex-direction:column;gap:12px;padding:0 2px 6px}
 .set-group{background:var(--surface-soft);border:1px solid var(--line);border-radius:18px;padding:4px 16px 14px;margin-bottom:0;box-shadow:0 1px 0 rgba(16,20,30,.02)}
 .set-group>.sec-line{display:flex;align-items:center;gap:8px;margin:14px 0 4px;padding-bottom:9px;border-bottom:1px dashed var(--line2);font-size:12.5px;font-weight:700;color:var(--ink2);letter-spacing:.3px}
 .set-group>.sec-line::before{content:"";width:3px;height:13px;border-radius:2px;background:linear-gradient(180deg,var(--accent),var(--accent2));flex:0 0 auto}
@@ -3860,7 +3870,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.3',
+    version: '1.1.4',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -9422,6 +9432,19 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 
     groupSettingsSections(root);
     buildAppearanceTabs(root);
+    (function () {
+      const panel = $('.settings-panel', root);
+      if (!panel || panel.querySelector('.set-scroll')) return;
+      const head = panel.querySelector('.set-head');
+      const foot = panel.querySelector('.mb-foot');
+      const body = document.createElement('div');
+      body.className = 'set-scroll';
+      Array.prototype.slice.call(panel.children).forEach(function (el) {
+        if (el === head || el === foot) return;
+        body.appendChild(el);
+      });
+      panel.insertBefore(body, foot || null);
+    })();
     openLayer(root);
     pushModal(closeModal);
     const settingsDepth = modalStack.length;
@@ -9468,7 +9491,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         if (title) title.textContent = '设置';
         if (headDesc) headDesc.textContent = '按类别整理，常用功能一眼找到';
         panes.forEach(function (p) { p.classList.remove('on'); });
-        if (panel) panel.scrollTop = 0;
+        const sb1 = panel && panel.querySelector('.set-scroll');
+        if (sb1) sb1.scrollTop = 0;
         syncHeadH();
       };
       const openPane = function (key) {
@@ -9484,7 +9508,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         if (title) title.textContent = cat.label;
         if (headDesc) headDesc.textContent = cat.desc;
         panes.forEach(function (p) { p.classList.toggle('on', p.dataset.setpane === key); });
-        if (panel) panel.scrollTop = 0;
+        const sb2 = panel && panel.querySelector('.set-scroll');
+        if (sb2) sb2.scrollTop = 0;
         syncHeadH();
       };
       /* 手机返回键 / 手势：子页先回设置首页，再按一次才关闭 */
@@ -15808,7 +15833,13 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.3', date: '2026-10-26', latest: true,
+      v: '1.1.4', date: '2026-10-26', latest: true,
+      fix: [
+        '设置页滚动时顶部不再漏出内容：标题栏和底栏固定，中间列表独立滚动；分页标签紧贴标题栏，没有空隙。'
+      ]
+    },
+    {
+      v: '1.1.3', date: '2026-10-26', latest: false,
       add: [
         '「未来 7 天」的标题、星期日期、日程名称可分别设置颜色，设置里带三行实时预览。'
       ],
@@ -16542,7 +16573,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       if (!b) return;
       activate(b.dataset.apptab);
       const p = pane.closest('.settings-panel');
-      if (p) p.scrollTop = 0;
+      const sb = p && p.querySelector('.set-scroll');
+      if (sb) sb.scrollTop = 0;
       if (b.dataset.apptab === 'type') { syncN7Preview(); }
     });
     activate(appearanceTab || 'bg');

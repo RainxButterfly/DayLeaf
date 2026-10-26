@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 22,
-  "versionName": "1.1.3",
+  "versionCode": 23,
+  "versionName": "1.1.4",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.3/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.3/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.3/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.3/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.4/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 877976,
-  "sha256": "7bc7d1c1c87f345f1a3856e6efab18af60b34a8fbea47e72d78fdc7eea6bdc66",
-  "notes": "未来 7 天的标题、星期日期、日程名称可分别设置颜色并实时预览；外观与文字拆成主题与背景/文字与字体/模块与侧栏三页，侧栏设置仅电脑显示；修复主卡预览拖动不同步；手机返回键/手势在设置子页先回设置首页。",
+  "size": 878456,
+  "sha256": "a64d8f049a0871185ce3f1ebc879c54b201063146316c6b461feaa265dd28f39",
+  "notes": "修复设置页滚动时顶部漏出内容：标题栏与底栏固定、中间列表独立滚动，分页标签紧贴标题栏；保留 1.1.3 的未来 7 天三色、外观分页、侧栏仅桌面、主卡预览拖动与返回键修复。",
   "publishedAt": "2026-10-26"
 }
