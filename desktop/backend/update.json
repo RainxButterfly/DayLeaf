@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 23,
-  "versionName": "1.1.4",
+  "versionCode": 24,
+  "versionName": "1.1.5",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.4/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.5/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 986354,
-  "sha256": "95211a048fb030394b98377baf8d1cd613f9ef31f711b6950a7ffe96d17860cd",
-  "notes": "修复设置页滚动时顶部漏出内容：标题栏与底栏固定、中间列表独立滚动，分页标签紧贴标题栏；保留 1.1.3 的未来 7 天三色、外观分页、侧栏仅桌面、主卡预览拖动与返回键修复。",
+  "size": 987764,
+  "sha256": "299cd4d222aae2721afd494266d822a8a1ddf2c21fb79dc493085569de7bdbd8",
+  "notes": "设置页新增桌面组件入口：手机可添加「下一项 2×1」与「今日日程 4×2」两个小组件，电脑可开关桌面下一项小窗；记事日历节假日显示具体节日名并保留调休「班」；分享图带作者与反馈邮箱；修复弹窗/右键菜单跳动、周复盘/课表导入/图片查看无法关闭、以及所有浮层的返回与关闭逻辑。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

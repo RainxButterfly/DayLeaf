@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 23,
-  "versionName": "1.1.4",
+  "versionCode": 24,
+  "versionName": "1.1.5",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.4/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.4/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.5/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 878456,
-  "sha256": "a64d8f049a0871185ce3f1ebc879c54b201063146316c6b461feaa265dd28f39",
-  "notes": "修复设置页滚动时顶部漏出内容：标题栏与底栏固定、中间列表独立滚动，分页标签紧贴标题栏；保留 1.1.3 的未来 7 天三色、外观分页、侧栏仅桌面、主卡预览拖动与返回键修复。",
+  "size": 883228,
+  "sha256": "6c3c0196430877af288ba092d8bbece7e03eb30130aff93c79711e637060b933",
+  "notes": "设置页新增桌面组件入口：手机可添加「下一项 2×1」与「今日日程 4×2」两个小组件，电脑可开关桌面下一项小窗；记事日历节假日显示具体节日名并保留调休「班」；分享图带作者与反馈邮箱；修复弹窗/右键菜单跳动、周复盘/课表导入/图片查看无法关闭、以及所有浮层的返回与关闭逻辑。",
   "publishedAt": "2026-10-26"
 }

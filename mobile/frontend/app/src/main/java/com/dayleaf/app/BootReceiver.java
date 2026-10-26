@@ -23,6 +23,7 @@ public class BootReceiver extends BroadcastReceiver {
                     try { ReminderScheduler.catchUpMissed(app); } catch (Exception e) { /* ignore */ }
                     try { NextNotifier.updateFromStored(app); } catch (Exception e) { /* ignore */ }
                     try { NextWidgetProvider.updateAll(app); } catch (Exception e) { /* ignore */ }
+                    try { TodayWidgetProvider.updateAll(app); } catch (Exception e) { /* ignore */ }
                 } finally {
                     try { pending.finish(); } catch (Exception e) { /* ignore */ }
                 }

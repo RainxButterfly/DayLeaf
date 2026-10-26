@@ -258,9 +258,47 @@ public class WebAppInterface {
     @JavascriptInterface
     public void updateWidget(final String json) {
         try { NextWidgetProvider.saveFirstItem(activity, json); } catch (Exception e) { /* ignore */ }
+        try { TodayWidgetProvider.saveItems(activity, json); } catch (Exception e) { /* ignore */ }
         activity.runOnUiThread(new Runnable() {
             @Override public void run() {
                 try { NextWidgetProvider.updateAll(activity); } catch (Exception e) { /* ignore */ }
+                try { TodayWidgetProvider.updateAll(activity); } catch (Exception e) { /* ignore */ }
+            }
+        });
+    }
+
+    /** 请求把「下一项」小组件钉到桌面（Android 8+ 支持；不支持的启动器会提示手动添加） */
+    @JavascriptInterface
+    public void pinNextWidget() {
+        pinWidget(NextWidgetProvider.class);
+    }
+
+    /** 请求把「今日日程」小组件钉到桌面 */
+    @JavascriptInterface
+    public void pinTodayWidget() {
+        pinWidget(TodayWidgetProvider.class);
+    }
+
+    private void pinWidget(final Class<?> provider) {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (Build.VERSION.SDK_INT < 26) {
+                        Toast.makeText(activity, "长按桌面空白处 → 小组件 → 叶历", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    android.appwidget.AppWidgetManager manager =
+                            android.appwidget.AppWidgetManager.getInstance(activity);
+                    if (manager == null || !manager.isRequestPinAppWidgetSupported()) {
+                        Toast.makeText(activity, "桌面长按空白处 → 小组件 → 叶历", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    android.content.ComponentName cn = new android.content.ComponentName(activity, provider);
+                    manager.requestPinAppWidget(cn, null, null);
+                    Toast.makeText(activity, "请在桌面确认添加", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(activity, "桌面长按空白处 → 小组件 → 叶历", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }

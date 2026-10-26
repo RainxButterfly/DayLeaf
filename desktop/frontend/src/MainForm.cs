@@ -176,6 +176,8 @@ namespace DayLeaf
             sb.Append("lanStop:function(){post({cmd:'lanStop'});},");
             sb.Append("lanPublish:function(j){post({cmd:'lanPublish',arg:String(j||'{}')});},");
             sb.Append("lanInfo:function(){post({cmd:'lanInfo'});},");
+            sb.Append("setDesktopWidget:function(on){post({cmd:'desktopWidget',arg:on?'1':'0'});},");
+            sb.Append("getDesktopWidget:function(){post({cmd:'getDesktopWidget'});},");
             sb.Append("isForeground:function(){return !document.hidden && document.hasFocus();},");
             sb.Append("getVersionName:function(){return '").Append(version).Append("';},");
             // 桌面端不提供 notify/ensureNotifyPermission（置 undefined），网页会回落到
@@ -246,6 +248,15 @@ namespace DayLeaf
             {
                 string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
                 BeginWebDavSync(json);
+            }
+            else if (cmd == "desktopWidget")
+            {
+                string on = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "0";
+                SetDesktopWidget(on == "1");
+            }
+            else if (cmd == "getDesktopWidget")
+            {
+                ReportDesktopWidget();
             }
             else if (cmd == "lanStart")
             {
@@ -1280,16 +1291,34 @@ namespace DayLeaf
         {
             EnsureWidget();
             if (_widget == null) return;
+            SetDesktopWidget(!_widget.WidgetOpen);
+        }
 
-            if (_widget.WidgetOpen)
+        private void SetDesktopWidget(bool on)
+        {
+            EnsureWidget();
+            if (_widget == null) { ReportDesktopWidget(); return; }
+            try
             {
-                _widget.HideWidget();
+                if (on)
+                {
+                    _widget.SetItems(_widgetItems);
+                    _widget.ShowWidget();
+                }
+                else
+                {
+                    _widget.HideWidget();
+                }
             }
-            else
-            {
-                _widget.SetItems(_widgetItems);
-                _widget.ShowWidget();
-            }
+            catch (Exception) { /* ignore */ }
+            SyncWidgetMenuCheck();
+            ReportDesktopWidget();
+        }
+
+        private void ReportDesktopWidget()
+        {
+            bool open = _widget != null && !_widget.IsDisposed && _widget.WidgetOpen;
+            InvokeWeb("window.__dlDesktopWidget && window.__dlDesktopWidget(" + (open ? "true" : "false") + ");");
         }
 
         private void SyncWidgetMenuCheck()

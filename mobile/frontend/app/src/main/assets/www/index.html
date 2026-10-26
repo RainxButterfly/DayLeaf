@@ -953,7 +953,7 @@ html.gh-none .cal-wd{background:transparent!important}
   margin-top:min(16vh,140px);margin-left:16px;margin-right:16px;
   background:var(--card);border:1px solid var(--line);border-radius:18px;
   box-shadow:0 30px 80px -28px rgba(16,20,30,.55);
-  overflow:hidden;animation:pop .18s ease;
+  overflow:hidden;animation:dlFade .16s ease;
   max-height:min(68vh,640px);display:flex;flex-direction:column;
 }
 .search-bar{
@@ -1314,6 +1314,8 @@ input[type=range]{width:100%;accent-color:var(--accent);height:26px}
     box-shadow:0 30px 80px -24px rgba(16,20,30,.55);
   }
   @keyframes pop{from{opacity:0;transform:translate(-50%,-48%)}to{opacity:1;transform:translate(-50%,-50%)}}
+  @keyframes dlIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+  @keyframes dlFade{from{opacity:0}to{opacity:1}}
 }
 
 /* ==========================================================================
@@ -1682,7 +1684,7 @@ html.dark .bs-bar{background:rgba(255,255,255,.12)}
   width:min(340px,86vw); padding:26px 22px 18px; border-radius:24px;
   background:var(--surface); border:1px solid var(--line);
   box-shadow:0 30px 80px -24px rgba(0,0,0,.7);
-  text-align:center; animation:pop .22s ease;
+  text-align:center; animation:dlFade .18s ease;
 }
 .alarm-card .al-ico{font-size:38px;line-height:1;display:block;margin-bottom:10px}
 .alarm-card .al-t{font-size:18px;font-weight:750;color:var(--ink);letter-spacing:-.2px}
@@ -3301,7 +3303,7 @@ html.dark .app-tabs{background:var(--bg)}
 /* hidden 必须能盖过 display:grid，否则锁屏/确认框会一直浮在最上层 */
 .dl-lock[hidden],.dl-ask[hidden],.dl-viewer[hidden],.ctx-menu[hidden],#monthRoot[hidden]{display:none!important}
 /* 应用内右键菜单（桌面端替代浏览器菜单） */
-.ctx-menu{position:fixed;z-index:960;min-width:178px;padding:6px;border-radius:13px;background:var(--card);border:1px solid var(--line2);box-shadow:0 18px 50px -18px rgba(16,20,30,.5);animation:pop .12s ease;overflow:hidden}
+.ctx-menu{position:fixed;z-index:960;min-width:178px;padding:6px;border-radius:13px;background:var(--card);border:1px solid var(--line2);box-shadow:0 18px 50px -18px rgba(16,20,30,.5);animation:dlIn .1s ease;transform-origin:top left;overflow:hidden}
 .ctx-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:9px;font-size:12.5px;color:var(--ink2);text-align:left}
 .ctx-menu button:hover{background:rgba(76,111,255,.09);color:var(--ink)}
 .ctx-menu button.danger{color:var(--absent)}
@@ -3400,7 +3402,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 .dl-lock-pad button.fn{font-size:13px;color:var(--muted)}
 .dl-ask{position:fixed;top:0;right:0;bottom:0;left:0;z-index:880;display:grid;place-items:center}
 .dl-ask-scrim{position:absolute;top:0;right:0;bottom:0;left:0;background:var(--overlay)}
-.dl-ask-panel{position:relative;width:min(400px,92vw);border-radius:18px;background:var(--card);border:1px solid var(--line);box-shadow:0 30px 80px -28px rgba(16,20,30,.55);padding:18px 18px 14px;animation:pop .18s ease}
+.dl-ask-panel{position:relative;width:min(400px,92vw);border-radius:18px;background:var(--card);border:1px solid var(--line);box-shadow:0 30px 80px -28px rgba(16,20,30,.55);padding:18px 18px 14px;animation:dlFade .16s ease}
 .dl-ask-panel b{font-size:15px;color:var(--ink)}
 .dl-ask-panel p{margin:8px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.75;white-space:pre-line}
 .dl-ask-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
@@ -3428,7 +3430,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 .n7-meta{font-size:10.5px;color:var(--muted)}
 .gh-hd{margin-left:3px;font-size:8.5px;padding:0 3px;border-radius:5px;background:rgba(244,63,94,.16);color:#F43F5E;vertical-align:1px}
 .gh-hd.work{background:rgba(22,163,74,.16);color:#16A34A}
-.cc-hd{position:absolute;left:5px;bottom:4px;font-size:8.5px;padding:0 3px;border-radius:5px;background:rgba(244,63,94,.16);color:#F43F5E}
+.cc-hd{position:absolute;right:4px;bottom:4px;z-index:2;font-size:8.5px;line-height:1.35;padding:0 4px;border-radius:5px;background:rgba(244,63,94,.18);color:#F43F5E;letter-spacing:0}
+.cc-hd.work{background:rgba(22,163,74,.18);color:#16A34A}
 .cc-hd.work{background:rgba(22,163,74,.16);color:#16A34A}
 .cloud-warn{color:#F59E0B;font-size:11px}
 </style>
@@ -3870,7 +3873,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.4',
+    version: '1.1.5',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -5712,7 +5715,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         ? 'background:' + hexA(tag, 0.13) + ';box-shadow:inset 0 0 0 1.5px ' + hexA(tag, 0.5)
         : '';
 
-      html += '<button class="' + cls + '" data-date="' + ds + '"' + (style ? ' style="' + style + '"' : '') + '>' +
+      const hd = holidayInfoOf(ds);
+      const hdTitle = hd.work ? ' title="调休上班"' : (hd.off ? ' title="' + esc(hd.name || '法定节假日') + ' · 放假"' : '');
+      html += '<button class="' + cls + '" data-date="' + ds + '"' + (style ? ' style="' + style + '"' : '') + hdTitle + '>' +
           '<span class="cc-num">' + d.getDate() + '</span>' + holidayTagHtml(ds, 'cc-hd') +
           (note && note.title ? '<span class="cc-note">' + esc(note.title) + '</span>' : '') +
           (tag ? '<span class="cc-tag" style="background:' + tag + '"></span>' : '') +
@@ -6610,11 +6615,14 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       grid.innerHTML = html;
     }
 
+    let escKey = null;
     function close() {
       document.removeEventListener('mousedown', onOut, true);
       document.removeEventListener('touchstart', onOut, true);
       window.removeEventListener('resize', close);
+      if (escKey) { document.removeEventListener('keydown', escKey); escKey = null; }
       if (pop.parentNode) pop.parentNode.removeChild(pop);
+      if (pop._stacked) { pop._stacked = false; popModal(close); }
     }
     function onOut(e) {
       if (!pop.contains(e.target) && e.target !== anchor) close();
@@ -6622,6 +6630,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
 
     draw();
     document.body.appendChild(pop);
+    pop._stacked = true;
+    pushModal(close);
+    escKey = function (e) { if (e.key === 'Escape') { close(); } };
+    document.addEventListener('keydown', escKey);
 
     /* 贴着按钮下方；下面放不下就翻到上面 */
     const r = anchor.getBoundingClientRect();
@@ -7633,13 +7645,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!ev) {
       draftCtx = {
         read: function () {
+          const tEl = $('#fTitle');
+          if (!tEl) return {};
           return {
-            t: $('#fTitle').value.trim(),
-            d: $('#fDate').value,
-            s: $('#fStart').value,
-            e: $('#fEnd').value,
-            p: $('#fPlace').value.trim(),
-            n: $('#fNote').value.trim(),
+            t: tEl.value.trim(),
+            d: ($('#fDate') || {}).value || '',
+            s: ($('#fStart') || {}).value || '',
+            e: ($('#fEnd') || {}).value || '',
+            p: ($('#fPlace') || {}).value ? $('#fPlace').value.trim() : '',
+            n: ($('#fNote') || {}).value ? $('#fNote').value.trim() : '',
             st: st,
             img: imgData || '',
             imp: !!impOn,
@@ -7976,8 +7990,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     draftTimer = null;
     if (!draftCtx) return;
 
-    const d = draftCtx.read();
-    if (draftIsMeaningful(d)) {
+    let d = null;
+    try { d = draftCtx.read(); } catch (e) { d = null; }
+    if (d && draftIsMeaningful(d)) {
       d.savedAt = Date.now();
       state.draft = d;
     } else {
@@ -8049,7 +8064,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   function closeModal() {
     /* 真正关闭时才回写草稿；提交路径会先把 draftCtx 置空 */
     if (draftCtx) {
-      flushDraft();
+      try { flushDraft(); } catch (e) { /* 表单已被其它弹窗替换时不再阻塞关闭 */ }
       draftCtx = null;
     }
     clearTimeout(draftTimer);
@@ -8619,6 +8634,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const box = $('#alarmRoot');
     if (!box) return;
     box.hidden = false;
+    if (!box._inStack) { box._inStack = true; pushModal(stopAlarm); }
     box.innerHTML =
       '<div class="alarm-card" role="alertdialog" aria-modal="true">' +
         '<span class="al-ico">⏰</span>' +
@@ -8654,6 +8670,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const box = $('#alarmRoot');
     if (!box) return;
     clearInterval(box._timer);
+    if (box._inStack) { box._inStack = false; popModal(stopAlarm); }
     box.hidden = true;
     box.innerHTML = '';
     box._cd = null;
@@ -9335,6 +9352,21 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             '<button class="btn ghost" data-dl-act="share-day">今日分享图</button>' +
           '</div>' +
           '<p class="hint">Excel 课表按「周一到周日为列、节次为行」识别，先预览再导入。</p></div>' +
+
+        '<div class="sec-line">桌面组件</div>' +
+        '<div class="field" id="widgetMobileBox" style="display:none">' +
+          '<label>添加到手机桌面</label>' +
+          '<div class="data-pick">' +
+            '<button class="btn ghost" data-dl-act="pin-next-widget">下一项 · 2×1</button>' +
+            '<button class="btn ghost" data-dl-act="pin-today-widget">今日日程 · 4×2</button>' +
+          '</div>' +
+          '<p class="hint">点按钮后按系统提示确认；找不到就长按桌面空白处 → 小组件 → 叶历。组件会随日程自动更新。</p>' +
+        '</div>' +
+        '<div class="field" id="widgetDesktopBox" style="display:none">' +
+          '<div class="row-sw"><span>桌面「下一项」小窗</span>' +
+            '<button class="sw" id="desktopWidgetSw" aria-label="桌面下一项小窗"></button></div>' +
+          '<p class="hint">小窗置顶显示最近 3 项，可拖动；也可右键托盘图标 → 桌面下一项。</p>' +
+        '</div>' +
 
         '<div class="sec-line">云同步（WebDAV）</div>' +
         '<div class="field"><label>服务器文件地址</label>' +
@@ -11577,6 +11609,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       '</div>';
 
     openLayer(root);
+    pushModal(closeModal);
     renderStretchList();
     renderColList();
 
@@ -13934,6 +13967,18 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       if (e.key === 'Escape') {
         if ($('#searchRoot').classList.contains('open')) { closeSearch(); return; }
         if ($('#framer').classList.contains('open')) { closeFramer(); return; }
+        if ($('#quickRoot') && $('#quickRoot').classList.contains('open')) { closeQuickAdd(); return; }
+        if ($('#monthRoot') && $('#monthRoot').classList.contains('open')) { closeMonthView(); return; }
+        if ($('#importRoot') && $('#importRoot').classList.contains('open')) { closeImport(); return; }
+        if ($('#reviewRoot') && $('#reviewRoot').classList.contains('open')) { closeReview(); return; }
+        if ($('#changelogRoot') && $('#changelogRoot').classList.contains('open')) { closeChangelog(); return; }
+        if ($('#viewerRoot') && !$('#viewerRoot').hidden) { closeViewer(); return; }
+        if ($('#askRoot') && !$('#askRoot').hidden) { $('#askCancel').click(); return; }
+        if ($('#alarmRoot') && !$('#alarmRoot').hidden) { stopAlarm(); return; }
+        if ($('#guideRoot') && !$('#guideRoot').hidden) { endGuide(); return; }
+        const wp = document.querySelector('.wp-root');
+        if (wp) { const c = wp.querySelector('.wp-cancel'); if (c) c.click(); return; }
+        if ($('#ocrRoot')) { window.__closeTopModal(); return; }
         if ($('#modalRoot').classList.contains('open')) closeModal();
         else {
           $('#noteEditor').classList.remove('open');
@@ -14278,7 +14323,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const close = function () {
       root.hidden = true;
       $('#askOk').onclick = null; $('#askCancel').onclick = null; ex.onclick = null;
+      if (root._stacked) { root._stacked = false; popModal(close); }
     };
+    if (!root._stacked) { root._stacked = true; pushModal(close); }
     $('#askCancel').onclick = close;
     root.querySelector('[data-ask-cancel]').onclick = close;
     ex.onclick = function () { close(); if (extra && extra.fn) extra.fn(); };
@@ -14292,11 +14339,18 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     return (n / 1048576).toFixed(2) + ' MB';
   }
 
+  function closeViewer() {
+    const root = $('#viewerRoot');
+    if (!root) return;
+    if (root._stacked) { root._stacked = false; popModal(closeViewer); }
+    root.hidden = true;
+  }
   function openViewer(src) {
     const root = $('#viewerRoot');
     if (!root) return;
     $('#viewerImg').src = src;
     root.hidden = false;
+    if (!root._stacked) { root._stacked = true; pushModal(closeViewer); }
   }
 
   /* ---------- 8.2 中国节假日 / 调休（2025–2026 官方安排） ---------- */
@@ -14364,8 +14418,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   function holidayTagHtml(ds, cls) {
     if (state.settings && state.settings.hideHoliday) return '';
     const info = holidayInfoOf(ds);
-    if (info.work) return '<span class="' + cls + ' work">班</span>';
-    if (info.off) return '<span class="' + cls + '">休</span>';
+    if (info.work) {
+      return '<span class="' + cls + ' work" title="调休上班">班</span>';
+    }
+    if (info.off) {
+      /* 能查到节日名就显示名字（如 国庆/春节），比单独一个「休」更有信息量 */
+      const short = String(info.name || '').split('·')[0].slice(0, 2);
+      const label = short || '休';
+      return '<span class="' + cls + '" title="' + esc(info.name || '法定节假日') + ' · 放假">' + esc(label) + '</span>';
+    }
     return '';
   }
 
@@ -14904,6 +14965,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   function openImport() {
     const root = $('#importRoot');
     if (!root) return;
+    $$('[data-im-close]', root).forEach(function (el) { el.onclick = closeImport; });
     root.classList.add('open');
     pushModal(closeImport);
     renderImportHome();
@@ -15032,7 +15094,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         '<div class="im-row"><button class="btn primary" id="imIcsOk">导入这些日程</button>' +
         '<button class="btn ghost" data-im-close>取消</button></div>';
       $('#imIcsOk').addEventListener('click', importIcsEvents);
-      $$('[data-im-close]', $('#importRoot')).forEach(function (el) { el.addEventListener('click', closeImport); });
+      $$('[data-im-close]', $('#importRoot')).forEach(function (el) { el.onclick = closeImport; });
       return;
     }
     const rows = st.courses.slice(0, 40).map(function (c) {
@@ -15399,6 +15461,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   function openReview() {
     const root = $('#reviewRoot');
     if (!root) return;
+    $$('[data-rv-close]', root).forEach(function (el) { el.onclick = closeReview; });
     root.classList.add('open');
     pushModal(closeReview);
     renderReview();
@@ -15488,9 +15551,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       g.fillText([ev.e ? ev.e + ' 结束' : '', ev.p || '', STATUS[ev.st] ? STATUS[ev.st].label : ''].filter(Boolean).join(' · '), 120, y + 44);
       y += 132;
     });
-    g.fillStyle = dark ? '#5c6478' : '#a9b0bf';
+    g.fillStyle = dark ? '#8b93a7' : '#767e90';
     g.font = '400 28px system-ui, "Microsoft YaHei", sans-serif';
-    g.fillText('由 叶历 DayLeaf 生成 · 把每一天，过成一片叶子', 90, H - 80);
+    g.fillText('由 叶历 DayLeaf 生成 · 把每一天，过成一片叶子', 90, H - 124);
+    g.fillStyle = dark ? '#5c6478' : '#a9b0bf';
+    g.font = '400 24px system-ui, "Microsoft YaHei", sans-serif';
+    g.fillText('作者 星河一叶Roxy · 反馈 ck_xuv@vip.qq.com', 90, H - 76);
     const url = cv.toDataURL('image/png');
     const name = 'dayleaf-' + ds + '.png';
     const nat = nativeBridge();
@@ -15593,11 +15659,32 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const items = nextItemsForStatus(3);
     const nat = nativeBridge();
     if (!nat) return;
+    const todayStr = toYMD(new Date());
+    const today = state.events
+      .filter(function (ev) { return ev.d === todayStr && ev.st !== 'absent'; })
+      .sort(function (a, b) { return toMin(a.s) - toMin(b.s); })
+      .slice(0, 4)
+      .map(function (ev) { return { time: ev.s, title: ev.t }; });
     try {
-      if (nat.updateWidget) nat.updateWidget(JSON.stringify({ items: items, updatedAt: Date.now() }));
+      if (nat.updateWidget) nat.updateWidget(JSON.stringify({ items: items, today: today, updatedAt: Date.now() }));
       if (nat.updateTrayStatus) nat.updateTrayStatus(JSON.stringify({ items: items }));
     } catch (e) { /* ignore */ }
   }
+
+  /* 桌面组件入口同步 */
+  function syncWidgetUI() {
+    const nat = nativeBridge();
+    const mobile = isMobileView() && !!(nat && nat.pinNextWidget);
+    const desk = !isMobileView() && !!(nat && nat.setDesktopWidget);
+    const mb = $('#widgetMobileBox'), db = $('#widgetDesktopBox');
+    if (mb) mb.style.display = mobile ? '' : 'none';
+    if (db) db.style.display = desk ? '' : 'none';
+    if (desk) { try { nat.getDesktopWidget && nat.getDesktopWidget(); } catch (e) { /* ignore */ } }
+  }
+  window.__dlDesktopWidget = function (open) {
+    const sw = $('#desktopWidgetSw');
+    if (sw) sw.classList.toggle('on', !!open);
+  };
   window.__dlShared = function (text) {
     if (!text) return;
     openQuickAdd(String(text).slice(0, 200));
@@ -15635,6 +15722,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     bind11SettingsUI();
     bindContextMenu();
     bindN7Controls();
+    (function () {
+      const vr = $('#viewerRoot');
+      if (vr) $$('[data-vw-close]', vr).forEach(function (el) {
+        el.addEventListener('click', closeViewer);
+      });
+    })();
 
     /* FAB：短按快速录入，长按直接进完整表单（原来的行为） */
     const fab = $('#fab');
@@ -15752,6 +15845,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       else if (act === 'battery') { const nat = nativeBridge(); if (nat && nat.openBatterySettings) nat.openBatterySettings(); else toast('当前环境不支持'); }
       else if (act === 'sysnotify') { const nat = nativeBridge(); if (nat && nat.openNotificationSettings) nat.openNotificationSettings(); else toast('当前环境不支持'); }
       else if (act === 'changelog') openChangelog();
+      else if (act === 'pin-next-widget') { const nat = nativeBridge(); if (nat && nat.pinNextWidget) nat.pinNextWidget(); else toast('当前平台不支持'); }
+      else if (act === 'pin-today-widget') { const nat = nativeBridge(); if (nat && nat.pinTodayWidget) nat.pinTodayWidget(); else toast('当前平台不支持'); }
       else if (act === 'lan-copy') { const a = $('#lanAddr'); if (a) ctxCopy(a.textContent); }
       else if (act === 'lan-copy-code') { const a = $('#lanCode'); if (a) ctxCopy(a.textContent); }
       else if (act === 'lan-push') lanPush();
@@ -15833,7 +15928,23 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.4', date: '2026-10-26', latest: true,
+      v: '1.1.5', date: '2026-10-26', latest: true,
+      add: [
+        '设置里新增「桌面组件」入口：手机可直接添加「下一项 2×1」和「今日日程 4×2」两个桌面小组件，电脑可开关桌面「下一项」小窗。',
+        '记事日历的节假日不再只写「休」，会直接显示节日名（国庆 / 春节 / 中秋…），调休上班显示「班」，长按/悬停有完整说明。',
+        '生成的今日分享图底部会带上作者星河一叶Roxy 与反馈邮箱 ck_xuv@vip.qq.com。'
+      ],
+      opt: [
+        '手机小组件会随日程自动刷新，点击回到应用；电脑小窗也可继续从托盘右键 → 桌面下一项开关。'
+      ],
+      fix: [
+        '更新日志、搜索等弹窗打开时不再先出现在上方再跳到最终位置，改为原地淡入。',
+        '电脑端右键菜单改为在鼠标位置直接展开，不再先闪现在左上角。',
+        '周复盘、课表导入、图片查看的关闭按钮与遮罩现在都能正常关闭。'
+      ]
+    },
+    {
+      v: '1.1.4', date: '2026-10-26', latest: false,
       fix: [
         '设置页滚动时顶部不再漏出内容：标题栏和底栏固定，中间列表独立滚动；分页标签紧贴标题栏，没有空隙。'
       ]
@@ -15997,6 +16108,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     sw('ntSkipHol', state.notify.skipHoliday);
     sw('ntSysAlarm', state.notify.sysAlarm);
     syncN7Preview();
+    syncWidgetUI();
     syncLanUI();
     if (lanHostSupported()) setTimeout(function () { try { nativeBridge().lanInfo && nativeBridge().lanInfo(); } catch (e) { /* ignore */ } }, 120);
     $$('#lockTimeout button').forEach(function (b) {
@@ -16033,6 +16145,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         e.target.classList.toggle('on', state.notify.sysAlarm);
         saveState();
         toast(state.notify.sysAlarm ? '保存带闹钟的日程时会写入系统时钟' : '已关闭系统时钟写入');
+        return;
+      }
+      if (e.target && e.target.id === 'desktopWidgetSw') {
+        const nat = nativeBridge();
+        if (nat && nat.setDesktopWidget) {
+          const now = e.target.classList.contains('on');
+          e.target.classList.toggle('on', !now);
+          try { nat.setDesktopWidget(!now); } catch (err) { /* ignore */ }
+        } else toast('当前平台不支持');
         return;
       }
       if (e.target && e.target.id === 'lanSw') {
@@ -16102,6 +16223,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const m = $('#ctxMenu');
     if (!m) return;
     m.innerHTML = html;
+    m.style.left = '-9999px';
+    m.style.top = '-9999px';
     m.hidden = false;
     const r = m.getBoundingClientRect();
     m.style.left = Math.max(8, Math.min(x, window.innerWidth - r.width - 8)) + 'px';
