@@ -2669,6 +2669,236 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   .gh-add{ display:none }
   .mb-grip,.ne-grip{ display:none }
 }
+
+/* ==========================================================================
+   100. 表格卡片补充信息 + 日程详情弹窗
+   ========================================================================== */
+
+/* 卡片：标题最多两行，下面补一行地点；更矮的卡片优先保标题+地点，不显示时间 */
+.ev-t{ -webkit-line-clamp:2 }
+.ev.is-mini .ev-t{ -webkit-line-clamp:1 }
+.ev-loc{
+  margin-top:3px;font-size:10px;line-height:1.25;opacity:.74;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:flex;align-items:center;gap:4px;
+}
+.ev-loc::before{
+  content:"";flex:0 0 auto;width:4px;height:4px;border-radius:50%;
+  background:currentColor;opacity:.55;
+}
+.ev.is-mini .ev-loc{ display:none }
+.ev.is-short .ev-hm{ display:none }
+@media (max-width:959px){
+  .ev-loc{font-size:9.5px;margin-top:2px}
+}
+
+/* 居中详情卡：不跟随底部 sheet，手机上也是中间一块 */
+.mb-panel.ev-detail{
+  top:50%;left:50%;right:auto;bottom:auto;
+  transform:translate(-50%,-50%);
+  width:min(430px, calc(100vw - 30px));
+  height:auto;max-height:min(84vh, 620px);
+  padding:0;border-radius:22px;overflow:hidden;
+  animation:evdIn .2s cubic-bezier(.2,.9,.3,1);
+  box-shadow:0 26px 70px -24px rgba(10,14,24,.65);
+}
+@media (max-width:959px){
+  .mb-panel.ev-detail{
+    top:50%;height:auto;max-height:82vh;border-radius:22px;padding:0;
+  }
+}
+@keyframes evdIn{
+  from{opacity:0;transform:translate(-50%,-48%) scale(.97)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+.evd-top{
+  position:relative;flex:0 0 auto;padding:18px 20px 16px;
+  background:
+    radial-gradient(120% 120% at 100% 0%, hsl(var(--h) 88% 90% / .9), transparent 60%),
+    linear-gradient(135deg, hsl(var(--h) 92% 96.5%), var(--surface) 72%);
+  border-bottom:1px solid var(--line);
+}
+html.dark .evd-top{
+  background:
+    radial-gradient(120% 120% at 100% 0%, hsl(var(--h) 52% 28% / .65), transparent 62%),
+    linear-gradient(135deg, hsl(var(--h) 35% 16%), var(--surface) 78%);
+}
+.evd-date{font-size:11.5px;letter-spacing:.4px;color:var(--muted);font-weight:600;padding-right:38px}
+.evd-close{position:absolute;top:14px;right:14px}
+.evd-title{
+  margin:7px 0 0;font-size:21px;line-height:1.3;font-weight:780;letter-spacing:-.35px;
+  color:var(--ink);word-break:break-word;padding-right:4px;
+}
+.evd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.evd-chip{
+  display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:8px;
+  font-size:10.5px;font-weight:650;color:var(--ink2);
+  background:var(--surface-soft);border:1px solid var(--line2);
+  font-variant-numeric:tabular-nums;
+}
+.evd-chip.time{color:hsl(var(--h) 50% 30%);background:hsl(var(--h) 80% 93%);border-color:hsl(var(--h) 60% 85%)}
+html.dark .evd-chip.time{color:hsl(var(--h) 70% 80%);background:hsl(var(--h) 35% 22%);border-color:hsl(var(--h) 40% 30%)}
+.evd-chip.imp{color:#9A5B00;background:#FFF4D6;border-color:#F5DE9B}
+html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
+.evd-body{
+  flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 20px 6px;
+  -webkit-overflow-scrolling:touch;
+}
+.evd-row{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line2);align-items:flex-start}
+.evd-row:last-child{border-bottom:0}
+.evd-row .k{flex:0 0 42px;font-size:10.5px;color:var(--muted);letter-spacing:.4px;padding-top:2px}
+.evd-row .v{flex:1;min-width:0;font-size:13px;line-height:1.55;color:var(--ink);word-break:break-word}
+.evd-row .v.soft{color:var(--ink2)}
+.evd-note{
+  margin:4px 0 10px;padding:11px 13px;border-radius:12px;
+  background:var(--surface-soft);border:1px solid var(--line2);
+  font-size:12.5px;line-height:1.65;color:var(--ink2);white-space:pre-wrap;word-break:break-word;
+}
+.evd-empty{font-size:12px;color:var(--muted);padding:8px 0}
+.evd-foot{
+  flex:0 0 auto;padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--line);background:var(--surface);
+  display:flex;align-items:center;gap:10px;
+}
+.evd-del{
+  border:0;background:transparent;color:#D23A48;font:inherit;font-size:11.5px;
+  padding:7px 4px;cursor:pointer;border-radius:8px;
+}
+.evd-del.armed{color:#fff;background:#D23A48;padding:7px 10px;font-weight:700}
+.evd-del-group{color:var(--muted);font-size:11px}
+.evd-foot .spacer{flex:1}
+.evd-foot .btn{height:40px;min-width:82px;border-radius:11px;font-size:12.5px;flex:0 0 auto}
+.evd-foot .btn.primary{min-width:104px}
+@media (max-width:959px){
+  .evd-top{padding:16px 18px 14px}
+  .evd-title{font-size:19px}
+  .evd-body{padding:14px 18px 4px}
+  .evd-foot{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+}
+
+/* 重复组整组编辑：默认整组，可切换只改一条 */
+.grp-edit{flex-wrap:wrap;align-items:flex-start}
+.grp-edit .tx{flex:1 1 150px}
+.grp-hint{color:var(--muted);font-size:10.5px}
+.grp-row .mini-btn{
+  color:var(--ink2);background:var(--surface);border:1px solid var(--line);
+  font-weight:600;height:30px;
+}
+.grp-row .mini-btn.on{
+  color:#fff;background:var(--accent);border-color:transparent;
+  box-shadow:0 4px 12px -6px rgba(76,111,255,.8);
+}
+.dt-date button:disabled,.dt-time button:disabled{opacity:.45;cursor:not-allowed}
+
+
+/* OCR 结果独立浮层：盖在新建日程之上，关掉就回到原表单 */
+.ocr-root{z-index:96}
+.ocr-raw{margin:0 0 10px;font-size:11px;color:var(--muted)}
+.ocr-raw summary{cursor:pointer;padding:6px 0;user-select:none}
+.ocr-raw pre{
+  margin:6px 0 0;padding:10px 12px;max-height:110px;overflow:auto;
+  white-space:pre-wrap;word-break:break-word;line-height:1.55;
+  background:var(--surface-soft);border:1px solid var(--line2);border-radius:10px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--ink2);
+}
+
+/* 自定义文字颜色：连同表格卡片、主页主卡一起生效 */
+#view-grid.type-custom-ink .ev{color:var(--type-custom-ink)}
+#view-home.type-custom-ink .hero:not(.is-faint){color:var(--type-custom-ink)}
+#view-home.type-custom-ink .hero:not(.is-faint) .hero-eyebrow{color:var(--type-custom-ink)}
+#view-home.type-custom-ink .hero:not(.is-faint) .hero-over{color:var(--type-custom-ink)}
+#view-home.type-custom-ink .quote-card.has-bg .q-text{color:var(--type-custom-ink);text-shadow:0 1px 6px rgba(0,0,0,.35)}
+#view-home.type-custom-ink .quote-card.has-bg .q-src{color:var(--type-custom-ink)}
+
+/* 文字外观 / 字体库 */
+.type-list{display:flex;flex-direction:column;gap:10px;margin:2px 0 4px}
+.type-row{
+  padding:12px 14px;border-radius:14px;
+  background:var(--surface-soft);border:1px solid var(--line2);
+}
+.type-boot{margin-top:10px}
+.type-head{display:flex;align-items:center;gap:9px;min-height:26px}
+.type-head b{font-size:13px;font-weight:700;letter-spacing:-.1px}
+.type-sub{margin-left:auto;font-size:10.5px;color:var(--muted)}
+.type-auto{
+  margin-left:auto;height:26px;padding:0 9px;border-radius:8px;
+  font-size:10.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line2);
+}
+.type-auto.on{color:var(--accent);border-color:rgba(76,111,255,.35);background:rgba(76,111,255,.08)}
+.type-color{
+  width:28px;height:28px;padding:0;border:1px solid var(--line2);border-radius:9px;
+  background:var(--surface);cursor:pointer;-webkit-appearance:none;appearance:none;
+}
+.type-color::-webkit-color-swatch-wrapper{padding:3px}
+.type-color::-webkit-color-swatch{border:0;border-radius:6px}
+.type-line{display:flex;align-items:center;gap:10px;margin-top:8px}
+.type-line>span{flex:0 0 30px;font-size:11px;color:var(--muted)}
+.type-line .chips{flex:1;min-width:0}
+.type-size button,.type-sizes button{flex:0 0 auto;padding:0 10px;height:28px;font-size:11px}
+.type-font{flex:1;min-width:0;height:36px;font-size:12px;padding:0 30px 0 10px}
+.type-lib-empty{font-size:11.5px;color:var(--muted);line-height:1.6;padding:8px 2px}
+.type-lib-list{display:flex;flex-direction:column;gap:7px;margin-bottom:9px}
+.type-lib-item{
+  display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;
+  background:var(--surface-soft);border:1px solid var(--line2);
+}
+.tl-name{flex:1;min-width:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-tag{font-size:9.5px;color:var(--muted);flex:0 0 auto}
+.tl-tag.bad{color:var(--absent)}
+.tl-del{
+  flex:0 0 auto;height:26px;padding:0 8px;border-radius:7px;
+  font-size:10.5px;color:var(--absent);background:rgba(244,63,94,.08);
+}
+.type-font-add{margin-top:2px}
+@media (max-width:959px){
+  .type-row{padding:11px 12px}
+  .type-line>span{flex-basis:28px}
+  .type-size button,.type-sizes button{padding:0 8px;height:27px;font-size:10.5px}
+}
+
+/* 设置分类导航 + 普通/简洁模式 */
+.set-modes{margin:-2px 0 10px}
+.set-mode-desc{margin:7px 0 0;font-size:10.5px;line-height:1.55;color:var(--muted)}
+.set-nav{
+  position:sticky;top:0;z-index:7;display:flex;gap:7px;align-items:center;
+  overflow-x:auto;white-space:nowrap;padding:9px 0 8px;margin:0 0 4px;
+  background:var(--surface);border-bottom:1px solid var(--line);
+  -ms-overflow-style:none;scrollbar-width:none;
+}
+.set-nav::-webkit-scrollbar{display:none}
+.set-nav button{
+  flex:0 0 auto;height:30px;padding:0 11px;border-radius:9px;
+  font-size:11.5px;color:var(--muted);background:var(--surface-soft);border:1px solid var(--line2);
+}
+.set-nav button.on{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+.set-anchor{display:block;height:1px;scroll-margin-top:58px}
+.adv-section{display:block}
+.mb-panel.set-simple .adv-section{display:none}
+.mb-panel.set-simple .set-nav [data-simple-hide]{display:none}
+@media (max-width:959px){
+  .set-nav{margin-left:-18px;margin-right:-18px;padding-left:18px;padding-right:18px}
+  .set-anchor{scroll-margin-top:62px}
+}
+@media (min-width:960px){
+  .set-nav{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+}
+
+/* 纪念日：公历 / 农历 */
+.anniv-cal-row{display:flex;align-items:center;gap:10px}
+.anniv-cal-row>span{flex:0 0 52px;font-size:11px;color:var(--muted)}
+.anniv-cal-row .chips{flex:1;min-width:0}
+.anniv-lunar{display:none;flex-direction:column;gap:7px}
+.anniv-lunar.on{display:flex}
+.anniv-lunar-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.anniv-lunar select{
+  flex:1;min-width:86px;height:36px;border-radius:10px;padding:0 8px;
+  border:1px solid var(--line2);background:var(--surface);color:var(--ink);font:inherit;font-size:12px;
+}
+.anniv-leap{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--ink2);cursor:pointer;
+}
+.anniv-leap input{width:16px;height:16px;accent-color:var(--accent)}
 </style>
 </head>
 
@@ -2984,7 +3214,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.12',
+    version: '1.0.13',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3112,7 +3342,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   ]);
 
   /** 资源库上限 */
-  const ASSET_LIMIT = { image: 8, fontSize: 5 * 1024 * 1024, fontCount: 4 };
+  const ASSET_LIMIT = { image: 8, fontSize: 8 * 1024 * 1024, fontCount: 10 };
 
   /* --------------------------------------------------------------------------
    * 7.2 状态与持久化
@@ -3186,6 +3416,13 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   ui: { dtStep: 15, sleep: { on: false, from: '23:00', to: '07:00' } },
     /** 语录字体：内置 key 或自定义字体 id */
     quoteFont: { key: 'sys', custom: [] },
+    /** 各页面文字外观：color 为空表示跟随主题，size 为倍率，font 为内置 key / 自定义字体 id */
+    typeStyle: {
+      home:  { color: '', size: 1, font: 'sys' },
+      grid:  { color: '', size: 1, font: 'sys' },
+      notes: { color: '', size: 1, font: 'sys' },
+      boot:  { font: 'sys' }
+    },
     /**
      * 主页外观。
      * @type {{img:string, imgX:number, imgY:number, alpha:number, cardAlpha:number}}
@@ -3338,6 +3575,19 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       state.quotes = Object.assign(state.quotes, obj.quotes || {});
       state.quoteBg = Object.assign({ items: [] }, obj.quoteBg || {});
       state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
+      /* 文字外观：只接受合法颜色/倍率，避免手改备份把页面弄坏 */
+      const ts = obj.typeStyle || {};
+      ['home', 'grid', 'notes'].forEach(function (k) {
+        const v = ts[k] || {};
+        state.typeStyle[k] = {
+          color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? v.color : '',
+          size: [0.92, 1, 1.08, 1.16].indexOf(Number(v.size)) > -1 ? Number(v.size) : 1,
+          font: (typeof v.font === 'string' && v.font) ? v.font : 'sys'
+        };
+      });
+      state.typeStyle.boot = {
+        font: (ts.boot && typeof ts.boot.font === 'string' && ts.boot.font) ? ts.boot.font : 'sys'
+      };
       state.bg = Object.assign(state.bg, obj.bg || {});
       /* 取景方式只有两种，手改坏了就回退到默认 */
       if (state.bg.fit !== 'cover') state.bg.fit = 'contain';
@@ -3347,6 +3597,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (it.fit !== 'contain' && it.fit !== 'cover') delete it.fit;
       });
       state.ui = Object.assign(state.ui, obj.ui || {});
+      state.ui.settingsMode = (obj.ui && obj.ui.settingsMode === 'simple') ? 'simple' : 'standard';
       /* 微调步长夹到 1–120，手改坏了也不至于一步跳一天 */
       let st = Math.round(Number(state.ui.dtStep));
       if (!isFinite(st) || st < 1) st = 15;
@@ -3573,6 +3824,162 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     return String(dateStr).slice(5);
   }
 
+  /* ---------------- 农历换算（1900–2100） ----------------
+     每年纪念日可以按农历记（生日、祭日等）。这里内置一份紧凑的月相表，
+     不联网、不依赖第三方库；只覆盖 1900–2100，超出范围按公历处理。 */
+  const LUNAR_INFO = [
+    0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+    0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+    0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+    0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+    0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+    0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+    0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+    0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+    0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+    0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
+    0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+    0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+    0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+    0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+    0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+    0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+    0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+    0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+    0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+    0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,
+    0x0d520
+  ];
+  const LUNAR_MONTH_NAMES = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
+  const LUNAR_DAY_NAMES = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+    '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+    '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
+
+  function lunarInfoOf(y) { return LUNAR_INFO[y - 1900] || 0; }
+  function lunarLeapMonth(y) { return lunarInfoOf(y) & 0xf; }
+  function lunarLeapDays(y) {
+    if (!lunarLeapMonth(y)) return 0;
+    return (lunarInfoOf(y) & 0x10000) ? 30 : 29;
+  }
+  function lunarMonthDays(y, m) {
+    return (lunarInfoOf(y) & (0x10000 >> m)) ? 30 : 29;
+  }
+  function lunarYearDays(y) {
+    let sum = 348;
+    const info = lunarInfoOf(y);
+    for (let i = 0x8000; i > 0x8; i >>= 1) { if (info & i) sum++; }
+    return sum + lunarLeapDays(y);
+  }
+
+  /* 预计算每个农历年相对 1900-01-31 的起始偏移，换算时不用每年重算 */
+  const LUNAR_YEAR_OFFSET = (function () {
+    const arr = [0];
+    let off = 0;
+    for (let y = 1900; y <= 2100; y++) {
+      off += lunarYearDays(y);
+      arr[y - 1900 + 1] = off;
+    }
+    return arr;
+  })();
+
+  function lunarMonthStartOffset(y, m, isLeap) {
+    let off = LUNAR_YEAR_OFFSET[y - 1900];
+    const leap = lunarLeapMonth(y);
+    for (let mm = 1; mm < m; mm++) {
+      off += lunarMonthDays(y, mm);
+      if (leap === mm) off += lunarLeapDays(y);
+    }
+    if (isLeap) off += lunarMonthDays(y, m);
+    return off;
+  }
+
+  /** 农历 → 公历 Date（本地零点）；日期不存在返回 null */
+  function lunarToSolar(y, m, d, isLeap) {
+    if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1) return null;
+    if (isLeap && lunarLeapMonth(y) !== m) return null;
+    if (d > lunarMonthDays(y, m)) return null;
+    const off = lunarMonthStartOffset(y, m, !!isLeap) + d - 1;
+    const dt = new Date(1900, 0, 31);
+    dt.setDate(dt.getDate() + off);
+    return dt;
+  }
+
+  /** 公历 → 农历 {y,m,d,leap}；1900 以前返回 null */
+  function solarToLunar(date) {
+    const base = new Date(1900, 0, 31);
+    const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    let off = Math.round((target - base) / 86400000);
+    if (off < 0 || off >= LUNAR_YEAR_OFFSET[201]) return null;
+    let y = 1900;
+    while (y < 2100 && LUNAR_YEAR_OFFSET[y - 1900 + 1] <= off) y++;
+    let rel = off - LUNAR_YEAR_OFFSET[y - 1900];
+    const leap = lunarLeapMonth(y);
+    for (let m = 1; m <= 12; m++) {
+      const days = lunarMonthDays(y, m);
+      if (rel < days) return { y: y, m: m, d: rel + 1, leap: false };
+      rel -= days;
+      if (leap === m) {
+        const ld = lunarLeapDays(y);
+        if (rel < ld) return { y: y, m: m, d: rel + 1, leap: true };
+        rel -= ld;
+      }
+    }
+    return null;
+  }
+
+  function lunarMonthLabel(m, leap) {
+    return (leap ? '闰' : '') + (LUNAR_MONTH_NAMES[m - 1] || m) + '月';
+  }
+  function lunarDayLabel(d) { return LUNAR_DAY_NAMES[d - 1] || d + '日'; }
+
+  /** 纪念日条目的唯一 key：公历沿用 MM-DD，农历用 L:月-日[-leap] */
+  function annualKeyOf(item, fallback) {
+    if (item && item.lunar) {
+      return 'L:' + item.lm + '-' + item.ld + (item.leap ? '-leap' : '');
+    }
+    return fallback || '';
+  }
+
+  /** 下一次出现的日期；农历每年查表，闰月在无闰年的年份跳过 */
+  function nextAnnivFor(key, item) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (item && item.lunar) {
+      /* 闰月不是每年都有：往后多找一些年份，别让闰月纪念日凭空消失 */
+      const span = item.leap ? 20 : 3;
+      for (let y = today.getFullYear() - 1; y <= today.getFullYear() + span; y++) {
+        let dt = lunarToSolar(y, item.lm, item.ld, !!item.leap);
+        if (!dt && item.ld === 30) dt = lunarToSolar(y, item.lm, 29, !!item.leap);
+        if (!dt) continue;
+        if (dt >= today) return { date: dt, days: Math.round((dt - today) / 86400000) };
+      }
+      return null;
+    }
+    return nextAnniv(key);
+  }
+
+  /** 某公历日期对应的纪念日条目（公历优先，其次农历） */
+  function annualEntryForDate(dateStr) {
+    const solarKey = mdOf(dateStr);
+    if (state.annual[solarKey]) return { key: solarKey, item: state.annual[solarKey] };
+    const lunar = solarToLunar(fromYMD(dateStr));
+    if (lunar) {
+      /* 闰月是独立的月份：闰月里的日期只匹配闰月条目，普通月不跟着亮 */
+      const k = 'L:' + lunar.m + '-' + lunar.d + (lunar.leap ? '-leap' : '');
+      if (state.annual[k]) return { key: k, item: state.annual[k] };
+      /* 农历三十遇到小月只有廿九：把「三十」的纪念日落在当月最后一天 */
+      if (!lunar.leap && lunar.d === lunarMonthDays(lunar.y, lunar.m) && lunar.d < 30) {
+        const k30 = 'L:' + lunar.m + '-30';
+        if (state.annual[k30]) return { key: k30, item: state.annual[k30] };
+      }
+    }
+    return null;
+  }
+  function annualForDate(dateStr) {
+    const e = annualEntryForDate(dateStr);
+    return e ? e.item : null;
+  }
+
   /**
    * 按重复规则展开成一组日期。
    * @param {string} startYMD 起始日（含）
@@ -3619,6 +4026,75 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   }
 
   /**
+   * 旧数据的重复组没有存规则。根据成员日期反推一个最接近的规则，
+   * 只用于界面上给用户一个合理默认值；改没改过由调用方单独判断。
+   */
+  function inferRepeatMeta(members) {
+    const dates = Array.from(new Set((members || []).map(function (x) { return x.d; }))).sort();
+    if (dates.length <= 1) return { rule: 'none', wds: [], until: dates[0] || '', uncertain: true };
+    const ds = dates.map(fromYMD);
+    const deltas = [];
+    for (let i = 1; i < ds.length; i++) {
+      deltas.push(Math.round((ds[i] - ds[i - 1]) / 86400000));
+    }
+    const firstDow = ds[0].getDay();
+    const sameDow = ds.every(function (d) { return d.getDay() === firstDow; });
+    const sameDom = ds.every(function (d) { return d.getDate() === ds[0].getDate(); });
+    const allWorkday = ds.every(function (d) { return d.getDay() >= 1 && d.getDay() <= 5; });
+    const until = dates[dates.length - 1];
+
+    if (deltas.every(function (n) { return n === 1; })) return { rule: 'daily', wds: [], until: until };
+    if (sameDow && deltas.every(function (n) { return n === 7; })) return { rule: 'weekly', wds: [firstDow], until: until };
+    if (sameDow && deltas.every(function (n) { return n === 14; })) return { rule: 'biweekly', wds: [firstDow], until: until };
+    if (allWorkday && deltas.every(function (n) { return n === 1 || n === 3; })) return { rule: 'workday', wds: [], until: until };
+    if (sameDom) return { rule: 'monthly', wds: [], until: until };
+    /* 认不出来：给每周、但标 uncertain，保存时若用户没动重复项就不重建日期 */
+    return { rule: 'weekly', wds: [firstDow], until: until, uncertain: true };
+  }
+
+  /**
+   * 取某条日程所属重复组的规则信息。
+   * 新数据直接读事件上的 rr/rw/ru/ga；旧数据按日期反推。
+   */
+  function repeatMetaOf(ev) {
+    if (!ev || !ev.gid) return null;
+    const members = state.events.filter(function (x) { return x.gid === ev.gid; })
+      .sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; });
+    if (!members.length) return null;
+    const carrier = members.filter(function (x) { return x.rr; })[0] || null;
+    const inferred = inferRepeatMeta(members);
+    const rule = carrier ? carrier.rr : inferred.rule;
+    const wds = carrier && Array.isArray(carrier.rw) && carrier.rw.length
+      ? carrier.rw.slice()
+      : (inferred.wds || []);
+    const until = (carrier && carrier.ru) || inferred.until || members[members.length - 1].d;
+    const anchor = (carrier && carrier.ga) || members[0].d;
+    return {
+      rule: rule,
+      wds: wds,
+      until: until,
+      anchor: anchor,
+      uncertain: !carrier && !!inferred.uncertain,
+      members: members
+    };
+  }
+
+  function repeatRuleLabel(rule) {
+    const r = REPEAT_RULES.filter(function (x) { return x.key === rule; })[0];
+    return r ? r.label : '重复';
+  }
+
+  /** 详情弹窗里的一行重复说明 */
+  function repeatSummaryOf(ev) {
+    const meta = repeatMetaOf(ev);
+    if (!meta) return '';
+    const n = meta.members.length;
+    let s = repeatRuleLabel(meta.rule) + ' · 共 ' + n + ' 项';
+    if (meta.rule !== 'none' && meta.until) s += ' · 至 ' + meta.until;
+    return s;
+  }
+
+  /**
    * 计算某个「MM-DD」纪念日的下一次出现。
    * @param {string} md 'MM-DD'
    * @returns {{date: Date, days: number}} days = 距今天数（0 表示就是今天）
@@ -3637,9 +4113,10 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
   function upcomingAnniv(n) {
     const list = Object.keys(state.annual).map(function (md) {
       const item = state.annual[md] || {};
-      const occ = nextAnniv(md);
+      const occ = nextAnnivFor(md, item);
+      if (!occ) return null;
       return { md: md, item: item, date: occ.date, days: occ.days };
-    });
+    }).filter(Boolean);
     list.sort(function (a, b) { return a.days - b.days; });
     return list.slice(0, n || 3);
   }
@@ -3887,6 +4364,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<span class="t-st">' + STATUS[ev.st].sym + '</span>' +
       '</button>';
     }).join('');
+    applyTypeStyle('home');
   }
 
   /** 主卡水印（叶片轮廓）——与品牌标记同源 */
@@ -4029,6 +4507,10 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       '</div></div>';
 
     applyHomeLook();
+    /* 主卡每秒重绘一次，内联字号会丢；只在设过非标准字号时补一遍 */
+    if (state.typeStyle && state.typeStyle.home && Math.abs(Number(state.typeStyle.home.size) - 1) > 0.01) {
+      applyTypeScale('home');
+    }
   }
 
   /** 相对日期描述：今天 / 明天 / M月D日 */
@@ -4373,7 +4855,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         const cardPct = 100 / n;
         const leftPct = lane * cardPct;
 
-        const mini = hgt < 42 ? ' is-mini' : '';
+        const mini = hgt < 42 ? ' is-mini' : (hgt < 64 ? ' is-short' : '');
         const hasImg = x.img ? ' has-img' : '';
         const bgImg = x.img ? ';background-image:url(\'' + x.img + '\')' : '';
 
@@ -4385,6 +4867,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '<span class="ev-badge">' + STATUS[x.st || 'todo'].sym + '</span>' +
             (x.imp ? '<span class="ev-imp" title="重要项目">★</span>' : '') +
             '<div class="ev-t">' + esc(x.t) + '</div>' +
+            (x.p ? '<div class="ev-loc" title="' + esc(x.p) + '">' + esc(x.p) + '</div>' : '') +
             '<div class="ev-hm"><span class="hm-full">' + esc(x.s) + '–' + esc(x.e) +
               (x._cross ? '↓' : '') + '</span>' +
               '<span class="hm-short">' + esc(x.s) + '</span></div>' +
@@ -4407,6 +4890,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     lastGeo = geo;
     updateNowLine();
+    applyTypeStyle('grid');
   }
 
   /** 拖动滑块时用 rAF 节流，避免每像素都重排整张表 */
@@ -4482,7 +4966,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const ds = toYMD(d);
       const note = state.notes[ds];
       const tag = state.tags[ds];
-      const ann = state.annual[mdOf(ds)];
+      const ann = annualForDate(ds);
       const isOut = d.getMonth() !== m;
 
       const cls = [
@@ -4509,6 +4993,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     grid.classList.toggle('markable', markMode);
     $('#markBar').classList.toggle('on', markMode);
     $('#calMark').classList.toggle('on', markMode);
+    applyTypeStyle('notes');
   }
 
   /** 渲染右侧单日编辑器 */
@@ -4526,8 +5011,20 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     const d = fromYMD(selectedDate);
     const note = state.notes[selectedDate] || { title: '', body: '' };
     const tag = state.tags[selectedDate] || '';
-    const md = mdOf(selectedDate);
-    const ann = state.annual[md] || null;
+    const annEntry = annualEntryForDate(selectedDate);
+    let annKey = annEntry ? annEntry.key : mdOf(selectedDate);
+    const ann = annEntry ? annEntry.item : null;
+    const annLunar = !!(ann && ann.lunar);
+    const lunarToday = solarToLunar(fromYMD(selectedDate));
+    const annLm = annLunar ? ann.lm : (lunarToday ? lunarToday.m : 1);
+    const annLd = annLunar ? ann.ld : (lunarToday ? lunarToday.d : 1);
+    const annLeap = annLunar ? !!ann.leap : !!(lunarToday && lunarToday.leap);
+    const lmOpts = LUNAR_MONTH_NAMES.map(function (n, i) {
+      return '<option value="' + (i + 1) + '"' + (annLm === i + 1 ? ' selected' : '') + '>' + n + '月</option>';
+    }).join('');
+    const ldOpts = LUNAR_DAY_NAMES.map(function (n, i) {
+      return '<option value="' + (i + 1) + '"' + (annLd === i + 1 ? ' selected' : '') + '>' + n + '</option>';
+    }).join('');
     const iconsHtml = ANNIV_ICONS.map(function (ic) {
       return '<button data-icon="' + ic + '" class="' + (ann && (ann.icon || '🎂') === ic ? 'on' : '') + '">' + ic + '</button>';
     }).join('');
@@ -4589,6 +5086,20 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="anniv-fields' + (ann ? ' on' : '') + '" id="neAnnivFields">' +
           '<input type="text" id="neAnnivTitle" maxlength="24" spellcheck="false" ' +
             'placeholder="纪念名称，如：小林生日" value="' + esc(ann ? ann.title : '') + '">' +
+          '<div class="anniv-cal-row"><span>日期类型</span>' +
+            '<div class="chips" id="neAnnivCal">' +
+              '<button data-cal="solar" class="' + (annLunar ? '' : 'on') + '">公历</button>' +
+              '<button data-cal="lunar" class="' + (annLunar ? 'on' : '') + '">农历</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="anniv-lunar' + (annLunar ? ' on' : '') + '" id="neLunarBox">' +
+            '<div class="anniv-lunar-row">' +
+              '<select id="neLunarMonth" aria-label="农历月份">' + lmOpts + '</select>' +
+              '<select id="neLunarDay" aria-label="农历日期">' + ldOpts + '</select>' +
+              '<label class="anniv-leap"><input type="checkbox" id="neLunarLeap"' + (annLeap ? ' checked' : '') + '> 闰月</label>' +
+            '</div>' +
+            '<div class="ne-hint" style="text-align:left">农历每年按对应日期提醒；闰月只在有该闰月的年份出现，没有闰月的年份会自动跳过。</div>' +
+          '</div>' +
           '<div class="icon-pick" id="neIcons">' + iconsHtml + '</div>' +
           '<div class="ne-hint" style="text-align:left">开启后每年这天都会在主页面提醒</div>' +
         '</div>' +
@@ -4685,48 +5196,119 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       });
     });
 
-    /* ---- 每年纪念日 ---- */
-    $('#neSw').addEventListener('click', function () {
-      const key = mdOf(selectedDate);
-      if (state.annual[key]) {
-        delete state.annual[key];
-      } else {
-        state.annual[key] = {
-          title: $('#neTitle').value.trim() || '纪念日',
-          icon: '🎂',
-          note: ''
-        };
-      }
-      saveState();
+    /* ---- 每年纪念日（公历 / 农历） ---- */
+    const lunarPick = function () {
+      return {
+        lm: Number(($('#neLunarMonth') || {}).value) || 1,
+        ld: Number(($('#neLunarDay') || {}).value) || 1,
+        leap: !!($('#neLunarLeap') && $('#neLunarLeap').checked)
+      };
+    };
+    const refreshAnnivViews = function () {
       renderCalendar();
       renderHome();
-      renderEditor();       // 重新渲染以同步开关与字段
+    };
+
+    $('#neSw').addEventListener('click', function () {
+      if (annKey && state.annual[annKey]) {
+        delete state.annual[annKey];
+        annKey = mdOf(selectedDate);
+      } else {
+        const title = ($('#neTitle').value || '').trim() || '纪念日';
+        const lunarMode = $('#neAnnivCal') && $('#neAnnivCal .on') &&
+          $('#neAnnivCal .on').dataset.cal === 'lunar';
+        if (lunarMode) {
+          const pick = lunarPick();
+          const item = { title: title, icon: '🎂', note: '', lunar: true, lm: pick.lm, ld: pick.ld, leap: pick.leap };
+          annKey = annualKeyOf(item);
+          state.annual[annKey] = item;
+        } else {
+          annKey = mdOf(selectedDate);
+          state.annual[annKey] = { title: title, icon: '🎂', note: '' };
+        }
+      }
+      saveState();
+      refreshAnnivViews();
+      renderEditor();
+    });
+
+    /* 公历 / 农历切换：已经开启纪念日时同步迁移数据 */
+    $$('#neAnnivCal button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        $$('#neAnnivCal button').forEach(function (x) { x.classList.toggle('on', x === b); });
+        const box = $('#neLunarBox');
+        if (box) box.classList.toggle('on', b.dataset.cal === 'lunar');
+        if (!annKey || !state.annual[annKey]) return;
+        const cur = state.annual[annKey];
+        if (b.dataset.cal === 'lunar' && !cur.lunar) {
+          const lunar = solarToLunar(fromYMD(selectedDate));
+          if (!lunar) { toast('这一天超出农历支持范围'); return; }
+          const item = {
+            title: cur.title || '纪念日', icon: cur.icon || '🎂', note: cur.note || '',
+            lunar: true, lm: lunar.m, ld: lunar.d, leap: lunar.leap
+          };
+          delete state.annual[annKey];
+          annKey = annualKeyOf(item);
+          state.annual[annKey] = item;
+        } else if (b.dataset.cal === 'solar' && cur.lunar) {
+          const item = { title: cur.title || '纪念日', icon: cur.icon || '🎂', note: cur.note || '' };
+          delete state.annual[annKey];
+          annKey = mdOf(selectedDate);
+          state.annual[annKey] = item;
+        } else {
+          return;
+        }
+        saveState();
+        refreshAnnivViews();
+        renderEditor();
+      });
+    });
+
+    /* 农历月份 / 日期 / 闰月：直接改当前条目，key 跟着变 */
+    const onLunarChange = function () {
+      if (!annKey || !state.annual[annKey]) return;
+      const cur = state.annual[annKey];
+      if (!cur.lunar) return;
+      const pick = lunarPick();
+      const nextKey = 'L:' + pick.lm + '-' + pick.ld + (pick.leap ? '-leap' : '');
+      if (nextKey !== annKey) {
+        delete state.annual[annKey];
+        annKey = nextKey;
+      }
+      cur.lm = pick.lm;
+      cur.ld = pick.ld;
+      cur.leap = pick.leap;
+      state.annual[annKey] = cur;
+      saveState();
+      refreshAnnivViews();
+    };
+    ['neLunarMonth', 'neLunarDay', 'neLunarLeap'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', onLunarChange);
     });
 
     const annTitleInput = $('#neAnnivTitle');
     if (annTitleInput) {
       let annTimer = null;
       annTitleInput.addEventListener('input', function () {
-        const key = mdOf(selectedDate);
-        if (!state.annual[key]) return;
-        state.annual[key].title = this.value;
+        if (!annKey || !state.annual[annKey]) return;
+        state.annual[annKey].title = this.value;
         saveState();
         clearTimeout(annTimer);
-        annTimer = setTimeout(function () { renderCalendar(); renderHome(); }, 280);
+        annTimer = setTimeout(function () { refreshAnnivViews(); }, 280);
       });
     }
 
     $$('#neIcons button').forEach(function (b) {
       b.addEventListener('click', function () {
-        const key = mdOf(selectedDate);
-        if (!state.annual[key]) return;
-        state.annual[key].icon = b.dataset.icon;
+        if (!annKey || !state.annual[annKey]) return;
+        state.annual[annKey].icon = b.dataset.icon;
         saveState();
         $$('#neIcons button').forEach(function (x) { x.classList.toggle('on', x === b); });
-        renderCalendar();
-        renderHome();
+        refreshAnnivViews();
       });
     });
+    applyTypeStyle('notes');
   }
 
   /* --------------------------------------------------------------------------
@@ -4904,8 +5486,14 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const on = text.match(/(腾讯会议|钉钉会议|钉钉|飞书会议|飞书|Zoom|zoom|线上[^\s,。;]{0,8})/);
       if (on) placeRaw = on[1];
     }
-    /* 展示时把逗号换成「；」，读起来更像两个地点；
-       但拆标题时用原文（带逗号），保证能整段从正文里挖掉 */
+    /* 地点后面常跟着「请准时参加」之类的句子：只保留真正像地点的片段。
+       多个真实地点（3F 会议室、1F 大厅）仍会保留下来。 */
+    if (placeRaw) {
+      const parts = placeRaw.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+      const locWord = /(会议室|教室|实验室|报告厅|礼堂|体育馆|食堂|咖啡厅|办公室|大厅|楼|室|厅|中心|大厦|校区|广场|酒店|线上|腾讯会议|钉钉|飞书|Zoom)/i;
+      const locParts = parts.filter(function (x) { return locWord.test(x); });
+      placeRaw = (locParts.length ? locParts : parts.slice(0, 1)).join('；');
+    }
     let place = placeRaw ? placeRaw.replace(/,+$/g, '').replace(/,/g, '；') : '';
     if (place.length > 60) place = place.slice(0, 60);
 
@@ -4931,8 +5519,14 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (kw) title = kw[1].trim();
     }
 
+    /* 【会议通知】这类方括号标题优先；即使它比较泛，也比正文里随便一句强 */
+    if (!title) {
+      const bm = text.match(/【([^】]{2,20})】/);
+      if (bm && !/id|链接|二维码|图片/i.test(bm[1])) title = bm[1].trim();
+    }
+
     /* 兜底：取前几行里第一句「像标题」的话，顺手把时间和日期片段剥掉 */
-    if (!title || TITLE_STOP.indexOf(title) > -1) {
+    if (!title) {
       const lines = titleText.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
       for (let i = 0; i < Math.min(lines.length, 5); i++) {
         const line = lines[i];
@@ -5011,7 +5605,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
    */
   function ocrImage(dataUrl, onProg) {
     return loadTessEngine().then(function () {
-      return window.Tesseract.recognize(dataUrl, 'chi_sim', {
+      return window.Tesseract.recognize(dataUrl, 'chi_sim+eng', {
         logger: function (m) {
           if (onProg && m && m.progress != null) onProg(m.progress);
         }
@@ -5106,8 +5700,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
    * 识别结果预览：逐行勾选 + 编辑，确认后按周重复写入。
    * @param {Array} rows parseScheduleText 的结果
    */
-  function openOcrPreview(rows) {
-    const root = $('#modalRoot');
+  function openOcrPreview(rows, rawText, onAdded) {
     const until0 = toYMD(addDays(new Date(), 16 * 7));
 
     const rowHtml = function (r, i) {
@@ -5137,26 +5730,47 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '</div>';
     };
 
+    const rawBlock = rawText
+      ? '<details class="ocr-raw"><summary>查看识别原文（识别不准时可以对照）</summary><pre>' + esc(rawText) + '</pre></details>'
+      : '';
+
+    /* 独立浮层：盖在新建日程弹窗之上；关闭后回到原来的表单，不再替换它。
+       这解决了旧版「放弃/叉号点不动、只能被迫添加」的问题。 */
+    const root = document.createElement('div');
+    root.className = 'modal-root ocr-root';
+    root.id = 'ocrRoot';
     root.innerHTML =
-      '<div class="mb-back" data-close></div>' +
-      '<div class="mb-panel" role="dialog" aria-modal="true">' +
+      '<div class="mb-back" data-ocr-close></div>' +
+      '<div class="mb-panel ocr-panel" role="dialog" aria-modal="true">' +
         '<div class="mb-head"><h3>识别结果 · 逐项确认</h3>' +
-          '<button class="icon-btn sm" data-close aria-label="关闭">✕</button></div>' +
+          '<button class="icon-btn sm" data-ocr-close aria-label="关闭">✕</button></div>' +
+        rawBlock +
         '<div class="ocr-list">' + rows.map(rowHtml).join('') + '</div>' +
         '<div class="ocr-foot">' +
           '<div class="until"><span>每周重复，至</span>' +
             '<input type="date" id="ocrUntil" value="' + until0 + '"></div>' +
-          '<p class="hint">只添加勾选的行；标红的字段建议补全。结束后想删，进日程用「删除整组」一次清掉。</p>' +
+          '<p class="hint">只添加勾选的行；不想要就点「放弃」或右上角 ✕，不会动原来的表单。</p>' +
           '<div class="mb-foot">' +
-            '<button class="btn danger" data-close>放弃</button>' +
+            '<button class="btn danger" data-ocr-close>放弃</button>' +
             '<button class="btn primary" id="ocrAdd">添加选中项</button>' +
           '</div>' +
         '</div>' +
       '</div>';
+    document.body.appendChild(root);
     openLayer(root);
 
+    function closeOcr() {
+      popModal(closeOcr);
+      root.classList.remove('open');
+      if (root.parentNode) root.parentNode.removeChild(root);
+    }
+    pushModal(closeOcr);
+    $$('[data-ocr-close]', root).forEach(function (el) {
+      el.addEventListener('click', closeOcr);
+    });
+
     /* 计数跟勾选走 */
-    const addBtn = $('#ocrAdd');
+    const addBtn = $('#ocrAdd', root);
     const syncCount = function () {
       const n = $$('.oi-check', root).filter(function (c) { return c.checked; }).length;
       addBtn.textContent = '添加选中项（' + n + '）';
@@ -5164,10 +5778,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     $$('.oi-check', root).forEach(function (c) { c.addEventListener('change', syncCount); });
     syncCount();
 
-    $$('[data-close]', root).forEach(function (el) { el.addEventListener('click', closeModal); });
-
     addBtn.addEventListener('click', function () {
-      const until = $('#ocrUntil').value || until0;
+      const until = $('#ocrUntil', root).value || until0;
       const today = new Date();
       let n = 0;
 
@@ -5197,20 +5809,20 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (!dates.length) return;
         const gid = uid('grp');
         dates.forEach(function (ds) {
-          state.events.push({ id: uid('ev'), gid: gid, gt: t, d: ds, s: s, e: e, t: t, p: p, n: note, st: 'todo' });
+          state.events.push({
+            id: uid('ev'), gid: gid, gt: t, d: ds, s: s, e: e, t: t, p: p, n: note, st: 'todo',
+            rr: 'weekly', rw: [wdn], ru: until, ga: toYMD(first)
+          });
         });
         n += dates.length;
       });
 
       if (!n) { toast('没有可添加的行：课程名不能为空'); return; }
 
-      /* 本次提交不走草稿 */
-      draftCtx = null;
-      clearDraft();
       saveState();
-      closeModal();
-      renderAll();
-      toast('已添加 ' + n + ' 项课程日程');
+      closeOcr();
+      if (typeof onAdded === 'function') onAdded(n);
+      else toast('已添加 ' + n + ' 项课程日程');
     });
   }
 
@@ -5508,26 +6120,36 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     /** 本次编辑临时保存的日程背景图（dataURL，空串表示无） */
     let imgData = base.img || '';
 
-    /* 编辑某条重复日程时，找出它所属的项目组 */
-    const groupMembers = (ev && ev.gid)
-      ? state.events.filter(function (x) { return x.gid === ev.gid; })
-      : [];
-    const groupHtml = (ev && ev.gid)
-      ? '<div class="grp-row">' +
+    /* 编辑某条重复日程时，找出它所属的项目组；新数据带规则，旧数据按日期反推 */
+    const groupMeta = (ev && ev.gid) ? repeatMetaOf(ev) : null;
+    const groupMembers = groupMeta ? groupMeta.members : [];
+    const formDate = groupMeta ? groupMeta.anchor : base.d;
+    let onlyOne = false;
+    let repRule = groupMeta ? groupMeta.rule : 'none';
+    let repWds = (groupMeta && groupMeta.wds && groupMeta.wds.length)
+      ? groupMeta.wds.slice()
+      : [fromYMD(base.d).getDay()];
+    let repUntil = (groupMeta && groupMeta.until)
+      ? groupMeta.until
+      : toYMD(addDays(fromYMD(base.d), 60));
+    let repTouched = false;
+
+    const groupHtml = groupMeta
+      ? '<div class="grp-row grp-edit">' +
           '<span class="ic">↻</span>' +
           '<span class="tx"><b>重复日程</b> · 「' + esc(ev.gt || ev.t) + '」共 ' + groupMembers.length + ' 项' +
-            '<br><span style="color:var(--muted)">此处修改只作用于当前这一条</span></span>' +
+            '<br><span class="grp-hint">默认修改整组；只改这一条请点右侧按钮</span></span>' +
+          '<button class="mini-btn" id="fOnlyOne" aria-pressed="false">仅改此条</button>' +
           '<button id="fDelGrp">删除整组</button>' +
         '</div>'
       : '';
 
-    /* 重复规则表单（仅新建时出现） */
     const repSegHtml = REPEAT_RULES.map(function (r) {
-      return '<button data-rule="' + r.key + '" class="' + (r.key === 'none' ? 'on' : '') + '">' + r.label + '</button>';
+      return '<button data-rule="' + r.key + '" class="' + (r.key === repRule ? 'on' : '') + '">' + r.label + '</button>';
     }).join('');
     const wdNames = ['日', '一', '二', '三', '四', '五', '六'];
     const wdHtml = wdNames.map(function (n, i) {
-      return '<button data-w="' + i + '" class="' + (fromYMD(base.d).getDay() === i ? 'on' : '') + '">' + n + '</button>';
+      return '<button data-w="' + i + '" class="' + (repWds.indexOf(i) > -1 ? 'on' : '') + '">' + n + '</button>';
     }).join('');
 
     const segHtml = Object.keys(STATUS).map(function (k) {
@@ -5539,15 +6161,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     /* 只有新建时才需要「从通知识别」；编辑已有日程不该被覆盖 */
     const pasteHtml = ev ? '' :
       '<details class="paste-box">' +
-        '<summary><span>粘贴通知 / 识别课表图片</span><i>本地规则 · 不上传</i></summary>' +
+        '<summary><span>粘贴通知 / 识别图片</span><i>本地规则 · 不上传</i></summary>' +
         '<div class="paste-inner">' +
           '<textarea id="fPaste" rows="4" placeholder="把群里发的通知整段粘进来，粘贴后会自动识别。&#10;例如：【会议通知】10月25日 周六 19:00-20:30，地点：3F 会议室，讨论下季度排期。"></textarea>' +
           '<button class="btn primary" id="fPasteRun" style="width:100%;height:34px;font-size:12px;margin-top:8px">识别并填入</button>' +
           '<div class="ocr-pick">' +
-            '<label class="mini-btn" style="position:relative;overflow:hidden;cursor:pointer">选课表图片识别' +
+            '<label class="mini-btn" style="position:relative;overflow:hidden;cursor:pointer">选图片识别（课表 / 通知）' +
               '<input type="file" id="fOcrFile" accept="image/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
             '</label>' +
-            '<span>截图里的课程名 / 时间 / 地点 / 老师自动填表。首次使用需联网加载识别引擎（约 10MB），之后有缓存。</span>' +
+            '<span>课表会按周展开；通知会直接填入当前表单。首次使用需联网加载识别引擎（约 10–15MB），之后有缓存。</span>' +
           '</div>' +
           '<div class="ocr-prog hide" id="ocrProg"></div>' +
         '</div>' +
@@ -5580,7 +6202,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
                   '<path d="M3.2 9.6h17.6M8 3.2v3.4M16 3.2v3.4"/></svg>' +
               '</button>' +
             '</div>' +
-            '<input class="inp dt-native" id="fDate" type="date" value="' + esc(base.d) + '">' +
+            '<input class="inp dt-native" id="fDate" type="date" value="' + esc(formDate) + '">' +
           '</div>' +
 
           '<div class="field-row two">' +
@@ -5642,26 +6264,34 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
               '<button class="sw" id="fAllDay" aria-label="设为全天"></button>' +
             '</div></div>' +
 
-        (ev ? '' :
-        '<div class="field"><label>重复（一次生成一整批）</label>' +
+        '<div class="field" id="repField"><label>' +
+          (groupMeta ? '重复（整组）' : (ev ? '重复' : '重复（一次生成一整批）')) + '</label>' +
           '<div class="rep-box">' +
-            '<p class="rep-why">选了「每周」这类规则，保存时会一次铺出一串日程：' +
-              '比如「每周一」+ 铺到期末，就自动生成这一学期的每一次。' +
-              '它们属于同一个项目组，之后可以「删除整组」一次清掉。' +
-              '只用一次的事，保持「不重复」就行。</p>' +
+            '<p class="rep-why">' +
+              (groupMeta
+                ? '这里是整组的重复规则。改规则会按新规则重建整组；只改标题、时间等字段则保留原日期。'
+                : (ev
+                  ? '把这条日程改成重复：保存后会按规则生成一整组。保持「不重复」就只改这一条。'
+                  : '选了「每周」这类规则，保存时会一次铺出一串日程：' +
+                    '比如「每周一」+ 铺到期末，就自动生成这一学期的每一次。' +
+                    '它们属于同一个项目组，之后可以「删除整组」一次清掉。' +
+                    '只用一次的事，保持「不重复」就行。')) +
+            '</p>' +
             '<div class="rep-seg" id="repSeg">' + repSegHtml + '</div>' +
-            '<div class="wd-pick" id="repWd" style="display:none">' + wdHtml + '</div>' +
-            '<div class="rep-row" id="repUntilRow" style="display:none">' +
+            '<div class="wd-pick" id="repWd" style="display:' +
+              ((repRule === 'weekly' || repRule === 'biweekly') ? 'flex' : 'none') + '">' + wdHtml + '</div>' +
+            '<div class="rep-row" id="repUntilRow" style="display:' +
+              (repRule === 'none' ? 'none' : 'flex') + '">' +
               '<span>铺到哪天为止</span>' +
               '<button type="button" class="dt-until" id="fUntilLbl"></button>' +
               '<button type="button" class="dt-cal sm" id="fUntilCal" aria-label="展开日历选结束日">' +
                 '<svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="15.6" rx="3"/>' +
                   '<path d="M3.2 9.6h17.6M8 3.2v3.4M16 3.2v3.4"/></svg>' +
               '</button>' +
-              '<input type="date" id="fUntil" class="dt-native" value="' + toYMD(addDays(fromYMD(base.d), 60)) + '">' +
+              '<input type="date" id="fUntil" class="dt-native" value="' + esc(repUntil) + '">' +
             '</div>' +
             '<div class="rep-preview hide" id="repPreview"></div>' +
-          '</div></div>') +
+          '</div></div>' +
 
         '<div class="field"><label>状态标记</label><div class="seg" id="fSeg">' + segHtml + '</div></div>' +
 
@@ -5701,9 +6331,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     pushModal(closeModal);
 
     /* ---- 重复规则状态与联动 ---- */
-    let repRule = 'none';
-    let repWds = [fromYMD(base.d).getDay()];
-    let wdTouched = false;
+    let wdTouched = !!groupMeta;
 
     function syncWd() {
       $$('#repWd button').forEach(function (b) {
@@ -5735,40 +6363,80 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         (dates.length >= REPEAT_LIMIT ? '（已达上限）' : '') + '，之后可整组删除';
     }
 
-    if (!ev) {
-      $$('#repSeg button').forEach(function (b) {
-        b.addEventListener('click', function () {
-          repRule = b.dataset.rule;
-          $$('#repSeg button').forEach(function (x) { x.classList.toggle('on', x === b); });
-          const needWd = repRule === 'weekly' || repRule === 'biweekly';
-          $('#repWd').style.display = needWd ? 'flex' : 'none';
-          $('#repUntilRow').style.display = repRule === 'none' ? 'none' : 'flex';
-          updatePreview();
-        });
-      });
-
-      $$('#repWd button').forEach(function (b) {
-        b.addEventListener('click', function () {
-          const w = Number(b.dataset.w);
-          const i = repWds.indexOf(w);
-          if (i > -1) { if (repWds.length > 1) repWds.splice(i, 1); }
-          else repWds.push(w);
-          wdTouched = true;
-          syncWd();
-          updatePreview();
-        });
-      });
-
-      $('#fUntil').addEventListener('change', updatePreview);
-
-      $('#fDate').addEventListener('change', function () {
-        if (!wdTouched) {
-          repWds = [fromYMD(this.value || base.d).getDay()];
-          syncWd();
-        }
+    $$('#repSeg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        repRule = b.dataset.rule;
+        repTouched = true;
+        $$('#repSeg button').forEach(function (x) { x.classList.toggle('on', x === b); });
+        const needWd = repRule === 'weekly' || repRule === 'biweekly';
+        $('#repWd').style.display = needWd ? 'flex' : 'none';
+        $('#repUntilRow').style.display = repRule === 'none' ? 'none' : 'flex';
         updatePreview();
       });
+    });
+
+    $$('#repWd button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const w = Number(b.dataset.w);
+        const i = repWds.indexOf(w);
+        if (i > -1) { if (repWds.length > 1) repWds.splice(i, 1); }
+        else repWds.push(w);
+        wdTouched = true;
+        repTouched = true;
+        syncWd();
+        updatePreview();
+      });
+    });
+
+    $('#fUntil').addEventListener('change', function () {
+      repTouched = true;
+      updatePreview();
+    });
+
+    $('#fDate').addEventListener('change', function () {
+      if (!wdTouched) {
+        repWds = [fromYMD(this.value || base.d).getDay()];
+        syncWd();
+      }
+      updatePreview();
+    });
+
+    /* 编辑整组时，日期默认锁在整组起始日；想只改一条就打开「仅改此条」 */
+    const setFormDate = function (ymd) {
+      const input = $('#fDate');
+      if (input) { input.value = ymd; input.dispatchEvent(new Event('change')); }
+      if (typeof dtSync === 'function') dtSync();
+    };
+    const onlyOneBtn = $('#fOnlyOne');
+    const setOnlyOne = function (on) {
+      onlyOne = !!on;
+      if (onlyOneBtn) {
+        onlyOneBtn.classList.toggle('on', onlyOne);
+        onlyOneBtn.setAttribute('aria-pressed', onlyOne ? 'true' : 'false');
+        onlyOneBtn.textContent = onlyOne ? '只改这一条' : '仅改此条';
+      }
+      const dateBtn = $('#fDateLbl');
+      const dateCal = $('#fDateCal');
+      const dateInput = $('#fDate');
+      [dateBtn, dateCal, dateInput].forEach(function (el) {
+        if (el) el.disabled = !!groupMeta && !onlyOne;
+      });
+      const repField = $('#repField');
+      if (repField) repField.style.display = onlyOne ? 'none' : '';
+      if (groupMeta) setFormDate(onlyOne ? base.d : groupMeta.anchor);
+      const hint = $('#dtHint');
+      if (hint && groupMeta) {
+        hint.textContent = onlyOne
+          ? '只修改当前这一条；不会影响同组其他日程。'
+          : '这是整组修改：日期锁定在 ' + groupMeta.anchor + '，改重复规则会重建整组。';
+      }
+    };
+    if (onlyOneBtn) {
+      onlyOneBtn.addEventListener('click', function () { setOnlyOne(!onlyOne); });
     }
+
+    syncWd();
+    updatePreview();
 
     /* ---- 日期 / 时间快选：手机上原生 date/time 是转轮，换成更好点的 ---- */
     const WD_CN = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -5932,6 +6600,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (el) el.addEventListener(p[1], dtSync);
     });
     dtSync();
+    if (onlyOneBtn) setOnlyOne(false);
 
     /* ---- 草稿：恢复上次没写完的内容 ---- */
     if (!ev && opts && opts.draft) {
@@ -6063,6 +6732,35 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       paintImgThumb();
     });
 
+    /* ---- 通知识别：粘贴/OCR 共用同一套填表逻辑 ---- */
+    const applyNotice = function (r, raw) {
+      $('#fTitle').value = r.t || '';
+      if (r.d) $('#fDate').value = r.d;
+      if (r.s) {
+        $('#fStart').value = r.s;
+        $('#fEnd').value = r.e;
+      }
+      $('#fPlace').value = r.p || '';
+      if (r.n) $('#fNote').value = r.n;
+
+      /* 什么都没认出来：把原文放进备注，至少不丢内容 */
+      const hits = r.hits || [];
+      if (!hits.length && raw) {
+        if (!$('#fTitle').value.trim()) $('#fTitle').value = 'OCR 识别结果';
+        $('#fNote').value = raw;
+        const mb = $('#moreBox');
+        if (mb) mb.open = true;
+      }
+
+      if (r.d && $('#fUntil')) {
+        $('#fUntil').value = toYMD(addDays(fromYMD(r.d), 60));
+      }
+      updatePreview();
+      dtSync();
+      scheduleDraftSave();
+      return hits;
+    };
+
     /* ---- 通知识别：粘贴后自动填，也可以点按钮重试 ---- */
     const pasteRun = $('#fPasteRun');
     if (pasteRun) {
@@ -6071,27 +6769,10 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         if (!raw) { toast('先把通知粘进来'); return; }
 
         const r = parseNotice(raw);
-
         /* 识别是「整段重填」：标题、日期、地点直接覆盖，
            没认出地点就清空，免得留下上一段的旧值；
            时间没认出来则保留默认的 09:00，只提示用户补 */
-        $('#fTitle').value = r.t || '';
-        if (r.d) $('#fDate').value = r.d;
-        if (r.s) {
-          $('#fStart').value = r.s;
-          $('#fEnd').value = r.e;
-        }
-        $('#fPlace').value = r.p || '';
-        if (r.n) $('#fNote').value = r.n;
-
-        /* 「重复至」跟着新日期走，免得还停在上次的默认值 */
-        if (r.d && $('#fUntil')) {
-          $('#fUntil').value = toYMD(addDays(fromYMD(r.d), 60));
-        }
-        /* 识别出来的地点 / 备注在「更多选项」里，顺手摊开给人看一眼 */
-        updatePreview();
-        dtSync();
-        scheduleDraftSave();
+        applyNotice(r, raw);
 
         const bits = [];
         if (r.d) {
@@ -6125,19 +6806,46 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           prog.textContent = txt;
         };
 
-        showProg('正在读图…');
-        readImageAsData(file, 1600, 0.9, function (data) {
-          showProg('正在加载识别引擎…首次约 10MB，请稍等');
+        showProg('正在优化图片…');
+        readImageForOcr(file, function (data) {
+          showProg('正在加载识别引擎…首次约 10–15MB，请稍等');
           ocrImage(data, function (p) {
             showProg('正在识别… ' + Math.round(p * 100) + '%');
           }).then(function (text) {
-            const rows = parseScheduleText(text);
             if (prog) prog.classList.add('hide');
-            if (!rows.length) {
-              showProg('没认出课程行。可以换一张更清晰的截图，或把文字复制到上面用「识别并填入」。');
+            const clean = String(text || '').trim();
+            if (!clean) {
+              showProg('没有识别到文字。换一张更清晰、正着的截图，或把文字复制到上面用「识别并填入」。');
               return;
             }
-            openOcrPreview(rows);
+
+            const schedRows = parseScheduleText(clean);
+            const scheduleHits = schedRows.filter(function (r) {
+              return r.wd != null && (r.s || r.t);
+            }).length;
+            const looksSchedule = scheduleHits >= 2 ||
+              (/(课程表|课表|节次|作息表)/.test(clean) && scheduleHits >= 1);
+
+            if (looksSchedule) {
+              openOcrPreview(schedRows, clean, function (n) {
+                /* 课表已经批量录入，关闭新建表单；单条通知不要走这里 */
+                draftCtx = null;
+                clearDraft();
+                if ($('#modalRoot').classList.contains('open')) closeModal();
+                renderAll();
+                toast('已添加 ' + n + ' 项课程日程');
+              });
+              return;
+            }
+
+            /* 普通通知：直接填当前表单，用户核对后自己保存，不再强制添加 */
+            const r = parseNotice(clean);
+            const hits = applyNotice(r, clean);
+            const panel = $('.mb-panel', $('#modalRoot'));
+            if (panel) panel.scrollTop = 0;
+            toast(hits.length
+              ? '已按通知填入，请核对后保存'
+              : '没认出明确字段，原文已放进备注，可手动整理');
           }).catch(function (err) {
             console.warn('[DayLeaf] OCR 失败', err);
             showProg('识别失败：' + (err && err.message ? err.message : '引擎没加载成功') +
@@ -6216,13 +6924,116 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         al: !!(rmOn && alarmOn)
       };
 
-      /* --- 编辑既有：只改当前这一条 --- */
+      /* --- 编辑既有 --- */
       if (editingId) {
+        const cur = state.events.filter(function (x) { return x.id === editingId; })[0];
+
+        /* 1) 整组修改（默认）：修改标题/时间等字段同步整组；
+              改重复规则则按整组起始日重建日期。 */
+        if (cur && cur.gid && !onlyOne) {
+          const anchor = groupMeta ? groupMeta.anchor : cur.d;
+          const common = Object.assign({}, payload, { d: anchor, gt: title });
+          const ruleWds = (repRule === 'weekly' || repRule === 'biweekly')
+            ? repWds.slice()
+            : [];
+
+          if (repTouched) {
+            const until = $('#fUntil').value || repUntil || anchor;
+            const dates = repRule === 'none' ? [anchor] : expandRepeat(anchor, until, repRule, repWds);
+            const oldIds = {};
+            groupMembers.forEach(function (x) { oldIds[x.id] = 1; });
+            state.events = state.events.filter(function (x) { return !oldIds[x.id]; });
+
+            if (dates.length > 1 && repRule !== 'none') {
+              const gid = cur.gid || uid('grp');
+              dates.forEach(function (ds) {
+                state.events.push(Object.assign({}, common, {
+                  id: uid('ev'),
+                  gid: gid,
+                  gt: title,
+                  d: ds,
+                  rr: repRule,
+                  rw: ruleWds,
+                  ru: until,
+                  ga: anchor
+                }));
+              });
+            } else {
+              state.events.push(Object.assign({}, common, {
+                id: uid('ev'),
+                d: dates[0] || anchor
+              }));
+            }
+
+            saveState();
+            weekStart = startOfWeek(fromYMD(anchor));
+            draftCtx = null;
+            clearDraft();
+            closeModal();
+            renderAll();
+            toast('已按新规则更新整组');
+            return;
+          }
+
+          /* 没改重复规则：保留每条原日期，只同步共同字段 */
+          groupMembers.forEach(function (x) {
+            const i = state.events.findIndex(function (y) { return y.id === x.id; });
+            if (i < 0) return;
+            state.events[i] = Object.assign({}, state.events[i], common, { d: x.d, gt: title });
+          });
+          saveState();
+          draftCtx = null;
+          clearDraft();
+          closeModal();
+          renderAll();
+          toast('已修改整组 ' + groupMembers.length + ' 项');
+          return;
+        }
+
+        /* 2) 只改这一条（或本来就不是重复日程） */
         const i = state.events.findIndex(function (x) { return x.id === editingId; });
-        if (i > -1) state.events[i] = Object.assign({}, state.events[i], payload);
+        if (i > -1) {
+          const old = state.events[i];
+
+          /* 原来是单条，这次选了重复规则：转成一整组 */
+          if (!old.gid && repRule !== 'none') {
+            const until = $('#fUntil').value || repUntil || date;
+            const dates = expandRepeat(date, until, repRule, repWds);
+            if (dates.length > 1) {
+              const gid = uid('grp');
+              const ruleWds = (repRule === 'weekly' || repRule === 'biweekly') ? repWds.slice() : [];
+              state.events.splice(i, 1);
+              dates.forEach(function (ds) {
+                state.events.push(Object.assign({}, payload, {
+                  id: uid('ev'),
+                  gid: gid,
+                  gt: title,
+                  d: ds,
+                  rr: repRule,
+                  rw: ruleWds,
+                  ru: until,
+                  ga: dates[0]
+                }));
+              });
+              saveState();
+              weekStart = startOfWeek(fromYMD(dates[0]));
+              draftCtx = null;
+              clearDraft();
+              closeModal();
+              renderAll();
+              toast('已改为重复日程，共 ' + dates.length + ' 项');
+              return;
+            }
+          }
+
+          state.events[i] = Object.assign({}, old, payload);
+        }
         saveState();
+        draftCtx = null;
+        clearDraft();
         closeModal();
         renderAll();
+        toast('已保存修改');
         return;
       }
 
@@ -6233,15 +7044,27 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       const anchor = dates[0] || date;
 
       if (dates.length > 1) {
-        /* 整组共用同一个 gid（项目组标识），供「删除整组」一次性清理 */
+        /* 整组共用同一个 gid；规则和起始日一并存下来，方便之后整组修改 */
         const gid = uid('grp');
+        const ruleWds = (repRule === 'weekly' || repRule === 'biweekly') ? repWds.slice() : [];
+        const until = $('#fUntil').value || date;
         dates.forEach(function (ds) {
-          state.events.push(Object.assign({ id: uid('ev'), gid: gid, gt: title }, payload, { d: ds }));
+          state.events.push(Object.assign({}, payload, {
+            id: uid('ev'),
+            gid: gid,
+            gt: title,
+            d: ds,
+            rr: repRule,
+            rw: ruleWds,
+            ru: until,
+            ga: anchor
+          }));
         });
       } else {
-        state.events.push(Object.assign({ id: uid('ev') }, payload, { d: anchor }));
+        state.events.push(Object.assign({}, payload, { id: uid('ev'), d: anchor }));
       }
 
+      saveState();
       /* 跳到起始日所在周，方便立刻看到结果 */
       weekStart = startOfWeek(fromYMD(anchor));
 
@@ -6433,6 +7256,143 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     root.classList.remove('open');
     root.innerHTML = '';
     editingId = null;
+  }
+
+  /** 删除并给一次撤销机会（详情弹窗、编辑弹窗共用） */
+  function deleteEventsWithUndo(victims, msg) {
+    if (!victims || !victims.length) return;
+    const ids = {};
+    victims.forEach(function (x) { ids[x.id] = 1; });
+    state.events = state.events.filter(function (x) { return !ids[x.id]; });
+    saveState();
+    closeModal();
+    renderAll();
+    toast(msg, {
+      label: '撤销',
+      fn: function () {
+        state.events = state.events.concat(victims);
+        saveState();
+        renderAll();
+        toast('已恢复 ' + victims.length + ' 项');
+      }
+    });
+  }
+
+  /**
+   * 表格里点一下日程：先看详情，再决定改不改。
+   * 居中卡片，手机上也是中间弹窗；长按拖动不受影响。
+   */
+  function openEventDetail(id) {
+    const ev = state.events.filter(function (x) { return x.id === id; })[0];
+    if (!ev) return;
+
+    const d = fromYMD(ev.d);
+    const st = STATUS[ev.st || 'todo'] || STATUS.todo;
+    const meta = repeatMetaOf(ev);
+    const groupMembers = meta ? meta.members : [];
+    const dur = evDuration(ev);
+    const durText = (function (m) {
+      const h = Math.floor(m / 60), mm = Math.round(m % 60);
+      return h ? (mm ? h + ' 小时 ' + mm + ' 分' : h + ' 小时') : mm + ' 分钟';
+    })(dur);
+    const dateText = (d.getMonth() + 1) + '月' + d.getDate() + '日 · ' + WEEKDAY[d.getDay()] +
+      (d.getFullYear() !== new Date().getFullYear() ? ' · ' + d.getFullYear() : '');
+    const timeText = ev.s + ' – ' + ev.e + (toMin(ev.e) <= toMin(ev.s) ? '（次日）' : '') + ' · ' + durText;
+
+    let chips = '<span class="evd-chip time">' + esc(timeText) + '</span>' +
+      '<span class="evd-chip">' + st.sym + ' ' + st.label + '</span>';
+    if (ev.imp) chips += '<span class="evd-chip imp">★ 重要</span>';
+    if (ev.gid) chips += '<span class="evd-chip">↻ ' + esc(repeatRuleLabel(meta ? meta.rule : 'weekly')) + '</span>';
+
+    let rows = '';
+    rows += '<div class="evd-row"><div class="k">时间</div><div class="v">' + esc(timeText) + '</div></div>';
+    if (ev.p) rows += '<div class="evd-row"><div class="k">地点</div><div class="v">' + esc(ev.p) + '</div></div>';
+    if (ev.gid && meta) {
+      rows += '<div class="evd-row"><div class="k">重复</div><div class="v">' +
+        esc(repeatSummaryOf(ev)) +
+        '<br><span style="font-size:11px;color:var(--muted)">修改默认作用于整组</span></div></div>';
+    }
+    if (remindOn(ev)) {
+      rows += '<div class="evd-row"><div class="k">提醒</div><div class="v soft">' +
+        esc(remindText(ev) + (ev.al ? ' · 闹钟' : '')) + '</div></div>';
+    }
+    if (ev.img) {
+      rows += '<div class="evd-row"><div class="k">配图</div><div class="v">' +
+        '<img src="' + ev.img + '" alt="" style="max-width:100%;max-height:150px;border-radius:10px;display:block">' +
+        '</div></div>';
+    }
+
+    const root = $('#modalRoot');
+    root.innerHTML =
+      '<div class="mb-back" data-close></div>' +
+      '<div class="mb-panel ev-detail" style="--h:' + hueOf(ev.t) + '">' +
+        '<div class="evd-top">' +
+          '<div class="evd-date">' + esc(dateText) + '</div>' +
+          '<button class="icon-btn sm evd-close" data-close aria-label="关闭">✕</button>' +
+          '<h3 class="evd-title">' + esc(ev.t || '未命名日程') + '</h3>' +
+          '<div class="evd-chips">' + chips + '</div>' +
+        '</div>' +
+        '<div class="evd-body">' +
+          rows +
+          (ev.n ? '<div class="evd-note"><b style="font-size:10.5px;color:var(--muted);display:block;margin-bottom:4px">备注</b>' +
+            esc(ev.n) + '</div>' : '') +
+        '</div>' +
+        '<div class="evd-foot">' +
+          (ev.gid
+            ? '<button class="evd-del" data-del="one">删除此条</button>' +
+              '<button class="evd-del evd-del-group" data-del="group">删除整组</button>'
+            : '<button class="evd-del" data-del="one">删除</button>') +
+          '<span class="spacer"></span>' +
+          '<button class="btn ghost" data-close>关闭</button>' +
+          '<button class="btn primary" id="evdEdit">修改</button>' +
+        '</div>' +
+      '</div>';
+
+    openLayer(root);
+    pushModal(closeModal);
+
+    $$('[data-close]', root).forEach(function (el) {
+      el.addEventListener('click', closeModal);
+    });
+
+    const editBtn = $('#evdEdit');
+    if (editBtn) {
+      editBtn.addEventListener('click', function () {
+        closeModal();
+        setTimeout(function () { openEventDialog(id); }, 0);
+      });
+    }
+
+    /* 删除：第一下变确认，第二下才真删；整组和单条分开 */
+    let armed = '';
+    let armTimer = null;
+    const disarm = function () {
+      armed = '';
+      clearTimeout(armTimer);
+      $$('.evd-del', root).forEach(function (b) {
+        b.classList.remove('armed');
+        b.textContent = b.dataset.del === 'group' ? '删除整组' : (ev.gid ? '删除此条' : '删除');
+      });
+    };
+    $$('.evd-del', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const kind = btn.dataset.del;
+        if (armed !== kind) {
+          disarm();
+          armed = kind;
+          btn.classList.add('armed');
+          btn.textContent = kind === 'group' ? '确认删除整组？' : '确认删除？';
+          armTimer = setTimeout(disarm, 3000);
+          return;
+        }
+        clearTimeout(armTimer);
+        if (kind === 'group') {
+          deleteEventsWithUndo(groupMembers.slice(), '已删除整组 ' + groupMembers.length + ' 项');
+        } else {
+          deleteEventsWithUndo([ev], '已删除「' + ev.t + '」');
+        }
+      });
+    });
   }
 
   /**
@@ -6874,6 +7834,22 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="mb-head"><h3>个性化</h3>' +
           '<button class="icon-btn sm" data-close aria-label="关闭">✕</button></div>' +
 
+        '<div class="set-modes">' +
+          '<div class="chips" id="setModeSeg">' +
+            '<button data-setmode="standard" class="on">普通模式</button>' +
+            '<button data-setmode="simple">简洁模式</button>' +
+          '</div>' +
+          '<p class="set-mode-desc" id="setModeDesc">完整的外观、主页、语录、表格与清理设置。</p>' +
+        '</div>' +
+        '<div class="set-nav" id="setNav">' +
+          '<button data-jump="setAppearance" class="on">外观与文字</button>' +
+          '<button data-jump="setSchedule" data-simple-hide>日程与表格</button>' +
+          '<button data-jump="setNotify">提醒</button>' +
+          '<button data-jump="setData">数据</button>' +
+          '<button data-jump="setAbout">关于</button>' +
+        '</div>' +
+        '<div class="set-anchor" id="setAppearance"></div>' +
+
         '<div class="sec-line">外观</div>' +
         '<div class="field"><label>主题</label>' +
           '<div class="chips" id="themeSeg">' +
@@ -6921,6 +7897,43 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '<input type="range" id="fY" min="0" max="100" value="' + bg.y + '"></div>' +
         '</div>' +
 
+        '<div class="sec-line">文字外观</div>' +
+        '<p class="hint">主页、表格、记事可以分别设置文字颜色、字号和字体，适合换了背景图后单独调清晰度。「跟随主题」不会覆盖原配色。</p>' +
+        '<div class="type-list">' +
+          ['home', 'grid', 'notes'].map(function (k) {
+            const label = { home: '主页', grid: '表格', notes: '记事' }[k];
+            const ts = state.typeStyle[k];
+            const fallbackColor = isDarkTheme() ? '#E8EBF3' : '#11141C';
+            const sizes = [{ v: 0.92, l: '小' }, { v: 1, l: '标准' }, { v: 1.08, l: '大' }, { v: 1.16, l: '特大' }];
+            return '<div class="type-row" data-type-mod="' + k + '">' +
+                '<div class="type-head"><b>' + label + '</b>' +
+                  '<button class="type-auto' + (ts.color ? '' : ' on') + '" data-typecolor-reset="' + k + '">跟随主题</button>' +
+                  '<input type="color" class="type-color" data-typecolor="' + k + '" value="' +
+                    (ts.color || fallbackColor) + '" aria-label="' + label + '文字颜色">' +
+                '</div>' +
+                '<div class="type-line"><span>字号</span><div class="chips type-sizes" data-typesize="' + k + '">' +
+                  sizes.map(function (z) {
+                    return '<button data-size="' + z.v + '" class="' +
+                      (Math.abs(Number(ts.size) - z.v) < 0.01 ? 'on' : '') + '">' + z.l + '</button>';
+                  }).join('') +
+                '</div></div>' +
+                '<div class="type-line"><span>字体</span>' +
+                  '<select class="inp type-font" data-typefont="' + k + '">' + fontOptionsHtml(ts.font) + '</select>' +
+                '</div>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="type-row type-boot">' +
+          '<div class="type-head"><b>启动页语录</b><span class="type-sub">只影响开场动画</span></div>' +
+          '<div class="type-line"><span>字体</span>' +
+            '<select class="inp type-font" data-bootfont>' + fontOptionsHtml(state.typeStyle.boot.font) + '</select>' +
+          '</div></div>' +
+        '<p class="hint">语料库（每日一句）的字体仍在「每日一句 → 字体」里单独选择；导入的字体统一在下面的字体库里管理。</p>' +
+
+        '<div class="sec-line">字体库</div>' +
+        '<div id="typeFontLib"></div>' +
+
+        '<div class="adv-section">' +
         '<div class="sec-line">主页外观</div>' +
         '<div class="field"><label>主卡背景图</label>' +
           '<div class="hero-prev' + (hm.alpha < 0.62 ? ' is-faint' : '') + '" id="heroPrev" style="--hp-a:' +
@@ -7047,6 +8060,9 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '<div class="qb-pane" data-pane="font" id="qbPaneFont"></div>' +
           '</div></div>' +
 
+        '</div>' +
+        '<div class="set-anchor" id="setSchedule"></div>' +
+        '<div class="adv-section">' +
         '<div class="sec-line">日程清理</div>' +
         '<div class="field"><div class="row-sw">' +
           '<span>自动清理过期日程</span>' +
@@ -7086,13 +8102,13 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '<div class="sec-line">时间微调</div>' +
         '<div class="field"><label>± 按钮每次走多少</label>' +
           '<div class="chips" id="dtStepSeg">' +
-            [1, 4, 15, 30].map(function (v) {
+            [1, 4, 10, 15, 30].map(function (v) {
               return '<button data-step="' + v + '" class="' +
                 (dtStep() === v ? 'on' : '') + '">' + v + ' 分</button>';
             }).join('') +
           '</div></div>' +
         '<p class="hint">新建 / 编辑里，开始、结束时间两边的 ± 一次挪这么多。' +
-          '默认 15 分钟；想一次挪 4 分钟就在这儿改成 4。</p>' +
+          '默认 15 分钟；想一次挪 10 分钟就在这儿改成 10。</p>' +
 
         '<div class="sec-line">表格时段</div>' +
         '<div class="field"><div class="row-sw">' +
@@ -7110,6 +8126,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         '</div>' +
         '<p class="hint" id="fSleepHint"></p>' +
 
+        '</div>' +
+        '<div class="set-anchor" id="setNotify"></div>' +
         '<div class="sec-line">通知与闹钟</div>' +
         '<div class="field"><div class="row-sw">' +
           '<span>开启提醒</span>' +
@@ -7149,6 +8167,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '浏览器写不了系统闹钟，想要手机真正响铃：点「导出 .ics」把带提醒的日程导进系统日历' +
             '（含提前提醒与到点响铃）。另外，提醒只在软件打开着的时候触发。') + '</p>' +
 
+        '<div class="set-anchor" id="setData"></div>' +
         '<div class="sec-line">数据</div>' +
         '<div class="field"><label>备份与恢复</label>' +
           '<div class="data-pick">' +
@@ -7156,6 +8175,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
             '<label class="btn ghost file">导入 JSON<input type="file" id="fImport" accept=".json,application/json"></label>' +
           '</div></div>' +
 
+        '<div class="set-anchor" id="setAbout"></div>' +
         (nat
           ? '<div class="sec-line">关于与更新</div>' +
             '<div class="field"><label>当前版本</label>' +
@@ -7174,6 +8194,52 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     openLayer(root);
     pushModal(closeModal);
+    renderTypeFontLib();
+
+    /* ---- 设置分类导航 + 普通/简洁模式 ---- */
+    (function () {
+      const panel = $('.mb-panel', root);
+      const desc = $('#setModeDesc', root);
+      const nav = $('#setNav', root);
+      const modes = $$('#setModeSeg button', root);
+      const setActiveNav = function (key) {
+        if (!nav) return;
+        $$('button', nav).forEach(function (b) { b.classList.toggle('on', b.dataset.jump === key); });
+      };
+      const applyMode = function (mode, persist) {
+        const simple = mode === 'simple';
+        state.ui.settingsMode = simple ? 'simple' : 'standard';
+        if (panel) panel.classList.toggle('set-simple', simple);
+        modes.forEach(function (b) { b.classList.toggle('on', b.dataset.setmode === state.ui.settingsMode); });
+        if (desc) {
+          desc.textContent = simple
+            ? '只保留主题、背景、文字、提醒和备份等常用项；高级外观与表格细节已收起。'
+            : '完整的外观、主页、语录、表格与清理设置。';
+        }
+        if (simple) {
+          const active = nav && $('button.on', nav);
+          if (active && active.dataset.jump === 'setSchedule') {
+            setActiveNav('setAppearance');
+            if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
+        if (persist) saveState();
+      };
+      modes.forEach(function (b) {
+        b.addEventListener('click', function () { applyMode(b.dataset.setmode, true); });
+      });
+      if (nav) {
+        nav.addEventListener('click', function (e) {
+          const btn = e.target.closest('[data-jump]');
+          if (!btn) return;
+          if (panel && panel.classList.contains('set-simple') && btn.hasAttribute('data-simple-hide')) return;
+          const target = document.getElementById(btn.dataset.jump);
+          setActiveNav(btn.dataset.jump);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+      applyMode(state.ui.settingsMode || 'standard', false);
+    })();
 
     /* ---- 检查更新（App 内手动入口） ---- */
     const fCheck = $('#fCheckUpdate');
@@ -7495,14 +8561,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     $('#qbPaneFont').addEventListener('click', function (e) {
       const del = e.target.closest('[data-fndel]');
       if (del) {
-        const id = del.dataset.fndel;
-        state.quoteFont.custom = (state.quoteFont.custom || []).filter(function (x) { return x.id !== id; });
-        if (state.quoteFont.key === id) state.quoteFont.key = 'sys';
-        delete fontReady[id];
-        AssetDB.del('font_' + id);
-        saveState();
+        deleteCustomFont(del.dataset.fndel);
         renderFontPane();
-        applyQuoteFont();
         return;
       }
       const item = e.target.closest('[data-font]');
@@ -7520,43 +8580,15 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (!input || input.id !== 'fFontFile' || !input.files || !input.files[0]) return;
       const file = input.files[0];
       input.value = '';
-
-      if (file.size > ASSET_LIMIT.fontSize) { toast('字体超过 5 MB，换个小一点的'); return; }
-      if ((state.quoteFont.custom || []).length >= ASSET_LIMIT.fontCount) {
-        toast('最多 ' + ASSET_LIMIT.fontCount + ' 个自定义字体');
-        return;
-      }
-
-      const ext = String(file.name.split('.').pop() || '').toLowerCase();
-      const mime = ext === 'otf' ? 'font/otf'
-        : ext === 'woff' ? 'font/woff'
-        : ext === 'woff2' ? 'font/woff2'
-        : 'font/ttf';
-
-      const reader = new FileReader();
-      reader.onload = function () {
-        const dataUrl = 'data:' + mime + ';base64,' + bufToBase64(reader.result);
-        const id = uid('f');
-        if (!state.quoteFont.custom) state.quoteFont.custom = [];
-        state.quoteFont.custom.push({
-          id: id,
-          name: (file.name || '').replace(/\.[^.]+$/, '').slice(0, 20) || '自定义字体'
-        });
+      importFontFile(file, function (id) {
         state.quoteFont.key = id;
-        fontReady[id] = null;
-
-        AssetDB.put('font_' + id, dataUrl).then(function (ok) {
-          if (!ok) toast('字体没能写入本地存储，刷新后会丢失');
-        });
-        registerCustomFont(id, dataUrl);
         saveState();
         renderFontPane();
         applyQuoteFont();
         toast('已添加并启用该字体');
         const rows = $$('#qbPaneFont .fn-item[data-font]');
         if (rows.length) rows[rows.length - 1].scrollIntoView({ block: 'nearest' });
-      };
-      reader.readAsArrayBuffer(file);
+      });
     });
 
     renderQuoteList();
@@ -7876,6 +8908,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         quotes: state.quotes,
         quoteBg: state.quoteBg,
         quoteFont: state.quoteFont,
+        typeStyle: state.typeStyle,
         ui: state.ui,
         clean: state.clean
       };
@@ -7904,6 +8937,12 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
           state.quotes = Object.assign(state.quotes, obj.quotes || {});
           state.quoteBg = Object.assign({ items: [] }, obj.quoteBg || {});
           state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
+          state.typeStyle = Object.assign(state.typeStyle, obj.typeStyle || {});
+          ['home', 'grid', 'notes'].forEach(function (k) {
+            state.typeStyle[k] = Object.assign({ color: '', size: 1, font: 'sys' }, state.typeStyle[k] || {});
+          });
+          state.typeStyle.boot = Object.assign({ font: 'sys' }, state.typeStyle.boot || {});
+          state.ui = Object.assign(state.ui, obj.ui || {});
           state.clean = Object.assign(state.clean, obj.clean || {});
           state.notify = Object.assign(state.notify, obj.notify || {});
       state.notify = Object.assign(state.notify, obj.notify || {});
@@ -7920,6 +8959,86 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     $$('[data-close]', root).forEach(function (el) {
       el.addEventListener('click', closeModal);
+    });
+
+    /* ---- 文字外观 / 字体库 ---- */
+    let typeSaveTimer = null;
+    const saveTypeSoon = function () {
+      clearTimeout(typeSaveTimer);
+      typeSaveTimer = setTimeout(function () { saveState(); }, 220);
+    };
+    const setTypeColor = function (mod, color) {
+      if (!state.typeStyle[mod]) return;
+      state.typeStyle[mod].color = color || '';
+      const auto = $('[data-typecolor-reset="' + mod + '"]', root);
+      if (auto) auto.classList.toggle('on', !color);
+      applyTypeStyle(mod);
+    };
+
+    root.addEventListener('input', function (e) {
+      const color = e.target.closest ? e.target.closest('[data-typecolor]') : null;
+      if (color) {
+        setTypeColor(color.dataset.typecolor, color.value);
+        saveTypeSoon();
+      }
+    });
+    root.addEventListener('change', function (e) {
+      const color = e.target.closest ? e.target.closest('[data-typecolor]') : null;
+      if (color) { setTypeColor(color.dataset.typecolor, color.value); saveState(); return; }
+
+      const font = e.target.closest ? e.target.closest('[data-typefont]') : null;
+      if (font) {
+        state.typeStyle[font.dataset.typefont].font = font.value;
+        saveState();
+        applyTypeStyle(font.dataset.typefont);
+        return;
+      }
+      const bootFont = e.target.closest ? e.target.closest('[data-bootfont]') : null;
+      if (bootFont) {
+        state.typeStyle.boot.font = bootFont.value;
+        saveState();
+        applyTypeStyle();
+        return;
+      }
+      if (e.target.id === 'typeFontFile' && e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        e.target.value = '';
+        importFontFile(file, function () {
+          refreshTypeFontSelects();
+          renderTypeFontLib();
+          applyTypeStyle();
+        });
+      }
+    });
+    root.addEventListener('click', function (e) {
+      const auto = e.target.closest ? e.target.closest('[data-typecolor-reset]') : null;
+      if (auto) {
+        const mod = auto.dataset.typecolorReset;
+        setTypeColor(mod, '');
+        const input = $('[data-typecolor="' + mod + '"]', root);
+        if (input) input.value = isDarkTheme() ? '#E8EBF3' : '#11141C';
+        saveState();
+        return;
+      }
+      const sizeBtn = e.target.closest ? e.target.closest('[data-typesize] button') : null;
+      if (sizeBtn) {
+        const mod = sizeBtn.parentNode.dataset.typesize;
+        const v = Number(sizeBtn.dataset.size);
+        state.typeStyle[mod].size = v;
+        $$('[data-typesize="' + mod + '"] button', root).forEach(function (b) {
+          b.classList.toggle('on', Number(b.dataset.size) === v);
+        });
+        saveState();
+        applyTypeStyle(mod);
+        return;
+      }
+      const del = e.target.closest ? e.target.closest('[data-typefontdel]') : null;
+      if (del) {
+        deleteCustomFont(del.dataset.typefontdel);
+        refreshTypeFontSelects();
+        renderTypeFontLib();
+        applyTypeStyle();
+      }
     });
 
     /* 面板建好后先把当前参数画进预览 */
@@ -8031,6 +9150,8 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     if (nb && nb.setThemeMode) {
       try { nb.setThemeMode(state.theme || 'light'); } catch (e) { /* ignore */ }
     }
+    /* 主题切换后文字混色用的底色变了，重新算一遍 */
+    applyTypeStyle();
   }
 
   /**
@@ -8610,6 +9731,51 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     reader.readAsDataURL(file);
   }
 
+  /**
+   * OCR 专用读图：放大、灰度、对比度增强，深色截图自动反色。
+   * Tesseract 对低分辨率/彩色背景的截图识别率很差，这一步比换模型更管用。
+   */
+  function readImageForOcr(file, cb) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        const srcMax = Math.max(img.width, img.height);
+        const target = Math.max(1600, Math.min(2600, srcMax < 900 ? srcMax * 2 : srcMax));
+        const k = target / srcMax;
+        const cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(img.width * k));
+        cv.height = Math.max(1, Math.round(img.height * k));
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        try {
+          const data = ctx.getImageData(0, 0, cv.width, cv.height);
+          const px = data.data;
+          let sum = 0;
+          for (let i = 0; i < px.length; i += 4) {
+            sum += px[i] * .299 + px[i + 1] * .587 + px[i + 2] * .114;
+          }
+          const avg = sum / Math.max(1, px.length / 4);
+          const invert = avg < 118;   // 深色底浅字：反相成白底黑字
+          const contrast = 1.22;
+          for (let i = 0; i < px.length; i += 4) {
+            let g = px[i] * .299 + px[i + 1] * .587 + px[i + 2] * .114;
+            if (invert) g = 255 - g;
+            g = (g - 128) * contrast + 128;
+            g = g < 0 ? 0 : g > 255 ? 255 : g;
+            px[i] = px[i + 1] = px[i + 2] = g;
+            px[i + 3] = 255;
+          }
+          ctx.putImageData(data, 0, 0);
+        } catch (err) { /* 跨域/隐私模式偶尔读不到像素，保留原图也能识别 */ }
+        cb(cv.toDataURL('image/png'), cv.width, cv.height);
+      };
+      img.onerror = function () { cb(e.target.result, 0, 0); };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   /* --------------------------------------------------------------------------
    * 7.9.2 时间块拉伸
    * 每个时间块可独立设「高度权重」和「卡片宽度占比」，
@@ -9157,6 +10323,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       if (map['hero'] && !state.home.img) { state.home.img = map['hero']; applyHomeLook(); }
       if (!curQuoteBgId) pickQuoteBg();
       applyQuoteFont();
+      applyTypeStyle();
       refreshQuoteCard();
     });
   }
@@ -9176,11 +10343,16 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         document.fonts.add(loaded);
         fontReady[id] = alias;
         if (state.quoteFont.key === id) applyQuoteFont();
+        applyTypeStyle();
+        refreshTypeFontSelects();
+        renderTypeFontLib();
         const pane = document.getElementById('qbPaneFont');
         if (pane && pane.classList.contains('on')) renderFontPane();
       }).catch(function (err) {
         console.warn('[DayLeaf] 字体载入失败', err);
         fontReady[id] = false;
+        refreshTypeFontSelects();
+        renderTypeFontLib();
       });
     } catch (err) {
       console.warn('[DayLeaf] 字体注册失败', err);
@@ -9188,21 +10360,248 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
     }
   }
 
+  /** 导入一个字体文件：校验、入库、注册，成功后回调 id */
+  function importFontFile(file, done) {
+    if (!file) return;
+    if (file.size > ASSET_LIMIT.fontSize) {
+      toast('字体超过 ' + Math.round(ASSET_LIMIT.fontSize / 1048576) + ' MB，换个小一点的');
+      return;
+    }
+    if ((state.quoteFont.custom || []).length >= ASSET_LIMIT.fontCount) {
+      toast('最多 ' + ASSET_LIMIT.fontCount + ' 个自定义字体');
+      return;
+    }
+    const ext = String(file.name.split('.').pop() || '').toLowerCase();
+    const mime = ext === 'otf' ? 'font/otf'
+      : ext === 'woff' ? 'font/woff'
+      : ext === 'woff2' ? 'font/woff2'
+      : 'font/ttf';
+    const reader = new FileReader();
+    reader.onload = function () {
+      const dataUrl = 'data:' + mime + ';base64,' + bufToBase64(reader.result);
+      const id = uid('f');
+      if (!state.quoteFont.custom) state.quoteFont.custom = [];
+      state.quoteFont.custom.push({
+        id: id,
+        name: (file.name || '').replace(/\.[^.]+$/, '').slice(0, 20) || '自定义字体'
+      });
+      fontReady[id] = null;
+      AssetDB.put('font_' + id, dataUrl).then(function (ok) {
+        if (!ok) toast('字体没能写入本地存储，刷新后会丢失');
+      });
+      registerCustomFont(id, dataUrl);
+      saveState();
+      refreshTypeFontSelects();
+      renderTypeFontLib();
+      toast('已加入字体库');
+      if (done) done(id);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  /** 删除自定义字体，并把所有引用它的位置退回系统字体 */
+  function deleteCustomFont(id) {
+    state.quoteFont.custom = (state.quoteFont.custom || []).filter(function (x) { return x.id !== id; });
+    if (state.quoteFont.key === id) state.quoteFont.key = 'sys';
+    ['home', 'grid', 'notes'].forEach(function (k) {
+      if (state.typeStyle[k] && state.typeStyle[k].font === id) state.typeStyle[k].font = 'sys';
+    });
+    if (state.typeStyle.boot && state.typeStyle.boot.font === id) state.typeStyle.boot.font = 'sys';
+    delete fontReady[id];
+    AssetDB.del('font_' + id);
+    saveState();
+    applyQuoteFont();
+    applyTypeStyle();
+    refreshTypeFontSelects();
+    renderTypeFontLib();
+  }
+
+  /** 字体 key → 可用的 font-family 栈（自定义字体未载入时先落到系统字体） */
+  function fontStackForKey(key) {
+    if (key && String(key).indexOf('f_') === 0) {
+      const alias = fontReady[key];
+      if (alias) return '"' + alias + '", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+    }
+    const preset = FONT_PRESETS.filter(function (p) { return p.key === key; })[0];
+    return (preset || FONT_PRESETS[0]).stack;
+  }
+
   /** 当前语录用什么字体栈 */
   function quoteFontStack() {
-    const f = state.quoteFont;
-    if (f.key && f.key.indexOf('f_') === 0) {
-      const alias = fontReady[f.key];
-      if (alias) return '"' + alias + '", system-ui, -apple-system, sans-serif';
-    }
-    const preset = FONT_PRESETS.filter(function (p) { return p.key === f.key; })[0];
-    return (preset || FONT_PRESETS[0]).stack;
+    return fontStackForKey(state.quoteFont && state.quoteFont.key);
   }
 
   /** 把字体应用到语录正文 */
   function applyQuoteFont() {
     const el = $('#qText');
     if (el) el.style.fontFamily = quoteFontStack();
+  }
+
+  /* ---------------- 页面文字外观（颜色 / 字号 / 字体） ---------------- */
+
+  /** 每个页面参与字号缩放的文字选择器；用计算后的 px 乘倍率，避免破坏响应式 */
+  const TYPE_SCALE_SELECTORS = {
+    home: [
+      '.ph-sub', '.ph-title', '.sec-head h2', '.sec-stat',
+      '.hero-eyebrow', '.hero-count b', '.hero-count i', '.hero-after',
+      '.hero-ev-title', '.hero-ev-meta', '.hero-foot',
+      '.today-item .t-main b', '.today-item .t-sub', '.today-item .t-time',
+      '.wk-day .wk-wd', '.wk-day .wk-dn',
+      '.anniv-item .tt b', '.anniv-item .tt span', '.anniv-item .cd',
+      '.st-row', '.st-row b', '.st-note', '.st-d-row'
+    ],
+    grid: ['.gh-wd', '.gh-dt', '.hl', '.ev-t', '.ev-hm', '.ev-loc', '.grid-hint', '.gv-title', '.gv-nav button'],
+    notes: ['.cal-head', '.cal-wd span', '.cal-cell .cc-num', '.ne-date', '.ne-title', '.ne-body', '.ne-tagrow .lbl', '.ne-empty', '.ne-saved']
+  };
+
+  function hexToRgb(hex) {
+    const h = String(hex || '').replace('#', '');
+    if (h.length !== 6 || !/^[0-9a-f]{6}$/i.test(h)) return null;
+    return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+  }
+  function rgbToHex(c) {
+    const h = function (n) { const v = Math.max(0, Math.min(255, Math.round(n))); return (v < 16 ? '0' : '') + v.toString(16); };
+    return '#' + h(c.r) + h(c.g) + h(c.b);
+  }
+  function mixHex(a, b, t) {
+    const ca = hexToRgb(a), cb = hexToRgb(b);
+    if (!ca || !cb) return a;
+    return rgbToHex({
+      r: ca.r + (cb.r - ca.r) * t,
+      g: ca.g + (cb.g - ca.g) * t,
+      b: ca.b + (cb.b - ca.b) * t
+    });
+  }
+  function themeBgHex() {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      if (/^#[0-9a-f]{6}$/i.test(v)) return v;
+    } catch (e) { /* ignore */ }
+    return '#FFFFFF';
+  }
+
+  /** 把自定义文字颜色换算成主/次/弱三级，作用在页面容器上 */
+  function applyViewInk(view, color) {
+    if (!view) return;
+    if (color && /^#[0-9a-f]{6}$/i.test(color)) {
+      const bg = themeBgHex();
+      view.style.setProperty('--ink', color);
+      view.style.setProperty('--ink2', mixHex(color, bg, 0.22));
+      view.style.setProperty('--muted', mixHex(color, bg, 0.42));
+      view.style.setProperty('--ink-soft', mixHex(color, bg, 0.58));
+      view.style.setProperty('--type-custom-ink', color);
+      view.classList.add('type-custom-ink');
+    } else {
+      ['--ink', '--ink2', '--muted', '--ink-soft', '--type-custom-ink'].forEach(function (k) {
+        view.style.removeProperty(k);
+      });
+      view.classList.remove('type-custom-ink');
+    }
+  }
+
+  /** 按当前倍率缩放某个页面的文字；倍率 1 时清掉内联字号，恢复原样式 */
+  function applyTypeScale(key) {
+    const view = document.getElementById('view-' + key);
+    if (!view) return;
+    const st = (state.typeStyle && state.typeStyle[key]) || {};
+    const scale = Number(st.size) || 1;
+    const list = TYPE_SCALE_SELECTORS[key] || [];
+    const els = [];
+    const seen = {};
+    list.forEach(function (sel) {
+      try {
+        $$(sel, view).forEach(function (el) {
+          if (seen[el.id || ''] && el.id) return;
+          if (!el.__dlSeen) { el.__dlSeen = 1; els.push(el); }
+        });
+      } catch (e) { /* 选择器不支持就跳过 */ }
+    });
+    els.forEach(function (el) { el.__dlSeen = 0; el.style.fontSize = ''; });
+    if (Math.abs(scale - 1) < 0.01) return;
+    const bases = els.map(function (el) {
+      const n = parseFloat(getComputedStyle(el).fontSize);
+      return isFinite(n) ? n : 0;
+    });
+    els.forEach(function (el, i) {
+      if (bases[i]) el.style.fontSize = (bases[i] * scale).toFixed(1) + 'px';
+    });
+  }
+
+  /** 应用主页/表格/记事/启动页的文字字体、颜色、字号 */
+  /** 字体下拉选项：内置 + 我的字体 */
+  function fontOptionsHtml(selected) {
+    let h = '<optgroup label="内置字体">';
+    FONT_PRESETS.forEach(function (p) {
+      h += '<option value="' + p.key + '"' + (p.key === selected ? ' selected' : '') + '>' + p.label + '</option>';
+    });
+    h += '</optgroup>';
+    const custom = (state.quoteFont && state.quoteFont.custom) || [];
+    if (custom.length) {
+      h += '<optgroup label="我的字体">';
+      custom.forEach(function (it) {
+        h += '<option value="' + it.id + '"' + (it.id === selected ? ' selected' : '') + '>' + esc(it.name) + '</option>';
+      });
+      h += '</optgroup>';
+    }
+    return h;
+  }
+
+  /** 设置里的字体库列表（导入 / 删除 / 预览） */
+  function renderTypeFontLib() {
+    const box = $('#typeFontLib');
+    if (!box) return;
+    const custom = (state.quoteFont && state.quoteFont.custom) || [];
+    let h = '';
+    if (!custom.length) {
+      h += '<div class="type-lib-empty">还没有导入字体。可以导入 .ttf / .otf / .woff / .woff2。</div>';
+    } else {
+      h += '<div class="type-lib-list">';
+      custom.forEach(function (it) {
+        const st = fontReady[it.id];
+        const alias = typeof st === 'string' ? st : '';
+        const tag = st === false ? '无法载入' : (alias ? '已就绪' : '载入中');
+        h += '<div class="type-lib-item">' +
+            '<span class="tl-name" style="font-family:' + (alias ? "'" + alias + "', " : '') + 'inherit">' + esc(it.name) + ' · 把今天过完</span>' +
+            '<span class="tl-tag' + (st === false ? ' bad' : '') + '">' + tag + '</span>' +
+            '<button class="tl-del" data-typefontdel="' + it.id + '">删除</button>' +
+          '</div>';
+      });
+      h += '</div>';
+    }
+    h += '<label class="qb-add type-font-add">+ 导入字体文件' +
+      '<input type="file" id="typeFontFile" accept=".ttf,.otf,.woff,.woff2,font/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
+      '</label>' +
+      '<p class="hint">导入后可在上面为每个页面单独选择；字体只存在本机，不会上传。' +
+      '单个不超过 ' + Math.round(ASSET_LIMIT.fontSize / 1048576) + ' MB，最多 ' + ASSET_LIMIT.fontCount + ' 个。</p>';
+    box.innerHTML = h;
+  }
+
+  /** 自定义字体增删后，重建所有字体下拉选项 */
+  function refreshTypeFontSelects() {
+    $$('[data-typefont]').forEach(function (sel) {
+      const mod = sel.dataset.typefont;
+      sel.innerHTML = fontOptionsHtml(state.typeStyle[mod] && state.typeStyle[mod].font);
+    });
+    $$('[data-bootfont]').forEach(function (sel) {
+      sel.innerHTML = fontOptionsHtml(state.typeStyle.boot && state.typeStyle.boot.font);
+    });
+  }
+
+  function applyTypeStyle(onlyKey) {
+    const keys = onlyKey ? [onlyKey] : ['home', 'grid', 'notes'];
+    keys.forEach(function (key) {
+      const view = document.getElementById('view-' + key);
+      if (!view) return;
+      const st = (state.typeStyle && state.typeStyle[key]) || {};
+      view.style.fontFamily = fontStackForKey(st.font);
+      applyViewInk(view, st.color);
+      applyTypeScale(key);
+    });
+    if (!onlyKey) {
+      const boot = $('#bsQuote');
+      if (boot) boot.style.fontFamily = fontStackForKey(state.typeStyle && state.typeStyle.boot && state.typeStyle.boot.font);
+      applyQuoteFont();
+    }
   }
 
   /** 随机挑一张启用的语录背景图 */
@@ -9444,7 +10843,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
 
     html += '<div class="fn-group">我的字体</div>';
     if (!custom.length) {
-      html += '<div class="qb-empty">还没有上传字体。<br>支持 .ttf / .otf / .woff / .woff2，单个不超过 5 MB。</div>';
+      html += '<div class="qb-empty">还没有上传字体。<br>支持 .ttf / .otf / .woff / .woff2，单个不超过 8 MB，最多 10 个。</div>';
     } else {
       html += '<div class="fn-list">';
       custom.forEach(function (it) {
@@ -10044,7 +11443,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
       /* 点卡片进详情；点空白单元格直接建 1 小时（单击即可创建） */
       body.addEventListener('click', function (e) {
         const evEl = e.target.closest('.ev');
-        if (evEl) { openEventDialog(evEl.dataset.id); return; }
+        if (evEl) { openEventDetail(evEl.dataset.id); return; }
         if (Date.now() - lastCreate < 400) return;   // 刚由拖拽/点按创建过，别重复
         const col = e.target.closest('.gcol');
         if (!col) return;
@@ -10398,7 +11797,7 @@ body.has-draft #view-notes.active{ padding-bottom:calc(var(--fab-space) + 68px);
         const evEl = e.target.closest('.ev');
         if (!evEl) return;
         e.stopPropagation();   // 别让「点卡片看详情」的监听再开一次
-        openEventDialog(evEl.dataset.id);
+        openEventDetail(evEl.dataset.id);
       }, true);
     })();
 

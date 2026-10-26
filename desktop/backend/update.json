@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 13,
-  "versionName": "1.0.12",
+  "versionCode": 14,
+  "versionName": "1.0.13",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.13/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.12/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.12/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.13/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.13/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.13/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 730852,
-  "sha256": "763728c67de34dabde01e781afe93afe79b5fa33b26cf1fee831aab54febdd73",
-  "notes": "更新弹窗重做为无边框圆角卡片，下载进度、错误提示与按钮全部重绘；下载源从 GitHub 改为国内可达的 jsDelivr 镜像，支持自动切换备用源并校验文件大小与 SHA-256，修复 GitHub 无法解析导致的下载失败。同时包含旧机型兼容、背景取景、记事页 UI 与跨版本直达更新。",
+  "size": 744071,
+  "sha256": "1a7fb0dfa9d2df85377947538bbf9e91581becf9ef3de01395ed41a4a58a7c61",
+  "notes": "新增：主页/表格/记事分别设置文字颜色、字号、字体，并加入字体库（可导入字体、分配给各页面）；设置分类导航 + 简洁模式；表格点击先看详情，可修改/删除，卡片补充地点；重复日程支持整组修改、编辑时可改重复规则、可仅改单条；每年纪念日支持农历/闰月；时间微调新增 10 分钟；启动页语录可单独选字体；OCR 结果改为独立可关闭弹层，通知直接填表、课表按周展开。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }
