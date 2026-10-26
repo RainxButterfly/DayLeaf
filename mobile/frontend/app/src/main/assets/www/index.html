@@ -3072,6 +3072,10 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 @media (min-width:960px){
   .set-cats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .set-cat{padding:13px}
+  /* 7 个分类时最后一项占满整行，避免右下角留一个空洞 */
+  .set-cat:last-child:nth-child(odd){grid-column:1 / -1}
+  .settings-panel .mb-foot{justify-content:flex-end}
+  .settings-panel .mb-foot .btn{flex:0 0 auto;min-width:148px;height:42px;padding:0 26px}
 }
 
 /* 应用内取色器 */
@@ -3302,7 +3306,7 @@ html.dark .set-head{background:var(--bg)}
 .set-group .field>.hint{background:transparent}
 .set-group .chips button,.set-group .btn.ghost{background:var(--surface-soft)}
 .set-group .chips button.on{background:var(--cat);border-color:transparent}
-.set-cat[data-setpane="appearance"] .set-cat-ico{color:#4C6FFF}
+.set-cat[data-setpane="appearance"] .set-cat-ico{color:#fff}
 .set-cat:hover{border-color:rgba(76,111,255,.35)}
 @media (max-width:700px){
   .set-head{padding:12px 14px 10px}
@@ -3325,7 +3329,7 @@ html.dark .app-tabs{background:var(--bg)}
 .settings-panel{overflow:hidden;padding:0}
 .settings-panel .set-head{margin-bottom:0}
 .settings-panel .set-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px 12px}
-.settings-panel .mb-foot{position:relative;margin:0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);box-shadow:0 -12px 26px -16px rgba(16,20,30,.45);z-index:2}
+.settings-panel .mb-foot{position:relative;bottom:auto;margin:0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);box-shadow:0 -12px 26px -16px rgba(16,20,30,.45);z-index:2}
 @media (max-width:959px){
   .settings-panel .set-scroll{padding:0 18px 10px}
   .settings-panel .mb-foot{padding:10px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg)}
@@ -4013,7 +4017,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.15',
+    version: '1.1.16',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -17235,7 +17239,15 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.15', date: '2026-10-27', latest: true,
+      v: '1.1.16', date: '2026-10-27', latest: true,
+      fix: [
+        '设置首页：底部「完成」不再被挤出面板；桌面端按钮改为右对齐，不再拉成一整条。',
+        '设置首页：修复「外观与文字」图标被同色背景盖住看不见的问题；七个分类的最后一项在桌面端占满整行，不再留空洞。',
+        '电脑更新弹窗重新排版：当前/最新版本改为独立版本条，更新说明、错误提示与底部按钮分区摆放，高 DPI 下不再互相压住。'
+      ]
+    },
+    {
+      v: '1.1.15', date: '2026-10-27', latest: false,
       fix: [
         '「未来 7 天」「数据概览」「纪念日」合并到同一个折叠区，默认收起，主页只保留今天的重点。',
         '表格页窄屏日期改为 10/26 – 11/1 短格式，「今天」等按钮不再被挤成竖排或换行。',

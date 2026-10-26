@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 34,
-  "versionName": "1.1.15",
+  "versionCode": 35,
+  "versionName": "1.1.16",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.15/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.16/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.15/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.15/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.15/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.16/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.16/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.16/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 1022207,
-  "sha256": "bf3c53d958decb06907d5c8e2c456777d7eaa02ca7775dd6df06c93bcba481c3",
-  "notes": "「未来 7 天 / 数据概览 / 纪念日」合并默认收起；表格页窄屏日期短格式与「今天」按钮不换行；快速添加面板内容滚动、底部按钮固定；启动字体预加载与开场停留修复。",
+  "size": 1022275,
+  "sha256": "c10273918611a933b601dbc04ab2404949585bfd8e8bc2485c9cbeb48b528208",
+  "notes": "设置首页修正底部完成按钮溢出、外观图标不可见与分类最后一项留空；桌面端分类最后一项占满整行、完成按钮右对齐；重做更新弹窗，版本条、更新说明、错误/下载状态和按钮分区摆放，高 DPI 下不再重叠。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-27"
 }

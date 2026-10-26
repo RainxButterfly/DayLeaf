@@ -64,10 +64,10 @@ namespace DayLeaf
         private readonly PillButton _primary;
         private readonly PillButton _secondary;
         private readonly PillButton _close;
-        private readonly Label _versionOld;
-        private readonly Label _versionArrow;
-        private readonly Label _versionNew;
+        private readonly VersionBar _versionBar;
         private readonly Label _title;
+        private readonly Label _subtitle;
+        private readonly Label _footHint;
 
         /* ---------------- 下载 ---------------- */
 
@@ -126,7 +126,7 @@ namespace DayLeaf
             KeyPreview = true;
             BackColor = _bg;
             DoubleBuffered = true;
-            ClientSize = new Size(Px(500), Px(500));
+            ClientSize = new Size(Px(520), Px(540));
             Text = "发现新版本 · 叶历 DayLeaf";
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
             try
@@ -147,46 +147,28 @@ namespace DayLeaf
                 BackColor = Color.Transparent,
                 UseMnemonic = false
             };
-            _title.Location = new Point(Px(92), Px(22));
+            _title.Location = new Point(Px(84), Px(20));
             Controls.Add(_title);
 
-            _versionOld = new Label
+            _subtitle = new Label
             {
-                Text = "当前 v" + current,
-                Font = _fontVersion,
-                ForeColor = _sub,
-                AutoSize = true,
-                BackColor = Color.Transparent,
-                UseMnemonic = false
-            };
-            Controls.Add(_versionOld);
-
-            _versionArrow = new Label
-            {
-                Text = "→",
-                Font = _fontVersion,
+                Text = "叶历 DayLeaf · 桌面版更新",
+                Font = _fontBody,
                 ForeColor = _faint,
                 AutoSize = true,
                 BackColor = Color.Transparent,
                 UseMnemonic = false
             };
-            Controls.Add(_versionArrow);
+            _subtitle.Location = new Point(Px(86), Px(50));
+            Controls.Add(_subtitle);
 
-            _versionNew = new Label
-            {
-                Text = "最新 v" + info.VersionName,
-                Font = _fontVersionStrong,
-                ForeColor = _accent,
-                AutoSize = true,
-                BackColor = Color.Transparent,
-                UseMnemonic = false
-            };
-            Controls.Add(_versionNew);
-            LayoutVersion();
+            _versionBar = new VersionBar(this, current, info.VersionName);
+            _versionBar.Bounds = new Rectangle(Px(24), Px(86), Px(472), Px(48));
+            Controls.Add(_versionBar);
 
             string note = string.IsNullOrEmpty(info.Notes) ? "本次更新包含稳定性改进与细节优化。" : info.Notes;
             _notes = new NotesCard(this, "更新内容", note.Replace("\r\n", "\n").Replace('\r', '\n'));
-            _notes.Bounds = new Rectangle(Px(24), Px(118), Px(452), Px(178));
+            _notes.Bounds = new Rectangle(Px(24), Px(150), Px(472), Px(180));
             Controls.Add(_notes);
 
             string meta = "可直接覆盖安装，日程与记事不会丢失";
@@ -202,11 +184,11 @@ namespace DayLeaf
                 UseMnemonic = false,
                 TextAlign = ContentAlignment.MiddleLeft
             };
-            _meta.Bounds = new Rectangle(Px(26), Px(306), Px(450), Px(22));
+            _meta.Bounds = new Rectangle(Px(26), Px(340), Px(468), Px(22));
             Controls.Add(_meta);
 
             _progress = new ProgressEx(this);
-            _progress.Bounds = new Rectangle(Px(24), Px(344), Px(452), Px(6));
+            _progress.Bounds = new Rectangle(Px(24), Px(370), Px(472), Px(6));
             _progress.Visible = false;
             Controls.Add(_progress);
 
@@ -222,32 +204,46 @@ namespace DayLeaf
                 TextAlign = ContentAlignment.MiddleLeft,
                 Visible = false
             };
-            _status.Bounds = new Rectangle(Px(26), Px(358), Px(450), Px(20));
+            _status.Bounds = new Rectangle(Px(26), Px(382), Px(468), Px(20));
             Controls.Add(_status);
 
             _error = new ErrorCard(this);
-            _error.Bounds = new Rectangle(Px(24), Px(334), Px(452), Px(66));
+            _error.Bounds = new Rectangle(Px(24), Px(354), Px(472), Px(76));
             _error.Visible = false;
             Controls.Add(_error);
+
+            _footHint = new Label
+            {
+                Text = "安装包 SHA-256 校验 · 数据不会丢失",
+                Font = _fontMeta,
+                ForeColor = _faint,
+                AutoSize = false,
+                AutoEllipsis = true,
+                BackColor = Color.Transparent,
+                UseMnemonic = false,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            _footHint.Bounds = new Rectangle(Px(26), Px(462), Px(218), Px(20));
+            Controls.Add(_footHint);
 
             _secondary = new PillButton(this, false, "稍后");
             _secondary.TabStop = false;
             _secondary.Font = _fontButtonSmall;
-            _secondary.Bounds = new Rectangle(Px(212), Px(424), Px(100), Px(44));
+            _secondary.Bounds = new Rectangle(Px(250), Px(456), Px(96), Px(44));
             _secondary.Click += delegate { SecondaryClick(); };
             Controls.Add(_secondary);
 
             _primary = new PillButton(this, true, "立即更新");
             _primary.TabStop = false;
             _primary.Font = _fontButton;
-            _primary.Bounds = new Rectangle(Px(324), Px(424), Px(152), Px(44));
+            _primary.Bounds = new Rectangle(Px(356), Px(456), Px(140), Px(44));
             _primary.Click += delegate { PrimaryClick(); };
             Controls.Add(_primary);
 
             _close = new PillButton(this, false, "×");
             _close.TabStop = false;
             _close.Font = _fontClose6;
-            _close.Bounds = new Rectangle(Px(444), Px(24), Px(32), Px(32));
+            _close.Bounds = new Rectangle(Px(464), Px(20), Px(32), Px(32));
             _close.RadiusBase = 8;
             _close.Click += delegate { Close(); };
             Controls.Add(_close);
@@ -255,9 +251,8 @@ namespace DayLeaf
             MouseEventHandler drag = delegate { DragWindow(); };
             MouseDown += drag;
             _title.MouseDown += drag;
-            _versionOld.MouseDown += drag;
-            _versionArrow.MouseDown += drag;
-            _versionNew.MouseDown += drag;
+            _subtitle.MouseDown += drag;
+            _versionBar.MouseDown += drag;
 
             BuildSources();
             _primary.Enabled = _sources.Count > 0;
@@ -340,26 +335,10 @@ namespace DayLeaf
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
             /* 顶部一层很淡的主题光晕，让大卡片不至于死板 */
-            var glow = new Rectangle(0, 0, Width, Px(150));
+            var glow = new Rectangle(0, 0, Width, Px(190));
             using (var lg = new LinearGradientBrush(glow,
                 Color.FromArgb(_dark ? 34 : 22, _accent), Color.FromArgb(0, _accent), 90f))
                 g.FillRectangle(lg, glow);
-
-            /* 版本号做成胶囊，当前 / 最新一眼分开 */
-            if (_versionOld != null && _versionNew != null)
-            {
-                int x1 = _versionOld.Left - Px(8);
-                int x2 = _versionNew.Right + Px(8);
-                var chip = new Rectangle(x1, _versionOld.Top - Px(4),
-                    Math.Max(Px(20), x2 - x1), _versionOld.Height + Px(8));
-                using (GraphicsPath cp = RoundPath(chip, Px(9)))
-                using (var fill = new SolidBrush(Color.FromArgb(_dark ? 150 : 200, _card2)))
-                using (var pen = new Pen(_border))
-                {
-                    g.FillPath(fill, cp);
-                    g.DrawPath(pen, cp);
-                }
-            }
 
             using (var pen = new Pen(_border))
             {
@@ -371,22 +350,19 @@ namespace DayLeaf
 
             using (var pen = new Pen(Color.FromArgb(28, _accent)))
             {
-                g.DrawLine(pen, Px(24), Px(104), Width - Px(24), Px(104));
+                g.DrawLine(pen, Px(24), Px(142), Width - Px(24), Px(142));
             }
             using (var pen = new Pen(_border))
             {
-                g.DrawLine(pen, Px(24), Px(410), Width - Px(24), Px(410));
+                g.DrawLine(pen, Px(24), Px(444), Width - Px(24), Px(444));
             }
-            TextRenderer.DrawText(g, "安装包会校验大小与 SHA-256 · 数据不会丢失", _fontMeta,
-                new Rectangle(Px(26), Px(414), Px(280), Px(18)), _faint,
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
 
             DrawAppIcon(g);
         }
 
         private void DrawAppIcon(Graphics g)
         {
-            var plate = new Rectangle(Px(28), Px(26), Px(48), Px(48));
+            var plate = new Rectangle(Px(24), Px(20), Px(48), Px(48));
             using (GraphicsPath p = RoundPath(plate, Px(13)))
             using (var brush = new SolidBrush(Color.FromArgb(34, _accent)))
             {
@@ -396,7 +372,7 @@ namespace DayLeaf
             {
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.DrawImage(_appIcon, new Rectangle(Px(33), Px(31), Px(38), Px(38)));
+                g.DrawImage(_appIcon, new Rectangle(Px(29), Px(25), Px(38), Px(38)));
             }
             else
             {
@@ -407,17 +383,6 @@ namespace DayLeaf
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
                 }
             }
-        }
-
-        private void LayoutVersion()
-        {
-            int x = Px(92);
-            int y = Px(64);
-            _versionOld.Location = new Point(x, y);
-            x += _versionOld.PreferredWidth + Px(9);
-            _versionArrow.Location = new Point(x, y);
-            x += _versionArrow.PreferredWidth + Px(9);
-            _versionNew.Location = new Point(x, y);
         }
 
         protected override CreateParams CreateParams
@@ -927,6 +892,73 @@ namespace DayLeaf
         /* ==================================================================
          * 自绘控件
          * ================================================================ */
+
+        /// <summary>
+        /// 版本条：当前版本 → 新版本。整块自绘，避免 AutoSize 标签在
+        /// 高 DPI / 系统文字缩放下互相挤压，甚至压到页脚上。
+        /// </summary>
+        private sealed class VersionBar : Control
+        {
+            private readonly UpdateDialog _o;
+            private readonly string _current;
+            private readonly string _next;
+
+            internal VersionBar(UpdateDialog owner, string current, string next)
+            {
+                _o = owner;
+                _current = "当前 v" + (current ?? "");
+                _next = "最新 v" + (next ?? "");
+                TabStop = false;
+                SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                         ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                var r = new Rectangle(0, 0, Width - 1, Height - 1);
+                using (GraphicsPath path = RoundPath(r, _o.Px(11)))
+                using (var fill = new SolidBrush(_o._card2))
+                using (var pen = new Pen(_o._border))
+                {
+                    g.FillPath(fill, path);
+                    g.DrawPath(pen, path);
+                }
+
+                int pad = _o.Px(14);
+                int y = 0;
+                int h = Height;
+                Size s1 = TextRenderer.MeasureText(g, _current, _o._fontVersion);
+                int x = pad;
+                TextRenderer.DrawText(g, _current, _o._fontVersion,
+                    new Rectangle(x, y, s1.Width + _o.Px(2), h), _o._sub,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                x += s1.Width + _o.Px(9);
+
+                Size sa = TextRenderer.MeasureText(g, "→", _o._fontVersion);
+                TextRenderer.DrawText(g, "→", _o._fontVersion,
+                    new Rectangle(x, y, sa.Width + _o.Px(2), h), _o._faint,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                x += sa.Width + _o.Px(9);
+
+                Size s2 = TextRenderer.MeasureText(g, _next, _o._fontVersionStrong);
+                TextRenderer.DrawText(g, _next, _o._fontVersionStrong,
+                    new Rectangle(x, y, s2.Width + _o.Px(2), h), _o._accent,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+
+                string tag = "可更新";
+                Size st = TextRenderer.MeasureText(g, tag, _o._fontMeta);
+                int tw = st.Width + _o.Px(16);
+                int th = _o.Px(22);
+                var chip = new Rectangle(Width - pad - tw, (Height - th) / 2, tw, th);
+                using (GraphicsPath cp = RoundPath(chip, _o.Px(7)))
+                using (var b = new SolidBrush(Color.FromArgb(_o._dark ? 42 : 28, _o._accent)))
+                    g.FillPath(b, cp);
+                TextRenderer.DrawText(g, tag, _o._fontMeta, chip, _o._accent,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+            }
+        }
 
         /// <summary>圆角按钮：主按钮渐变，次按钮描边，支持悬停/按下/焦点。</summary>
         private sealed class PillButton : Button
