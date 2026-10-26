@@ -3888,7 +3888,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.11',
+    version: '1.1.12',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -9424,6 +9424,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             '<button class="btn ghost" data-dl-act="lan-pull">从电脑拉取</button>' +
           '</div>' +
           '<p class="hint" id="lanProbe" style="margin-top:8px;display:none"></p>' +
+          '<p class="hint" id="lanPhoneIp" style="display:none"></p>' +
           '<p class="hint">电脑端在「数据与备份 → 局域网同步」里开启后，会显示地址与配对码。数据只在内网传输。</p>' +
         '</div>' +
         '<p class="hint" id="lanUnsupported" style="display:none">当前环境不支持局域网同步；请使用手机/电脑 App，或改用 WebDAV。</p>' +
@@ -16027,7 +16028,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.11', date: '2026-10-27', latest: true,
+      v: '1.1.12', date: '2026-10-27', latest: true,
+      add: [
+        '局域网地址列表会显示网卡名称与类型（Wi‑Fi / 以太网 / 虚拟网卡），192 和 10 开头都可以，不再把 192 当成错误。',
+        '手机设置里显示本机 Wi‑Fi IP，并与输入的电脑地址对比网段；跨网段时会直接提示改用热点。'
+      ],
+      fix: [
+        '补充「测试连接」与电脑请求日志，能区分连不上、配对码不对、连到了别的地址。'
+      ]
+    },
+    {
+      v: '1.1.11', date: '2026-10-27', latest: false,
       add: [
         '局域网新增「测试连接」：不校验配对码，直接显示连到的是哪台电脑、端口是多少，先确认地址是否有效。',
         '电脑端会记录局域网请求日志（lan.log），并在状态栏区分「手机已连接」「配对码不对」；同时兼容 Android 的 100-continue 上传。'
@@ -16287,6 +16298,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       if (id === 'clUrl') cfg.url = e.target.value.trim();
       else if (id === 'clUser') cfg.user = e.target.value.trim();
       else if (id === 'clPass') cfg.pass = e.target.value;
+      else if (id === 'lanUrl') syncLanClientHints();
     });
     document.addEventListener('change', function (e) {
       const id = e.target && e.target.id;
@@ -16571,24 +16583,29 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     const t = $('#lanToken'); if (t) t.value = st.token || '';
     if (isHost) {
       if (st.on && lanInfoCache && lanInfoCache.running) {
-        const ips = lanInfoCache.ips || [];
-        const mainIp = ips[0] || '127.0.0.1';
+        const rawIps = lanInfoCache.ips || [];
+        const ips = rawIps.map(function (x) {
+          return typeof x === 'string' ? { ip: x, name: '', type: '', virtual: false } : x;
+        });
+        const mainIp = (ips[0] && ips[0].ip) || '127.0.0.1';
         const port = lanInfoCache.port || st.port || 17890;
         const url = 'http://' + mainIp + ':' + port;
         st.url = url; st.port = port;
         const box = $('#lanInfoBox');
         if (box) {
-          const ipHtml = ips.map(function (ip, i) {
-            const u = 'http://' + ip + ':' + port;
+          const ipHtml = ips.map(function (a, i) {
+            const u = 'http://' + a.ip + ':' + port;
+            const meta = [a.type, a.name].filter(Boolean).join(' · ');
             return '<div class="lan-line"><span class="k">' + (i === 0 ? '推荐' : '备用 ' + i) + '</span>' +
               '<b class="lan-ip" data-ip="' + esc(u) + '">' + esc(u) + '</b>' +
+              '<span class="hint" style="margin:0;font-size:10px">' + esc(meta) + (a.virtual && a.type !== '虚拟网卡' ? ' · 虚拟网卡' : '') + '</span>' +
               '<button class="lan-copy" data-dl-act="lan-copy-ip" data-ip="' + esc(u) + '">复制</button></div>';
           }).join('');
           box.innerHTML = ipHtml +
             '<div class="lan-line"><span class="k">配对码</span><b id="lanCode">' + esc(st.token) + '</b>' +
             '<button class="lan-copy" data-dl-act="lan-copy-code">复制</button></div>' +
             '<div class="lan-line"><span class="k">电脑</span><span style="font-size:11.5px">' + esc((lanInfoCache && lanInfoCache.device) || '—') + '</span></div>' +
-            '<div class="lan-line"><span class="k">提示</span><span class="hint" style="margin:0;font-size:10.5px">优先用推荐地址；连不上就换备用地址（有线/Wi‑Fi 网卡），不要用 192.168.x.1 这类虚拟网卡/网关。</span></div>' +
+            '<div class="lan-line"><span class="k">提示</span><span class="hint" style="margin:0;font-size:10.5px">192 或 10 开头都正常，关键是和手机同一网段。优先选「Wi‑Fi / 以太网」网卡，避开标注虚拟的地址。</span></div>' +
             '<div class="lan-line"><span class="k">状态</span><span style="color:var(--done);font-size:11.5px">● ' +
               (lanPeer.at
                 ? (lanPeer.bad ? '手机已连到电脑，但配对码不对' : '手机已连接 · 最近 ' + pad2(new Date(lanPeer.at).getHours()) + ':' + pad2(new Date(lanPeer.at).getMinutes()) +
@@ -16602,6 +16619,27 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         if (box) box.innerHTML = '<span class="lan-off">未开启。开启后手机就能在同一 Wi-Fi 下连接。</span>';
       }
     }
+    syncLanClientHints();
+  }
+
+  /** 手机 IP 与输入的电脑地址做网段对比，帮助判断校园网是否跨网段 */
+  function syncLanClientHints() {
+    const el = $('#lanPhoneIp');
+    if (!el) return;
+    const nat = nativeBridge();
+    let phone = '';
+    try { phone = (nat && nat.getWifiIp) ? String(nat.getWifiIp() || '') : ''; } catch (e) { phone = ''; }
+    if (!phone) { el.style.display = 'none'; return; }
+    const url = (($('#lanUrl') || {}).value || lanState().url || '');
+    const m = url.match(/^https?:\/\/([^\/:]+)/);
+    const host = m ? m[1] : '';
+    const pre = function (ip) { const p = String(ip).split('.'); return p.length === 4 ? p.slice(0, 3).join('.') : ''; };
+    let msg = '手机 IP：' + phone;
+    if (host && /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+      msg += pre(host) === pre(phone) ? ' · 与电脑同一网段' : ' · 与电脑不在同一网段，可能需要手机热点';
+    }
+    el.style.display = '';
+    el.textContent = msg;
   }
   function startLanHost() {
     lanPeer = { at: 0, method: '', count: 0, added: 0 };

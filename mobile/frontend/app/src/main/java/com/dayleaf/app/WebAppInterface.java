@@ -267,6 +267,29 @@ public class WebAppInterface {
         });
     }
 
+    /** 当前手机 Wi-Fi/局域网的 IPv4（用于和电脑地址做网段对比） */
+    @JavascriptInterface
+    public String getWifiIp() {
+        try {
+            java.util.Enumeration<java.net.NetworkInterface> en = java.net.NetworkInterface.getNetworkInterfaces();
+            String fallback = "";
+            while (en != null && en.hasMoreElements()) {
+                java.net.NetworkInterface ni = en.nextElement();
+                if (!ni.isUp() || ni.isLoopback()) continue;
+                String name = (ni.getName() + " " + ni.getDisplayName()).toLowerCase();
+                for (java.util.Enumeration<java.net.InetAddress> ia = ni.getInetAddresses(); ia.hasMoreElements(); ) {
+                    java.net.InetAddress a = ia.nextElement();
+                    if (!(a instanceof java.net.Inet4Address)) continue;
+                    String ip = a.getHostAddress();
+                    if (ip == null || ip.startsWith("127.")) continue;
+                    if (name.contains("wlan") || name.contains("wifi") || name.contains("wi-fi")) return ip;
+                    if (fallback.length() == 0) fallback = ip;
+                }
+            }
+            return fallback;
+        } catch (Exception e) { return ""; }
+    }
+
     /** 请求把「下一项」小组件钉到桌面（Android 8+ 支持；不支持的启动器会提示手动添加） */
     @JavascriptInterface
     public void pinNextWidget() {

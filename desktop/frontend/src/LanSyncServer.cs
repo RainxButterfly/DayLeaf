@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -292,26 +293,85 @@ namespace DayLeaf
         }
 
         /// <summary>本机所有可用的 IPv4 局域网地址（过滤回环与虚拟网卡）。</summary>
-        public static List<string> LocalIPv4()
+        public sealed class NetAddr
         {
-            var list = new List<string>();
+            public string Ip = "";
+            public string Name = "";
+            public string Type = "";
+            public bool Virtual;
+            public bool Gateway;
+        }
+
+        /** 带网卡名称/类型/虚拟标记的地址列表；第一个是推荐地址。 */
+        public static List<NetAddr> LocalIPv4Details()
+        {
+            var scored = new List<KeyValuePair<int, NetAddr>>();
             try
             {
                 foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
                 {
                     if (ni.OperationalStatus != OperationalStatus.Up) continue;
                     if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+
+                    string desc = (ni.Name + " " + ni.Description).ToLowerInvariant();
+                    bool virtualIf = desc.Contains("vethernet") || desc.Contains("hyper-v")
+                        || desc.Contains("vmware") || desc.Contains("virtualbox")
+                        || desc.Contains("wsl") || desc.Contains("docker")
+                        || desc.Contains("tap-") || desc.Contains("tailscale")
+                        || desc.Contains("zerotier") || desc.Contains("bluetooth")
+                        || desc.Contains("vpn") || desc.Contains("radmin")
+                        || desc.Contains("hamachi") || desc.Contains("npcap");
+
+                    bool hasGateway = false;
+                    try { hasGateway = ni.GetIPProperties().GatewayAddresses.Count > 0; }
+                    catch (Exception) { /* ignore */ }
+
+                    string type = ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ? "Wi-Fi"
+                        : ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet ? "以太网"
+                        : (virtualIf ? "虚拟网卡" : "其他网卡");
+
+                    int score = virtualIf ? 30 : (hasGateway ? 0 : 8);
+                    if (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211) score -= 1;
+                    if (ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet) score -= 1;
+
                     foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
                     {
                         if (ip.Address.AddressFamily != AddressFamily.InterNetwork) continue;
-                        string s = ip.Address.ToString();
-                        if (s.StartsWith("127.") || s.StartsWith("169.254.")) continue;
-                        if (!list.Contains(s)) list.Add(s);
+                        string ipText = ip.Address.ToString();
+                        if (ipText.StartsWith("127.") || ipText.StartsWith("169.254.")) continue;
+                        var addr = new NetAddr
+                        {
+                            Ip = ipText,
+                            Name = ni.Name,
+                            Type = type,
+                            Virtual = virtualIf,
+                            Gateway = hasGateway
+                        };
+                        scored.Add(new KeyValuePair<int, NetAddr>(score, addr));
                     }
                 }
             }
             catch (Exception) { /* ignore */ }
-            if (list.Count == 0) list.Add("127.0.0.1");
+
+            var seen = new HashSet<string>();
+            var list = new List<NetAddr>();
+            foreach (var kv in scored.OrderBy(x => x.Key))
+            {
+                if (seen.Contains(kv.Value.Ip)) continue;
+                seen.Add(kv.Value.Ip);
+                list.Add(kv.Value);
+            }
+            if (list.Count == 0) list.Add(new NetAddr { Ip = "127.0.0.1", Name = "本机", Type = "回环" });
+            return list;
+        }
+
+        public static List<string> LocalIPv4()
+        {
+            var list = new List<string>();
+            foreach (NetAddr a in LocalIPv4Details())
+            {
+                if (!list.Contains(a.Ip)) list.Add(a.Ip);
+            }
             return list;
         }
     }

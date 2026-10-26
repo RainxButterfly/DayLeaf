@@ -1269,7 +1269,17 @@ namespace DayLeaf
         {
             bool running = _lanServer != null && _lanServer.Running;
             int port = running ? _lanServer.Port : 0;
-            var ips = LanSyncServer.LocalIPv4();
+            var ips = new List<Dictionary<string, object>>();
+            foreach (LanSyncServer.NetAddr a in LanSyncServer.LocalIPv4Details())
+            {
+                var one = new Dictionary<string, object>();
+                one["ip"] = a.Ip;
+                one["name"] = a.Name;
+                one["type"] = a.Type;
+                one["virtual"] = a.Virtual;
+                one["gateway"] = a.Gateway;
+                ips.Add(one);
+            }
             var data = new Dictionary<string, object>();
             data["running"] = running;
             data["port"] = port;

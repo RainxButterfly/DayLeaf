@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 30,
-  "versionName": "1.1.11",
+  "versionCode": 31,
+  "versionName": "1.1.12",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.11/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.12/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.11/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.11/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.11/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.12/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.12/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.12/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 927979,
-  "sha256": "8c52230aea026dff99ae62ec749144e8cf0ce36d22e4b3a2c3e78e2096b737e1",
-  "notes": "局域网新增测试连接（显示电脑名/端口，先确认地址有效）；电脑端记录请求日志并区分已连接/配对码错误，兼容 100-continue；修复电脑更新后仍运行旧版（安装器会结束占用端口的旧进程），解决一直等待手机和本机0条。",
+  "size": 929031,
+  "sha256": "4490b007efbfe36d344fea6dd6b92ba4bbc33b7f3f90835fb019d55e54545458",
+  "notes": "局域网地址显示网卡名称/类型（Wi-Fi/以太网/虚拟），192 与 10 都支持；手机显示本机 Wi-Fi IP 并提示是否与电脑同网段；新增测试连接与电脑端请求日志；安装器会结束占端口的旧进程，修复更新后仍跑旧版。",
   "publishedAt": "2026-10-27"
 }
