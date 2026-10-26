@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
@@ -31,11 +33,20 @@ namespace DayLeaf
         /* 后台提醒：窗口关闭后留在托盘，用 NotifyIcon 继续提醒 */
         private NotifyIcon _tray;
         private System.Windows.Forms.Timer _reminderTimer;
+        private System.Windows.Forms.Timer _catchUpTimer;
         private bool _backgroundReminders;
         private bool _exiting;
         private bool _trayTipShown;
         private List<ReminderItem> _reminders = new List<ReminderItem>();
         private readonly HashSet<string> _firedReminders = new HashSet<string>();
+        private ReminderItem _lastFired;                        // 最近响过的一条，供「稍后提醒」用
+        private ToolStripMenuItem _snoozeItem;
+        private ToolStripMenuItem _widgetMenuItem;
+        private NextUpForm _widget;                             // 桌面「下一项」小窗，懒创建
+        private List<WidgetItem> _widgetItems = new List<WidgetItem>();
+        private bool _reminderStateReady;                       // 提醒开关是否已从磁盘/网页读到过
+        private int _webdavBusy;                                // WebDAV 同时只允许跑一个
+        private readonly bool _trayMode;                        // --tray：开机自启静默进托盘
         private string ReminderFile { get { return Path.Combine(AppPaths.Root, "reminders.json"); } }
 
         private sealed class ReminderItem
@@ -53,6 +64,7 @@ namespace DayLeaf
             _dark = AppPaths.IsDarkNow();
             _selfTest = Array.IndexOf(Environment.GetCommandLineArgs(), "--selftest") >= 0;
             _updatePreview = Array.IndexOf(Environment.GetCommandLineArgs(), "--update-preview") >= 0;
+            _trayMode = Array.IndexOf(Environment.GetCommandLineArgs(), "--tray") >= 0;
 
             SuspendLayout();
             Text = "叶历 DayLeaf";
@@ -84,10 +96,11 @@ namespace DayLeaf
             RestoreWindowBounds();
             SetupTray();
             LoadRemindersFromDisk();
+            ScheduleCatchUpPass();
 
             Load += OnLoadAsync;
             FormClosing += OnFormClosing;
-            Shown += delegate { ApplyTheme(_dark); };
+            Shown += delegate { ApplyTheme(_dark); OnFirstShown(); };
         }
 
         /* ------------------------------------------------------------------
@@ -108,7 +121,7 @@ namespace DayLeaf
                 CoreWebView2Settings s = core.Settings;
                 s.IsStatusBarEnabled = false;
                 s.AreDevToolsEnabled = false;
-                s.AreDefaultContextMenusEnabled = true;   // 输入框仍要右键复制粘贴
+                s.AreDefaultContextMenusEnabled = false;  // 右键改用应用内菜单（网页自己实现）
                 s.IsZoomControlEnabled = false;
                 s.IsPinchZoomEnabled = false;
                 s.IsSwipeNavigationEnabled = false;
@@ -126,6 +139,7 @@ namespace DayLeaf
                 core.ProcessFailed += OnProcessFailed;
                 core.NavigationCompleted += OnNavigationCompleted;
                 core.PermissionRequested += OnPermissionRequested;
+                try { core.DownloadStarting += OnDownloadStarting; } catch (Exception) { /* 旧运行时没有这个事件 */ }
 
                 await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildBridgeScript());
 
@@ -153,6 +167,10 @@ namespace DayLeaf
             sb.Append("setThemeMode:function(m){post({cmd:'theme',arg:String(m||'light')});},");
             sb.Append("saveTextFile:function(n,c){post({cmd:'save',name:String(n||'dayleaf.txt'),content:String(c==null?'':c)});},");
             sb.Append("syncReminders:function(j){post({cmd:'reminders',arg:String(j||'{}')});},");
+            sb.Append("updateTrayStatus:function(j){post({cmd:'trayStatus',arg:String(j||'{}')});},");
+            sb.Append("updateWidget:function(j){post({cmd:'widget',arg:String(j||'{}')});},");
+            sb.Append("saveBinary:function(n,b,m){post({cmd:'saveBinary',name:String(n||'dayleaf.bin'),base64:String(b==null?'':b),mime:String(m==null?'':m)});},");
+            sb.Append("webdavSync:function(j){post({cmd:'webdav',arg:String(j||'{}')});},");
             sb.Append("isForeground:function(){return !document.hidden && document.hasFocus();},");
             sb.Append("getVersionName:function(){return '").Append(version).Append("';},");
             // 桌面端不提供 notify/ensureNotifyPermission（置 undefined），网页会回落到
@@ -202,6 +220,28 @@ namespace DayLeaf
                 string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
                 ApplyReminders(json);
             }
+            else if (cmd == "trayStatus")
+            {
+                string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
+                ApplyTrayStatus(json);
+            }
+            else if (cmd == "widget")
+            {
+                string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
+                ApplyWidget(json);
+            }
+            else if (cmd == "saveBinary")
+            {
+                string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "dayleaf.bin";
+                string base64 = msg.ContainsKey("base64") ? Convert.ToString(msg["base64"]) : "";
+                string mime = msg.ContainsKey("mime") ? Convert.ToString(msg["mime"]) : "";
+                SaveBinaryFile(name, base64, mime);
+            }
+            else if (cmd == "webdav")
+            {
+                string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
+                BeginWebDavSync(json);
+            }
         }
 
         /// <summary>导出 JSON / ics：走系统「另存为」。</summary>
@@ -239,7 +279,88 @@ namespace DayLeaf
                 case ".json": return "JSON 备份 (*.json)|*.json|所有文件 (*.*)|*.*";
                 case ".ics": return "日历文件 (*.ics)|*.ics|所有文件 (*.*)|*.*";
                 case ".txt": return "文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*";
+                case ".png": return "PNG 图片 (*.png)|*.png|所有文件 (*.*)|*.*";
+                case ".jpg":
+                case ".jpeg": return "JPEG 图片 (*.jpg;*.jpeg)|*.jpg;*.jpeg|所有文件 (*.*)|*.*";
+                case ".gif": return "GIF 图片 (*.gif)|*.gif|所有文件 (*.*)|*.*";
+                case ".webp": return "WebP 图片 (*.webp)|*.webp|所有文件 (*.*)|*.*";
+                case ".pdf": return "PDF 文档 (*.pdf)|*.pdf|所有文件 (*.*)|*.*";
+                case ".zip": return "压缩包 (*.zip)|*.zip|所有文件 (*.*)|*.*";
                 default: return "所有文件 (*.*)|*.*";
+            }
+        }
+
+        /// <summary>保存二进制（base64，可带 data:xxx;base64, 前缀）：解码后走系统「另存为」。</summary>
+        private void SaveBinaryFile(string name, string base64, string mime)
+        {
+            byte[] bytes = DecodeBase64(base64);
+            if (bytes == null || bytes.Length == 0)
+            {
+                MessageBox.Show(this, "内容为空或格式不对", "叶历 DayLeaf",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string safeName = string.IsNullOrEmpty(name) ? "dayleaf.bin" : name.Trim();
+            foreach (char c in Path.GetInvalidFileNameChars()) safeName = safeName.Replace(c, '_');
+            if (safeName.Length == 0) safeName = "dayleaf.bin";
+
+            if (Path.GetExtension(safeName).Length == 0)
+            {
+                string fromMime = ExtFromMime(mime);
+                if (fromMime.Length > 0) safeName += fromMime;
+            }
+
+            using (var dlg = new SaveFileDialog())
+            {
+                string ext = Path.GetExtension(safeName);
+                if (string.IsNullOrEmpty(ext)) ext = ".bin";
+                dlg.FileName = safeName;
+                dlg.Filter = BuildFilter(ext);
+                dlg.AddExtension = true;
+                dlg.OverwritePrompt = true;
+                dlg.Title = "保存文件";
+
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    File.WriteAllBytes(dlg.FileName, bytes);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, "保存失败：" + ex.Message, "叶历 DayLeaf",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private static byte[] DecodeBase64(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return null;
+            string raw = s.Trim();
+            if (raw.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                int comma = raw.IndexOf(',');
+                if (comma < 0) return null;
+                raw = raw.Substring(comma + 1);
+            }
+            try { return Convert.FromBase64String(raw); }
+            catch (Exception) { return null; }
+        }
+
+        private static string ExtFromMime(string mime)
+        {
+            switch ((mime ?? "").Trim().ToLowerInvariant())
+            {
+                case "image/png": return ".png";
+                case "image/jpeg": case "image/jpg": return ".jpg";
+                case "image/gif": return ".gif";
+                case "image/webp": return ".webp";
+                case "application/pdf": return ".pdf";
+                case "application/zip": return ".zip";
+                case "application/json": return ".json";
+                default: return "";
             }
         }
 
@@ -417,8 +538,35 @@ namespace DayLeaf
                 {
                     e.State = CoreWebView2PermissionState.Allow;
                 }
+                else if (e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead)
+                {
+                    /* 右键菜单里的「粘贴」需要读剪贴板；这是本机应用自己的请求 */
+                    e.State = CoreWebView2PermissionState.Allow;
+                }
             }
             catch (Exception) { /* 旧运行时没有通知权限枚举就忽略 */ }
+        }
+
+        /// <summary>
+        /// 拦截网页发起的下载：叶历所有导出都走原生「另存为」，
+        /// 不该出现浏览器式的下载条 / 另存为。
+        /// </summary>
+        private void OnDownloadStarting(object sender, CoreWebView2DownloadStartingEventArgs e)
+        {
+            try
+            {
+                e.Cancel = true;
+            }
+            catch (Exception) { /* ignore */ }
+            try
+            {
+                if (_web != null && _web.CoreWebView2 != null)
+                {
+                    _web.CoreWebView2.ExecuteScriptAsync(
+                        "window.__dlNotice && window.__dlNotice('请在应用内使用导出/另存为按钮');");
+                }
+            }
+            catch (Exception) { /* ignore */ }
         }
 
         /// <summary>
@@ -532,6 +680,11 @@ namespace DayLeaf
             catch (Exception) { /* 还没初始化完成 */ }
 
             if (IsHandleCreated) SetDarkTitleBar(Handle, dark);
+
+            if (_widget != null && !_widget.IsDisposed)
+            {
+                try { _widget.ApplyTheme(dark); } catch (Exception) { /* ignore */ }
+            }
         }
 
         [DllImport("dwmapi.dll", PreserveSig = true)]
@@ -689,7 +842,9 @@ namespace DayLeaf
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             try { if (_reminderTimer != null) { _reminderTimer.Stop(); _reminderTimer.Dispose(); } } catch (Exception) { }
+            try { if (_catchUpTimer != null) { _catchUpTimer.Stop(); _catchUpTimer.Dispose(); } } catch (Exception) { }
             try { if (_tray != null) { _tray.Visible = false; _tray.Dispose(); } } catch (Exception) { }
+            try { if (_widget != null) _widget.CloseForExit(); } catch (Exception) { }
             base.OnFormClosed(e);
         }
 
@@ -710,13 +865,31 @@ namespace DayLeaf
                     Visible = true
                 };
                 var menu = new ContextMenuStrip();
+
                 var open = new ToolStripMenuItem("打开叶历");
                 open.Click += delegate { ShowFromTray(); };
                 menu.Items.Add(open);
+
+                _snoozeItem = new ToolStripMenuItem("稍后提醒 10 分钟");
+                _snoozeItem.Enabled = false;   // 还没有刚响过的提醒
+                _snoozeItem.Click += delegate { SnoozeLastReminder(); };
+                menu.Items.Add(_snoozeItem);
+
+                _widgetMenuItem = new ToolStripMenuItem("桌面下一项");
+                _widgetMenuItem.Click += delegate { ToggleWidget(); SyncWidgetMenuCheck(); };
+                menu.Items.Add(_widgetMenuItem);
+
                 menu.Items.Add(new ToolStripSeparator());
                 var exit = new ToolStripMenuItem("退出");
                 exit.Click += delegate { ExitFromTray(); };
                 menu.Items.Add(exit);
+
+                menu.Opening += delegate
+                {
+                    if (_snoozeItem != null) _snoozeItem.Enabled = _lastFired != null;
+                    SyncWidgetMenuCheck();
+                };
+
                 _tray.ContextMenuStrip = menu;
                 _tray.DoubleClick += delegate { ShowFromTray(); };
                 _tray.BalloonTipClicked += delegate { ShowFromTray(); };
@@ -789,10 +962,20 @@ namespace DayLeaf
             }
             catch (Exception) { enabled = false; }
 
+            bool wasEnabled = _backgroundReminders;
+            bool firstLoad = !_reminderStateReady;
+            _reminderStateReady = true;
+
             _backgroundReminders = enabled;
             _reminders = items;
             if (enabled) StartReminderTimer();
             else StopReminderTimer();
+
+            /* 后台提醒的开关同步到开机自启；自检 / 预览等测试模式下绝不写注册表 */
+            if (!_selfTest && !_updatePreview && (enabled != wasEnabled || firstLoad))
+            {
+                AutoStart.SetEnabled(enabled);
+            }
         }
 
         private void LoadRemindersFromDisk()
@@ -828,16 +1011,23 @@ namespace DayLeaf
         {
             if (!_backgroundReminders || _reminders == null || _tray == null) return;
             long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            const long catchUpWindow = 12 * 60 * 60 * 1000L;   // 刚开机/刚打开：补 12 小时内错过的
+            const long onTimeGrace = 2 * 60 * 1000L;           // 迟到 2 分钟以上标成「补提醒」
+
             foreach (ReminderItem r in _reminders)
             {
-                if (r.At > now || r.At < now - 120000) continue;
+                if (r.At > now || r.At < now - catchUpWindow) continue;
                 string key = r.Id + "|" + r.At;
                 if (_firedReminders.Contains(key)) continue;
                 _firedReminders.Add(key);
+                _lastFired = r;
+                if (_snoozeItem != null) _snoozeItem.Enabled = true;
+
+                string body = now - r.At > onTimeGrace ? "（补提醒）" + r.Body : r.Body;
                 try
                 {
                     _tray.Visible = true;
-                    _tray.ShowBalloonTip(8000, r.Title, r.Body,
+                    _tray.ShowBalloonTip(8000, r.Title, body,
                         r.Kind == "al" ? ToolTipIcon.Warning : ToolTipIcon.Info);
                     if (r.Kind == "al")
                     {
@@ -868,6 +1058,368 @@ namespace DayLeaf
                 if (long.TryParse(Convert.ToString(v), out n)) return n;
             }
             return fallback;
+        }
+
+        /* ------------------------------------------------------------------
+         * 稍后提醒 / 托盘状态 / 桌面小窗
+         * ---------------------------------------------------------------- */
+
+        /// <summary>启动后补扫一次：把 12 小时内错过的提醒集中补出来，之后交给 15 秒轮询。</summary>
+        private void ScheduleCatchUpPass()
+        {
+            try
+            {
+                _catchUpTimer = new System.Windows.Forms.Timer();
+                _catchUpTimer.Interval = 2500;
+                _catchUpTimer.Tick += delegate
+                {
+                    try { _catchUpTimer.Stop(); _catchUpTimer.Dispose(); } catch (Exception) { }
+                    _catchUpTimer = null;
+                    CheckReminders();
+                };
+                _catchUpTimer.Start();
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        /// <summary>把最近响过的一条推迟 10 分钟：追加一条新 id 的提醒并写回 reminders.json。</summary>
+        private void SnoozeLastReminder()
+        {
+            ReminderItem last = _lastFired;
+            if (last == null) return;
+
+            string prefix = last.Id + ".sn";
+            int seq = 0;
+            foreach (ReminderItem r in _reminders)
+            {
+                if (!string.IsNullOrEmpty(r.Id) && r.Id.StartsWith(prefix, StringComparison.Ordinal)) seq++;
+            }
+
+            var snoozed = new ReminderItem
+            {
+                Id = prefix + (seq + 1),
+                At = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 10 * 60 * 1000,
+                Title = last.Title,
+                Body = last.Body,
+                Kind = last.Kind
+            };
+            _reminders.Add(snoozed);
+            PersistReminders();
+
+            try
+            {
+                if (_tray != null)
+                {
+                    _tray.Visible = true;
+                    _tray.ShowBalloonTip(4000, last.Title, "已设为 10 分钟后再次提醒", ToolTipIcon.Info);
+                }
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        /// <summary>把当前提醒列表写回 reminders.json（字段与 ApplyReminders 读的一致）。</summary>
+        private void PersistReminders()
+        {
+            try
+            {
+                var items = new List<Dictionary<string, object>>();
+                foreach (ReminderItem r in _reminders)
+                {
+                    items.Add(new Dictionary<string, object>
+                    {
+                        { "id", r.Id },
+                        { "at", r.At },
+                        { "title", r.Title },
+                        { "body", r.Body },
+                        { "kind", r.Kind }
+                    });
+                }
+                var root = new Dictionary<string, object>
+                {
+                    { "enabled", _backgroundReminders },
+                    { "items", items }
+                };
+                Directory.CreateDirectory(AppPaths.Root);
+                File.WriteAllText(ReminderFile, new JavaScriptSerializer().Serialize(root), new UTF8Encoding(false));
+            }
+            catch (Exception) { /* 写不下就只在内存里生效 */ }
+        }
+
+        /// <summary>托盘悬浮提示：叶历 · 14:00 形策（≤60 字，没有内容就回落到默认名）。</summary>
+        private void ApplyTrayStatus(string json)
+        {
+            if (_tray == null) return;
+
+            string text = "叶历 DayLeaf";
+            try
+            {
+                List<WidgetItem> items = NextUpForm.ParseItems(json);
+                if (items.Count > 0)
+                {
+                    WidgetItem it = items[0];
+                    string title = it.Title.Length > 0 ? it.Title : it.Body;
+                    string head = (it.Time.Length > 0 ? it.Time + " " + title : title).Trim();
+                    if (head.Length > 0) text = "叶历 · " + head;
+                }
+            }
+            catch (Exception) { /* 结构不对就保持默认 */ }
+
+            if (text.Length > 60) text = text.Substring(0, 60);
+            try { _tray.Text = text; } catch (Exception) { /* ignore */ }
+        }
+
+        /// <summary>网页推送的「下一项」：缓存；小窗开着就顺手刷新（不动焦点）。</summary>
+        private void ApplyWidget(string json)
+        {
+            _widgetItems = NextUpForm.ParseItems(json);
+            if (_widget != null && !_widget.IsDisposed)
+            {
+                try { _widget.SetItems(_widgetItems); } catch (Exception) { /* ignore */ }
+            }
+        }
+
+        private void EnsureWidget()
+        {
+            if (_widget != null && !_widget.IsDisposed) return;
+            try { _widget = new NextUpForm(_dark); }
+            catch (Exception) { _widget = null; }
+        }
+
+        private void ToggleWidget()
+        {
+            EnsureWidget();
+            if (_widget == null) return;
+
+            if (_widget.WidgetOpen)
+            {
+                _widget.HideWidget();
+            }
+            else
+            {
+                _widget.SetItems(_widgetItems);
+                _widget.ShowWidget();
+            }
+        }
+
+        private void SyncWidgetMenuCheck()
+        {
+            if (_widgetMenuItem == null) return;
+            bool open = _widget != null && !_widget.IsDisposed && _widget.WidgetOpen;
+            try { _widgetMenuItem.Checked = open; } catch (Exception) { /* ignore */ }
+        }
+
+        /// <summary>首次显示后：恢复桌面小窗、处理 --tray 静默启动。自检/预览模式不碰。</summary>
+        private void OnFirstShown()
+        {
+            if (_selfTest || _updatePreview) return;
+
+            try
+            {
+                if (WidgetStore.Load().Open)
+                {
+                    EnsureWidget();
+                    if (_widget != null)
+                    {
+                        _widget.SetItems(_widgetItems);
+                        _widget.ShowWidget();
+                    }
+                }
+            }
+            catch (Exception) { /* ignore */ }
+            SyncWidgetMenuCheck();
+
+            /* --tray（开机自启）：后台提醒开着时直接收进托盘，不弹主窗口 */
+            if (_trayMode && _backgroundReminders)
+            {
+                try { Hide(); } catch (Exception) { /* ignore */ }
+            }
+        }
+
+        /* ------------------------------------------------------------------
+         * WebDAV 同步：{op:"pull"|"push", url, user, pass, body}
+         * 全程后台线程，结束后回主线程调 window.__dlSyncResult(op, ok, data, error)。
+         * ---------------------------------------------------------------- */
+
+        private sealed class SyncResult
+        {
+            public string Op = "pull";
+            public bool Ok;
+            public string Data = "";
+            public string Error = "";
+        }
+
+        private void BeginWebDavSync(string configJson)
+        {
+            if (Interlocked.CompareExchange(ref _webdavBusy, 1, 0) != 0)
+            {
+                PostSyncResult(new SyncResult { Op = "pull", Ok = false, Error = "同步进行中，请稍后再试" });
+                return;
+            }
+
+            string cfg = string.IsNullOrEmpty(configJson) ? "{}" : configJson;
+            SyncResult result = null;
+            var worker = new Thread(new ThreadStart(delegate
+            {
+                try { result = RunWebDav(cfg); }
+                catch (Exception ex)
+                {
+                    result = new SyncResult { Op = "pull", Ok = false, Error = ex.Message ?? ex.GetType().Name };
+                }
+                finally { Interlocked.Exchange(ref _webdavBusy, 0); }
+                PostSyncResult(result);
+            }));
+            worker.IsBackground = true;
+            worker.Name = "dayleaf-webdav";
+            worker.Start();
+        }
+
+        private static SyncResult RunWebDav(string json)
+        {
+            var r = new SyncResult();
+            string url = "", user = "", pass = "", body = "";
+            try
+            {
+                var dict = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(json);
+                if (dict != null)
+                {
+                    r.Op = GetStr(dict, "op", "pull") == "push" ? "push" : "pull";
+                    url = GetStr(dict, "url", "").Trim();
+                    user = GetStr(dict, "user", "");
+                    pass = GetStr(dict, "pass", "");
+                    body = GetStr(dict, "body", "");
+                }
+            }
+            catch (Exception) { /* 配置坏了按默认处理 */ }
+
+            if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                r.Error = "URL 无效";
+                return r;
+            }
+
+            HttpWebRequest req = null;
+            try
+            {
+                req = (HttpWebRequest)WebRequest.Create(url);
+                req.Timeout = 20000;
+                req.ReadWriteTimeout = 20000;
+                req.AllowAutoRedirect = true;
+                req.UserAgent = "DayLeaf-Desktop";
+                req.Accept = "application/json, text/plain, */*";
+                req.ContentType = "application/json; charset=utf-8";
+                req.Method = r.Op == "push" ? "PUT" : "GET";
+                if (user.Length > 0 || pass.Length > 0)
+                {
+                    req.Headers["Authorization"] = "Basic " +
+                        Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + pass));
+                }
+
+                if (r.Op == "push")
+                {
+                    byte[] payload = new UTF8Encoding(false).GetBytes(body ?? "");
+                    req.ContentLength = payload.Length;
+                    using (Stream os = req.GetRequestStream())
+                    {
+                        os.Write(payload, 0, payload.Length);
+                    }
+                }
+
+                using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+                {
+                    int code = (int)resp.StatusCode;
+                    if (code >= 200 && code < 300)
+                    {
+                        r.Ok = true;
+                        if (r.Op == "pull") r.Data = ReadLimited(resp.GetResponseStream());
+                    }
+                    else
+                    {
+                        r.Error = HttpError(code);
+                    }
+                }
+            }
+            catch (WebException we)
+            {
+                var resp = we.Response as HttpWebResponse;
+                int code = resp == null ? 0 : (int)resp.StatusCode;
+                if (r.Op == "pull" && code == 404)
+                {
+                    r.Ok = true;      // 远端还没有文件：当作空的
+                    r.Data = "";
+                }
+                else
+                {
+                    r.Error = code > 0 ? HttpError(code) : (we.Message ?? we.GetType().Name);
+                }
+                if (resp != null) resp.Dispose();
+            }
+            catch (Exception ex)
+            {
+                r.Error = ex.Message ?? ex.GetType().Name;
+            }
+            finally
+            {
+                try { if (req != null) req.Abort(); } catch (Exception) { /* ignore */ }
+            }
+
+            return r;
+        }
+
+        private static string HttpError(int code)
+        {
+            if (code == 401) return "认证失败（401）";
+            if (code == 403) return "没有权限（403）";
+            if (code == 507) return "云端空间不足（507）";
+            return "HTTP " + code;
+        }
+
+        /// <summary>读取响应正文，超过 8MB 直接失败（和安卓端一致）。</summary>
+        private static string ReadLimited(Stream input)
+        {
+            if (input == null) return "";
+            const int MaxBytes = 8 * 1024 * 1024;
+            using (var buffer = new MemoryStream())
+            {
+                byte[] chunk = new byte[16 * 1024];
+                int n;
+                while ((n = input.Read(chunk, 0, chunk.Length)) > 0)
+                {
+                    if (buffer.Length + n > MaxBytes) throw new InvalidOperationException("响应超过 8MB");
+                    buffer.Write(chunk, 0, n);
+                }
+                return new UTF8Encoding(false).GetString(buffer.ToArray());
+            }
+        }
+
+        private void PostSyncResult(SyncResult r)
+        {
+            if (r == null) r = new SyncResult();
+            if (IsDisposed) return;
+            try { BeginInvoke((Action)delegate { RunSyncCallback(r); }); }
+            catch (Exception) { /* 窗口已关 */ }
+        }
+
+        private void RunSyncCallback(SyncResult r)
+        {
+            try
+            {
+                CoreWebView2 core = _web.CoreWebView2;
+                if (core == null) return;
+                string js = "(function(){try{if(window.__dlSyncResult){window.__dlSyncResult("
+                    + QuoteJs(r.Op) + "," + (r.Ok ? "true" : "false") + ","
+                    + QuoteJs(r.Data) + "," + QuoteJs(r.Error)
+                    + ");}}catch(e){}})();";
+                core.ExecuteScriptAsync(js);
+            }
+            catch (Exception) { /* 页面不可用就算了 */ }
+        }
+
+        /// <summary>JS 字符串字面量：JavaScriptSerializer 转义后再补 \u2028/\u2029。</summary>
+        private static string QuoteJs(string s)
+        {
+            string q = new JavaScriptSerializer().Serialize(s ?? "");
+            return q.Replace("\u2028", "\\u2028").Replace("\u2029", "\\u2029");
         }
 
         /// <summary>另一个实例被启动时，把本窗口提到前面。</summary>

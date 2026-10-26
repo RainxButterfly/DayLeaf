@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 16,
-  "versionName": "1.0.15",
+  "versionCode": 17,
+  "versionName": "1.1.0",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.15/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.15/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.15/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.15/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.0/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.0/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 755287,
-  "sha256": "f28146fa2bccf5014ef1930eaa0c0d77bb8cdb5619f1d82467e08a37da21e534",
-  "notes": "新增后台提醒：打开后手机端交给系统闹钟、桌面端驻留托盘，退出应用也能收到通知；文字外观新增语料库字号/字体/主次弱三色，并全面改用应用内调色盘（支持十六进制输入）；背景支持清晰模式与轻度锐化，恢复默认可撤销；记事日历卡与编辑卡、侧边栏透明度可调，侧边栏去除模糊保持文字图标清晰；表格周导航顶栏可隐藏并可自定义主题/纯色/图片；设置改为分类首页与独立子页并重新分组，关于页重新设计。",
+  "size": 977161,
+  "sha256": "96431f5a1e10200c6b1710c24ad8ff4b2ffbac7d17f0803443118cd700eef7ae",
+  "notes": "新增后台提醒闭环（通知可直接完成/稍后 10 分钟、重启与改时间自动重排、错过 12 小时内补提醒）、快捷录入与中文自然语言解析、全局搜索与命令面板、完整备份与每日快照、手机与电脑 WebDAV 云同步、节假日与调休（2025–2026）、Excel/CSV 课表导入与 ICS 导入、月视图与未来 7 天、应用锁（PIN）、周复盘、今日分享图、事件附件与 OCR 批量识别、桌面应用内右键菜单；优化设置子页排版、侧边栏文字图标可调、语料库字号上限 300% 与左中右对齐、星期栏与记事日历顶条可透明/纯色/图片、图片预览支持直接拖拽（两个方向）、主页分区标题与任务文字颜色可调、删除可撤销与首页滑动操作、新建日程冲突检测与空档建议。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

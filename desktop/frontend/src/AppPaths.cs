@@ -16,6 +16,7 @@ namespace DayLeaf
         public static string WindowFile { get { return Path.Combine(Root, "window.json"); } }
         public static string NotifiedFile { get { return Path.Combine(Root, "update-notified.txt"); } }
         public static string UpdateDir { get { return Path.Combine(Root, "update"); } }
+        public static string WidgetFile { get { return Path.Combine(Root, "widget.json"); } }
 
         public static void Ensure()
         {

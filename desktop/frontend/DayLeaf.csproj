@@ -49,6 +49,7 @@
   <ItemGroup>
     <!-- 界面就是移动端那份 index.html，构建时由 build.ps1 同步进来 -->
     <EmbeddedResource Include="res\www\index.html" LogicalName="www.index.html" Condition="Exists('res\www\index.html')" />
+    <EmbeddedResource Include="res\www\xlsx.full.min.js" LogicalName="www.xlsx.full.min.js" Condition="Exists('res\www\xlsx.full.min.js')" />
   </ItemGroup>
 
 </Project>

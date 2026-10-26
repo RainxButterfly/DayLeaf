@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">叶历 DayLeaf</string>
+
+    <!-- 桌面小组件 -->
+    <string name="widget_name">叶历 · 下一项</string>
+    <string name="widget_next_label">下一项</string>
+    <string name="widget_next_empty">还没有安排</string>
+
+    <!-- 提醒通知按钮 -->
+    <string name="notif_action_done">完成</string>
+    <string name="notif_action_snooze">10 分钟后提醒</string>
 </resources>

@@ -18,6 +18,7 @@ try {
     $here      = $PSScriptRoot
     $software  = Split-Path (Split-Path $here -Parent) -Parent
     $htmlSrc   = Join-Path $software "mobile\frontend\app\src\main\assets\www\index.html"
+    $xlsxSrc   = Join-Path $software "mobile\frontend\app\src\main\assets\www\xlsx.full.min.js"
     $libDir    = Join-Path $here "lib"
     $resWww    = Join-Path $here "res\www"
     $outDir    = Join-Path $here "bin\Release\net472"
@@ -26,6 +27,7 @@ try {
     if (-not (Test-Path $htmlSrc)) { throw "找不到移动端界面文件：$htmlSrc" }
     New-Item -ItemType Directory -Force -Path $resWww | Out-Null
     Copy-Item $htmlSrc (Join-Path $resWww "index.html") -Force
+    if (Test-Path $xlsxSrc) { Copy-Item $xlsxSrc (Join-Path $resWww "xlsx.full.min.js") -Force }
     $kb = [math]::Round((Get-Item (Join-Path $resWww "index.html")).Length / 1KB)
     Write-Host "· 已同步界面 index.html ($kb KB)" -ForegroundColor DarkGray
 

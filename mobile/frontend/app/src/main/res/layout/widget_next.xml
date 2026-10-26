@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2x1 小组件：上一行是「下一项」小标，下一行是「14:00 形策」 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_next_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_next_bg"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:paddingLeft="12dp"
+    android:paddingTop="6dp"
+    android:paddingRight="12dp"
+    android:paddingBottom="6dp">
+
+    <TextView
+        android:id="@+id/widget_next_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:text="@string/widget_next_label"
+        android:textColor="#99A3BA"
+        android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/widget_next_line"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:text="@string/widget_next_empty"
+        android:textColor="#F2F5FF"
+        android:textSize="15sp" />
+</LinearLayout>
