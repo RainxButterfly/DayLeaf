@@ -391,8 +391,7 @@ public class WebAppInterface {
                         }
                     }
                 } catch (Exception e) {
-                    String msg = e.getMessage();
-                    err = (msg == null || msg.length() == 0) ? e.getClass().getSimpleName() : msg;
+                    err = lanFriendlyError(e);
                     ok = false;
                 } finally {
                     try { if (conn != null) conn.disconnect(); } catch (Exception e) { /* ignore */ }
@@ -401,6 +400,24 @@ public class WebAppInterface {
                 finishLan(op, ok, data, err);
             }
         }, "dayleaf-lan").start();
+    }
+
+    /** 不把 java.net 的原始异常抛给用户；校园网/AP 隔离最常见 */
+    private static String lanFriendlyError(Exception e) {
+        String msg = e == null ? "" : String.valueOf(e.getMessage());
+        String low = msg.toLowerCase();
+        if (e instanceof java.net.UnknownHostException) return "地址无法解析，请检查电脑地址是否写对";
+        if (e instanceof java.net.SocketTimeoutException || low.contains("timed out")) {
+            return "连接超时：请确认手机和电脑在同一 Wi‑Fi、电脑防火墙允许 17890，并用电脑 Wi‑Fi/以太网卡的 IPv4";
+        }
+        if (e instanceof java.net.ConnectException || low.contains("failed to connect")
+                || low.contains("connection refused") || low.contains("econnrefused")) {
+            return "连不上电脑：请确认同一 Wi‑Fi、电脑已开启局域网同步并允许防火墙；校园网若开了 AP 隔离，手机和电脑可能互相不可见";
+        }
+        if (low.contains("network is unreachable") || low.contains("no route to host")) {
+            return "网络不可达：手机和电脑可能不在同一个 Wi‑Fi/子网，或校园网隔离了设备互访";
+        }
+        return "网络错误，请检查 Wi‑Fi 与电脑地址（不要使用 192.168.x.1 这类虚拟网卡地址）";
     }
 
     private static String lanError(int code) {

@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 24,
-  "versionName": "1.1.5",
+  "versionCode": 25,
+  "versionName": "1.1.6",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.6/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.5/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.5/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.6/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.6/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.6/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 987764,
-  "sha256": "299cd4d222aae2721afd494266d822a8a1ddf2c21fb79dc493085569de7bdbd8",
-  "notes": "设置页新增桌面组件入口：手机可添加「下一项 2×1」与「今日日程 4×2」两个小组件，电脑可开关桌面下一项小窗；记事日历节假日显示具体节日名并保留调休「班」；分享图带作者与反馈邮箱；修复弹窗/右键菜单跳动、周复盘/课表导入/图片查看无法关闭、以及所有浮层的返回与关闭逻辑。",
+  "size": 988043,
+  "sha256": "67417059bb3d9e10846ff5e3bb49c5957787e13c1dc7bd5d6033174fc18f9013",
+  "notes": "局域网同步改为优先显示电脑有线/Wi-Fi 网卡地址并列出备用地址，排除虚拟网卡；连接失败给出可操作的中文提示（同一 Wi-Fi、防火墙、校园网 AP 隔离）；手机设置双列输入改单列并统一输入框宽度；字体导入整块卡片可点击。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

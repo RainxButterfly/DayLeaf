@@ -3209,9 +3209,18 @@ html.bg-clear .rail, html.bg-clear .tabbar{
 }
 /* 桌面专属设置（手机端没有侧边栏） */
 @media (max-width:959px){ .desk-only{display:none!important} }
+/* 手机端设置输入框：两列凭证改为单列，避免占位文字被挤/超出 */
+@media (max-width:700px){
+  .set-group .field-row.two{grid-template-columns:1fr;gap:8px}
+  .set-group .inp{width:100%;min-width:0;box-sizing:border-box}
+  .set-group .chips{width:100%}
+}
 
-/* 字体导入卡片 */
-.font-import{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:14px;background:var(--surface-soft);border:1px dashed var(--line2);margin-top:8px}
+/* 字体导入卡片：整块可点 */
+.font-import{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:14px;background:var(--surface-soft);border:1px dashed var(--line2);margin-top:8px;cursor:pointer;transition:.16s}
+.font-import:hover{border-color:rgba(76,111,255,.5);background:var(--surface)}
+.font-import:active{transform:scale(.995)}
+.font-import .fi-file{position:absolute;width:1px;height:1px;opacity:0;left:-9999px;top:0}
 .font-import .fi-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .font-import .fi-tx b{font-size:12.5px;color:var(--ink)}
 .font-import .fi-tx span{font-size:10.5px;color:var(--muted);line-height:1.55}
@@ -3873,7 +3882,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.5',
+    version: '1.1.6',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -12560,15 +12569,14 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       });
       h += '</div>';
     }
-    h += '<div class="font-import">' +
+    h += '<label class="font-import" for="typeFontFile">' +
         '<div class="fi-tx"><b>导入自己的字体</b>' +
           '<span>支持 .ttf / .otf / .woff / .woff2 · 单个 ≤ ' + Math.round(ASSET_LIMIT.fontSize / 1048576) + ' MB · 最多 ' + ASSET_LIMIT.fontCount + ' 个</span>' +
-          '<span>导入后在「字体」下拉里选择；文件只保存在本机。</span>' +
+          '<span>点这块任意位置选择文件；字体只保存在本机。</span>' +
         '</div>' +
-        '<label class="btn ghost fi-btn">选择字体文件' +
-          '<input type="file" id="typeFontFile" accept=".ttf,.otf,.woff,.woff2,font/*" style="position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;cursor:pointer">' +
-        '</label>' +
-      '</div>';
+        '<span class="btn ghost fi-btn">选择字体文件</span>' +
+        '<input type="file" id="typeFontFile" class="fi-file" accept=".ttf,.otf,.woff,.woff2,font/*">' +
+      '</label>';
     box.innerHTML = h;
   }
 
@@ -15848,6 +15856,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       else if (act === 'pin-next-widget') { const nat = nativeBridge(); if (nat && nat.pinNextWidget) nat.pinNextWidget(); else toast('当前平台不支持'); }
       else if (act === 'pin-today-widget') { const nat = nativeBridge(); if (nat && nat.pinTodayWidget) nat.pinTodayWidget(); else toast('当前平台不支持'); }
       else if (act === 'lan-copy') { const a = $('#lanAddr'); if (a) ctxCopy(a.textContent); }
+      else if (act === 'lan-copy-ip') { const u = c.dataset.ip || ''; if (u) ctxCopy(u); }
       else if (act === 'lan-copy-code') { const a = $('#lanCode'); if (a) ctxCopy(a.textContent); }
       else if (act === 'lan-push') lanPush();
       else if (act === 'lan-pull') lanPull();
@@ -15928,7 +15937,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.5', date: '2026-10-26', latest: true,
+      v: '1.1.6', date: '2026-10-26', latest: true,
+      fix: [
+        '局域网同步优先显示电脑的有线/Wi‑Fi 网卡地址，排除虚拟网卡；连不上时给出可操作的中文提示（同一 Wi‑Fi、防火墙、校园网 AP 隔离、别填 192.168.x.1）。',
+        '手机设置里的双列输入框改为单列，避免占位文字被挤或超出；所有设置输入框统一宽度。'
+      ],
+      opt: [
+        '字体导入整块卡片都可以点，点说明文字也能选择文件，不用非要点按钮。'
+      ]
+    },
+    {
+      v: '1.1.5', date: '2026-10-26', latest: false,
       add: [
         '设置里新增「桌面组件」入口：手机可直接添加「下一项 2×1」和「今日日程 4×2」两个桌面小组件，电脑可开关桌面「下一项」小窗。',
         '记事日历的节假日不再只写「休」，会直接显示节日名（国庆 / 春节 / 中秋…），调休上班显示「班」，长按/悬停有完整说明。',
@@ -16415,11 +16434,16 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         st.url = url; st.port = port;
         const box = $('#lanInfoBox');
         if (box) {
-          box.innerHTML = '<div class="lan-line"><span class="k">手机地址</span><b id="lanAddr">' + esc(url) + '</b>' +
-            '<button class="lan-copy" data-dl-act="lan-copy">复制</button></div>' +
+          const ipHtml = ips.map(function (ip, i) {
+            const u = 'http://' + ip + ':' + port;
+            return '<div class="lan-line"><span class="k">' + (i === 0 ? '推荐' : '备用 ' + i) + '</span>' +
+              '<b class="lan-ip" data-ip="' + esc(u) + '">' + esc(u) + '</b>' +
+              '<button class="lan-copy" data-dl-act="lan-copy-ip" data-ip="' + esc(u) + '">复制</button></div>';
+          }).join('');
+          box.innerHTML = ipHtml +
             '<div class="lan-line"><span class="k">配对码</span><b id="lanCode">' + esc(st.token) + '</b>' +
             '<button class="lan-copy" data-dl-act="lan-copy-code">复制</button></div>' +
-            (ips.length > 1 ? '<div class="lan-line"><span class="k">其他网卡</span><span class="hint" style="margin:0;font-size:10.5px">' + esc(ips.slice(1).join(' · ')) + '</span></div>' : '') +
+            '<div class="lan-line"><span class="k">提示</span><span class="hint" style="margin:0;font-size:10.5px">优先用推荐地址；连不上就换备用地址（有线/Wi‑Fi 网卡），不要用 192.168.x.1 这类虚拟网卡/网关。</span></div>' +
             '<div class="lan-line"><span class="k">状态</span><span style="color:var(--done);font-size:11.5px">● 正在等待手机连接</span></div>';
         }
       } else {
