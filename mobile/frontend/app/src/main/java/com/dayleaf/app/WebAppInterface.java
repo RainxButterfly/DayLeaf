@@ -20,10 +20,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.provider.AlarmClock;
 import android.provider.Settings;
 import android.util.Base64;
+import android.widget.Toast;
 import android.webkit.JavascriptInterface;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -286,6 +289,139 @@ public class WebAppInterface {
                 finishSync(r.op, r.ok, r.data, r.err);
             }
         }, "dayleaf-webdav").start();
+    }
+
+    /**
+     * 局域网同步（手机作为客户端）：
+     *   lanPush(url, token, body) → PUT /sync
+     *   lanPull(url, token)       → GET /sync
+     * 结束后回调 window.__dlLanResult(op, ok, data, error)。
+     */
+    @JavascriptInterface
+    public void lanPush(final String url, final String token, final String body) {
+        lanRequest("push", url, token, body);
+    }
+
+    @JavascriptInterface
+    public void lanPull(final String url, final String token) {
+        lanRequest("pull", url, token, "");
+    }
+
+    private void lanRequest(final String op, final String url, final String token, final String body) {
+        if (!SYNCING.compareAndSet(false, true)) {
+            finishLan(op, false, "", "同步进行中，请稍后再试");
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override public void run() {
+                String data = "";
+                boolean ok = false;
+                String err = "";
+                HttpURLConnection conn = null;
+                try {
+                    String u = url == null ? "" : url.trim();
+                    if (!u.startsWith("http://") && !u.startsWith("https://")) {
+                        err = "地址要以 http:// 开头";
+                    } else {
+                        if (u.indexOf("/sync") < 0) u = u.replaceAll("/+$", "") + "/sync";
+                        conn = (HttpURLConnection) new URL(u).openConnection();
+                        conn.setConnectTimeout(6000);
+                        conn.setReadTimeout(20000);
+                        conn.setUseCaches(false);
+                        conn.setRequestProperty("Accept", "application/json");
+                        conn.setRequestProperty("X-DayLeaf-Token", token == null ? "" : token);
+                        if ("push".equals(op)) {
+                            conn.setRequestMethod("PUT");
+                            conn.setDoOutput(true);
+                            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                            byte[] payload = (body == null ? "" : body).getBytes("UTF-8");
+                            conn.setFixedLengthStreamingMode(payload.length);
+                            OutputStream os = conn.getOutputStream();
+                            os.write(payload);
+                            os.flush();
+                            os.close();
+                            int code = conn.getResponseCode();
+                            ok = code >= 200 && code < 300;
+                            if (!ok) err = lanError(code);
+                        } else {
+                            conn.setRequestMethod("GET");
+                            int code = conn.getResponseCode();
+                            if (code >= 200 && code < 300) {
+                                data = readLimited(conn.getInputStream());
+                                ok = true;
+                            } else err = lanError(code);
+                        }
+                    }
+                } catch (Exception e) {
+                    String msg = e.getMessage();
+                    err = (msg == null || msg.length() == 0) ? e.getClass().getSimpleName() : msg;
+                    ok = false;
+                } finally {
+                    try { if (conn != null) conn.disconnect(); } catch (Exception e) { /* ignore */ }
+                    SYNCING.set(false);
+                }
+                finishLan(op, ok, data, err);
+            }
+        }, "dayleaf-lan").start();
+    }
+
+    private static String lanError(int code) {
+        if (code == 401) return "配对码不对（401）";
+        if (code == 404) return "电脑端没有开启局域网同步（404）";
+        if (code == 413) return "数据超过 8MB";
+        return "电脑端返回 HTTP " + code;
+    }
+
+    private void finishLan(String op, boolean ok, String data, String err) {
+        String js = "(function(){try{if(window.__dlLanResult){window.__dlLanResult("
+                + quote(op == null ? "pull" : op) + ","
+                + (ok ? "true" : "false") + ","
+                + quote(data == null ? "" : data) + ","
+                + quote(err == null ? "" : err)
+                + ");}}catch(e){}})();";
+        if (activity instanceof MainActivity) {
+            ((MainActivity) activity).runJs(js);
+        }
+    }
+
+    /**
+     * 写入手机系统闹钟（时钟 App）：
+     * hour/minute 为 24 小时制；daysJson 是 [1..7]（1=周日 … 7=周六），空数组表示只响一次。
+     * 需要 manifest 里的 com.android.alarm.permission.SET_ALARM。
+     */
+    @JavascriptInterface
+    public void setSystemAlarm(final int hour, final int minute, final String label, final String daysJson) {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try {
+                    int[] days = null;
+                    try {
+                        JSONArray arr = new JSONArray(daysJson == null || daysJson.length() == 0 ? "[]" : daysJson);
+                        if (arr.length() > 0) {
+                            days = new int[arr.length()];
+                            for (int i = 0; i < arr.length(); i++) days[i] = arr.optInt(i);
+                        }
+                    } catch (Exception e) { days = null; }
+
+                    Intent i = new Intent(AlarmClock.ACTION_SET_ALARM);
+                    i.putExtra(AlarmClock.EXTRA_HOUR, Math.max(0, Math.min(23, hour)));
+                    i.putExtra(AlarmClock.EXTRA_MINUTES, Math.max(0, Math.min(59, minute)));
+                    i.putExtra(AlarmClock.EXTRA_MESSAGE, label == null ? "叶历日程" : label);
+                    if (days != null) i.putExtra(AlarmClock.EXTRA_DAYS, days);
+                    i.putExtra(AlarmClock.EXTRA_SKIP_UI, true);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    try {
+                        activity.startActivity(i);
+                    } catch (Exception first) {
+                        i.putExtra(AlarmClock.EXTRA_SKIP_UI, false);
+                        activity.startActivity(i);
+                    }
+                    Toast.makeText(activity, "已写入系统时钟", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(activity, "这台手机没有可用的时钟 App", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
     }
 
     // ------------------------------------------------------------------

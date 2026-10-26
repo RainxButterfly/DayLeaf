@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 18,
-  "versionName": "1.1.1",
+  "versionCode": 19,
+  "versionName": "1.2.0",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.0/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.1/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.1/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.0/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.2.0/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.2.0/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 977147,
-  "sha256": "20c9e20b9be6ba8208e5092773b701ce23f073885ab59e1da77f92f4357c26a2",
-  "notes": "修复手机端设置页按钮被挤成多行/文字截断（数据页改为两列自适应）；字体导入改为独立卡片并重写说明；导航栏透明度只在电脑端显示；重新打开设置后背景、主卡、取景位置不再显示长小数；设置分组间距与提示统一并去掉重复说明。",
+  "size": 982980,
+  "sha256": "ef23e8b750f1ac161013f0db05db2da087c734e833aea014240c5a3a380782f7",
+  "notes": "新增局域网同步：电脑开启后手机在同一 Wi-Fi 下填地址和 6 位配对码即可直接互传数据，不依赖云盘或账号；新增手机系统闹钟：带闹钟的日程可写入系统时钟，重复日程按星期几设成每周闹钟，详情/编辑里都能单独写入。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

@@ -3218,6 +3218,15 @@ html.bg-clear .rail, html.bg-clear .tabbar{
   .font-import{flex-direction:column;align-items:stretch;gap:10px}
   .font-import .fi-btn{width:100%;justify-content:center}
 }
+
+/* 局域网同步信息卡 */
+.lan-info{margin-top:10px;padding:11px 12px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--line);font-size:12px;line-height:1.8}
+.lan-info .lan-off{color:var(--muted);font-size:11.5px}
+.lan-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lan-line b{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--accent);word-break:break-all}
+.lan-line .k{flex:0 0 56px;color:var(--muted);font-size:11px}
+.lan-copy{font-size:11px;padding:2px 7px;border-radius:6px;border:1px solid var(--line2);color:var(--ink2)}
+.evd-sysalarm{height:40px;padding:0 10px;border-radius:11px;font-size:11.5px;color:var(--accent);background:rgba(76,111,255,.1);flex:0 0 auto}
 /* hidden 必须能盖过 display:grid，否则锁屏/确认框会一直浮在最上层 */
 .dl-lock[hidden],.dl-ask[hidden],.dl-viewer[hidden],.ctx-menu[hidden],#monthRoot[hidden]{display:none!important}
 /* 应用内右键菜单（桌面端替代浏览器菜单） */
@@ -3790,7 +3799,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.1',
+    version: '1.2.0',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -4299,6 +4308,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     scheduleNativeReminderSync(false);
     scheduleCloudPush();
     scheduleStatusPush();
+    scheduleLanPublish();
   }
 
   /* --------------------------------------------------------------------------
@@ -6891,7 +6901,11 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             ? '<div class="field"><div class="row-sw" id="rmAlarmRow" style="display:none">' +
                 '<span>同时作为闹钟</span>' +
                 '<button class="sw' + (base.al ? ' on' : '') + '" id="rmAlarm" aria-label="绑定闹钟"></button>' +
-              '</div></div>'
+              '</div></div>' +
+              '<div class="field" id="sysAlarmRow" style="display:none;align-items:center;gap:8px">' +
+                '<button class="mini-btn" id="fSysAlarm">写入系统闹钟</button>' +
+                '<span class="hint" style="margin:0;font-size:11px">把当前时间和重复的星期写进手机时钟 App；不写入也能用叶历自己的提醒。</span>' +
+              '</div>'
             : '') +
           '<div class="field"><label>地点</label>' +
             '<input class="inp" id="fPlace" maxlength="60" placeholder="选填，如：3F 会议室" value="' + esc(base.p) + '"></div>' +
@@ -7315,6 +7329,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       });
       const alBtn = $('#rmAlarm');
       if (alBtn) alBtn.classList.toggle('on', alarmOn);
+      const sysRow = $('#sysAlarmRow');
+      const nat = nativeBridge();
+      const sysOk = !!(nat && nat.setSystemAlarm);
+      if (sysRow) sysRow.style.display = (rmOn && alarmOn && sysOk) ? 'flex' : 'none';
     };
 
     const rmBtn = $('#rmOn');
@@ -7348,6 +7366,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       rmAlarmBtn.addEventListener('click', function () {
         alarmOn = !alarmOn;
         rmAlarmBtn.classList.toggle('on', alarmOn);
+        syncRemind();
+      });
+    }
+    const sysAlarmBtn = $('#fSysAlarm');
+    if (sysAlarmBtn) {
+      sysAlarmBtn.addEventListener('click', function () {
+        const title = ($('#fTitle') || {}).value || '日程';
+        const start = ($('#fStart') || {}).value || '09:00';
+        const date = ($('#fDate') || {}).value || toYMD(new Date());
+        const wds = (repRule === 'weekly' || repRule === 'biweekly') ? repWds.slice() : [];
+        writeSystemAlarmData(title, start, wds, date);
       });
     }
     syncRemind();
@@ -7603,6 +7632,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
           '取消',
           slot ? { label: '改到 ' + slot.s, fn: function () { $('#fStart').value = slot.s; $('#fEnd').value = slot.e; dtSync(); toast('已改到 ' + slot.s + ' – ' + slot.e + '，再点一次保存'); } } : null);
         return;
+      }
+
+      /* 可选：闹钟同时写入手机系统时钟（重复日程按星期几设每周） */
+      if (payload.al && state.notify.sysAlarm && isMobileView()) {
+        const wds = (repRule === 'weekly' || repRule === 'biweekly') ? repWds.slice() : [];
+        writeSystemAlarmData(title, start, wds, date);
       }
 
       /* --- 编辑既有 --- */
@@ -8026,6 +8061,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             esc(ev.n) + '</div>' : '') +
         '</div>' +
         '<div class="evd-foot">' +
+          (ev.al && isMobileView() ? '<button class="evd-sysalarm" id="evdSysAlarm">写入系统闹钟</button>' : '') +
           (ev.gid
             ? '<button class="evd-del" data-del="one">删除此条</button>' +
               '<button class="evd-del evd-del-group" data-del="group">删除整组</button>'
@@ -8043,6 +8079,12 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       el.addEventListener('click', closeModal);
     });
 
+    const evdSys = $('#evdSysAlarm', root);
+    if (evdSys) {
+      evdSys.addEventListener('click', function () {
+        writeSystemAlarmData(ev.t, ev.s, (ev.rw || []), ev.d);
+      });
+    }
     const editBtn = $('#evdEdit');
     if (editBtn) {
       editBtn.addEventListener('click', function () {
@@ -9114,6 +9156,14 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
               '<span>闹钟（手机端专属）</span>' +
               '<b class="plat-note">电脑端不实现</b>' +
             '</div></div>') +
+        (isMobileView()
+          ? '<div class="sec-line">系统闹钟</div>' +
+            '<div class="field"><div class="row-sw">' +
+              '<span>闹钟同时写入系统时钟</span>' +
+              '<button class="sw' + (nt.sysAlarm ? ' on' : '') + '" id="ntSysAlarm" aria-label="写入系统时钟"></button>' +
+            '</div>' +
+            '<p class="hint">保存带「闹钟」的日程时，同时把时间写进手机时钟 App；重复日程会按星期几设成每周闹钟。响铃时长由系统时钟控制。</p></div>'
+          : '') +
         '<div class="sec-line">常驻与节假日</div>' +
         '<div class="field"><div class="row-sw">' +
           '<span>常驻显示下一项</span>' +
@@ -9193,6 +9243,26 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
             '<button class="btn ghost" data-dl-act="cloud-pull">从云端合并</button>' +
           '</div>' +
           '<p class="hint">手机和电脑填同一个地址即可互相同步；合并按 id 去重，删除也会同步。密码只存本机，注意账号安全。</p></div>' +
+
+        '<div class="sec-line">局域网同步（同一 Wi-Fi）</div>' +
+        '<div class="field" id="lanHostBox" style="display:none">' +
+          '<div class="row-sw"><span>电脑端开启局域网同步</span>' +
+            '<button class="sw" id="lanSw" aria-label="开启局域网同步"></button></div>' +
+          '<div class="lan-info" id="lanInfoBox"><span class="lan-off">未开启。开启后手机就能在同一 Wi-Fi 下连接。</span></div>' +
+          '<p class="hint">电脑和手机连同一个 Wi-Fi；手机端填上面的地址与配对码，不需要云盘或账号。首次开启 Windows 可能弹防火墙提示，选「允许」。</p>' +
+        '</div>' +
+        '<div class="field" id="lanClientBox" style="display:none">' +
+          '<label>电脑地址</label>' +
+          '<input class="inp" id="lanUrl" placeholder="http://192.168.1.5:17890" autocapitalize="off" spellcheck="false">' +
+          '<div class="field" style="margin-top:10px"><label>配对码</label>' +
+            '<input class="inp" id="lanToken" inputmode="numeric" maxlength="6" placeholder="电脑上显示的 6 位数字"></div>' +
+          '<div class="data-pick" style="margin-top:10px">' +
+            '<button class="btn ghost" data-dl-act="lan-push">发送到电脑</button>' +
+            '<button class="btn ghost" data-dl-act="lan-pull">从电脑拉取</button>' +
+          '</div>' +
+          '<p class="hint">电脑端在「数据与备份 → 局域网同步」里开启后，会显示地址与配对码。数据只在内网传输。</p>' +
+        '</div>' +
+        '<p class="hint" id="lanUnsupported" style="display:none">当前环境不支持局域网同步；请使用手机/电脑 App，或改用 WebDAV。</p>' +
 
         '<div class="sec-line">隐私与应用锁</div>' +
         '<div class="field"><div class="row-sw">' +
@@ -14914,6 +14984,8 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.10 云同步（WebDAV） ---------- */
   function cloudCfg() {
     if (!state.ui.cloud) state.ui.cloud = { url: '', user: '', pass: '', auto: false, withAssets: false, lastAt: 0 };
+    if (!state.ui.lan) state.ui.lan = { on: false, token: '', url: '', port: 0 };
+    if (typeof state.notify.sysAlarm !== 'boolean') state.notify.sysAlarm = false;
     return state.ui.cloud;
   }
   function buildSyncPayload(withAssets, cb) {
@@ -15516,6 +15588,10 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
       else if (act === 'battery') { const nat = nativeBridge(); if (nat && nat.openBatterySettings) nat.openBatterySettings(); else toast('当前环境不支持'); }
       else if (act === 'sysnotify') { const nat = nativeBridge(); if (nat && nat.openNotificationSettings) nat.openNotificationSettings(); else toast('当前环境不支持'); }
       else if (act === 'changelog') openChangelog();
+      else if (act === 'lan-copy') { const a = $('#lanAddr'); if (a) ctxCopy(a.textContent); }
+      else if (act === 'lan-copy-code') { const a = $('#lanCode'); if (a) ctxCopy(a.textContent); }
+      else if (act === 'lan-push') lanPush();
+      else if (act === 'lan-pull') lanPull();
     });
     document.addEventListener('change', function (e) {
       if (e.target && e.target.id === 'fullRestoreFile') {
@@ -15542,6 +15618,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     }
 
     pushStatusNow();
+    if (lanHostSupported() && lanState().on) {
+      setTimeout(function () { startLanHost(); }, 900);
+    }
   }
 
   /* ---------- 8.17 设置预览直接拖拽（背景 / 主卡） ---------- */
@@ -15589,7 +15668,16 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.1', date: '2026-10-26', latest: true,
+      v: '1.2.0', date: '2026-10-26', latest: true,
+      add: [
+        '局域网同步：电脑开启后，手机在同一个 Wi-Fi 下填地址与 6 位配对码，就能直接互传数据，不依赖云盘或账号。',
+        '手机系统闹钟：保存带「闹钟」的日程时可同时写入系统时钟；重复日程会按星期几设成每周闹钟，详情里也能单独写入。'
+      ],
+      opt: ['局域网同步与 WebDAV 共用同一套合并逻辑，删除墓碑与记事时间戳都会生效。'],
+      fix: []
+    },
+    {
+      v: '1.1.1', date: '2026-10-26', latest: false,
       fix: [
         '手机端设置里的「课表导入 / 今日分享图」等按钮不再被挤成多行，文字不再截断（数据页按钮改为两列自适应）。',
         '字体导入改为独立卡片：支持格式、单个大小与数量说明更清楚，按钮不再和说明文字挤在一起。',
@@ -15717,6 +15805,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     sw('lockSw', lockOn());
     sw('ntNext', state.notify.nextOn);
     sw('ntSkipHol', state.notify.skipHoliday);
+    sw('ntSysAlarm', state.notify.sysAlarm);
+    syncLanUI();
+    if (lanHostSupported()) setTimeout(function () { try { nativeBridge().lanInfo && nativeBridge().lanInfo(); } catch (e) { /* ignore */ } }, 120);
     $$('#lockTimeout button').forEach(function (b) {
       b.classList.toggle('on', Number(b.dataset.lockto) === Number(state.lock.timeout || 0));
     });
@@ -15744,6 +15835,17 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         state.notify.nextOn = !state.notify.nextOn;
         e.target.classList.toggle('on', state.notify.nextOn);
         saveState(); syncNativeReminders(true);
+        return;
+      }
+      if (e.target && e.target.id === 'ntSysAlarm') {
+        state.notify.sysAlarm = !state.notify.sysAlarm;
+        e.target.classList.toggle('on', state.notify.sysAlarm);
+        saveState();
+        toast(state.notify.sysAlarm ? '保存带闹钟的日程时会写入系统时钟' : '已关闭系统时钟写入');
+        return;
+      }
+      if (e.target && e.target.id === 'lanSw') {
+        if (lanState().on) stopLanHost(); else startLanHost();
         return;
       }
       if (e.target && e.target.id === 'ntSkipHol') {
@@ -15958,6 +16060,173 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideCtxMenu(); });
     window.addEventListener('blur', hideCtxMenu);
     document.addEventListener('scroll', hideCtxMenu, true);
+  }
+
+
+  /* ---------- 8.21 局域网同步（电脑做服务端，手机做客户端） ---------- */
+  var lanInfoCache = null;
+  function lanState() {
+    if (!state.ui.lan) state.ui.lan = { on: false, token: '', url: '', port: 0 };
+    return state.ui.lan;
+  }
+  function lanHostSupported() {
+    const n = nativeBridge();
+    return !!(n && n.lanStart && n.lanPublish);
+  }
+  function lanClientSupported() {
+    const n = nativeBridge();
+    return !!(n && n.lanPush && n.lanPull);
+  }
+  function lanRandomToken() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+  function syncLanUI() {
+    const host = $('#lanHostBox'), client = $('#lanClientBox'), uns = $('#lanUnsupported');
+    const st = lanState();
+    const isHost = lanHostSupported();
+    const isClient = !isHost && lanClientSupported();
+    if (host) host.style.display = isHost ? '' : 'none';
+    if (client) client.style.display = isClient ? '' : 'none';
+    if (uns) uns.style.display = (!isHost && !isClient) ? '' : 'none';
+    const sw = $('#lanSw');
+    if (sw) sw.classList.toggle('on', !!st.on);
+    const u = $('#lanUrl'); if (u) u.value = st.url || '';
+    const t = $('#lanToken'); if (t) t.value = st.token || '';
+    if (isHost) {
+      if (st.on && lanInfoCache && lanInfoCache.running) {
+        const ips = lanInfoCache.ips || [];
+        const mainIp = ips[0] || '127.0.0.1';
+        const port = lanInfoCache.port || st.port || 17890;
+        const url = 'http://' + mainIp + ':' + port;
+        st.url = url; st.port = port;
+        const box = $('#lanInfoBox');
+        if (box) {
+          box.innerHTML = '<div class="lan-line"><span class="k">手机地址</span><b id="lanAddr">' + esc(url) + '</b>' +
+            '<button class="lan-copy" data-dl-act="lan-copy">复制</button></div>' +
+            '<div class="lan-line"><span class="k">配对码</span><b id="lanCode">' + esc(st.token) + '</b>' +
+            '<button class="lan-copy" data-dl-act="lan-copy-code">复制</button></div>' +
+            (ips.length > 1 ? '<div class="lan-line"><span class="k">其他网卡</span><span class="hint" style="margin:0;font-size:10.5px">' + esc(ips.slice(1).join(' · ')) + '</span></div>' : '') +
+            '<div class="lan-line"><span class="k">状态</span><span style="color:var(--done);font-size:11.5px">● 正在等待手机连接</span></div>';
+        }
+      } else {
+        const box = $('#lanInfoBox');
+        if (box) box.innerHTML = '<span class="lan-off">未开启。开启后手机就能在同一 Wi-Fi 下连接。</span>';
+      }
+    }
+  }
+  function startLanHost() {
+    const st = lanState();
+    if (!st.token) st.token = lanRandomToken();
+    st.on = true;
+    saveState();
+    const n = nativeBridge();
+    try { n.lanStart(st.token); } catch (e) { toast('开启失败'); }
+    setTimeout(function () { try { n.lanInfo && n.lanInfo(); } catch (e) { /* ignore */ } }, 300);
+    syncLanUI();
+  }
+  function stopLanHost() {
+    const st = lanState();
+    st.on = false;
+    saveState();
+    const n = nativeBridge();
+    try { n.lanStop && n.lanStop(); } catch (e) { /* ignore */ }
+    lanInfoCache = null;
+    syncLanUI();
+  }
+  function lanPublishNow() {
+    const st = lanState();
+    if (!st.on) return;
+    const n = nativeBridge();
+    if (!n || !n.lanPublish) return;
+    buildSyncPayload(false, function (payload) {
+      try { n.lanPublish(JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    });
+  }
+  let lanPublishTimer = null;
+  function scheduleLanPublish() {
+    const st = lanState();
+    if (!st.on || !lanHostSupported()) return;
+    clearTimeout(lanPublishTimer);
+    lanPublishTimer = setTimeout(lanPublishNow, 1800);
+  }
+  window.__dlLanInfo = function (info) {
+    lanInfoCache = info || null;
+    if (info && info.token) lanState().token = info.token;
+    if (info && info.running) lanState().port = info.port || 0;
+    syncLanUI();
+    lanPublishNow();
+  };
+  window.__dlLanStatus = function (s) {
+    if (s && s.running) {
+      if (s.port) lanState().port = s.port;
+      lanInfoCache = lanInfoCache || { running: true, port: s.port, ips: [], token: lanState().token };
+      lanInfoCache.running = true;
+      toast('局域网同步已开启');
+    } else {
+      if (lanState().on) { lanState().on = false; saveState(); }
+      lanInfoCache = null;
+      if (s && s.error) toast('局域网开启失败：' + s.error);
+      else toast('局域网同步已关闭');
+    }
+    syncLanUI();
+  };
+  window.__dlLanIncoming = function (body) {
+    let obj = null;
+    try { obj = typeof body === 'string' ? JSON.parse(body) : body; } catch (e) { toast('收到一条无法解析的同步数据'); return; }
+    mergeRemotePayload(obj, function () {
+      lanPublishNow();
+      toast('已接收来自手机的数据');
+    });
+  };
+  function lanPayload(cb) {
+    buildSyncPayload(false, function (payload) { cb(JSON.stringify(payload)); });
+  }
+  function lanPush() {
+    const st = lanState();
+    const u = ($('#lanUrl') || {}).value || st.url || '';
+    const t = (($('#lanToken') || {}).value || '').trim();
+    if (!/^https?:\/\//.test(u)) { toast('地址要以 http:// 开头'); return; }
+    if (!/^\d{4,8}$/.test(t)) { toast('配对码是电脑上显示的 6 位数字'); return; }
+    st.url = u; st.token = t; saveState();
+    const n = nativeBridge();
+    if (!n || !n.lanPush) { toast('当前环境不支持'); return; }
+    toast('正在发送到电脑…');
+    lanPayload(function (payload) {
+      try { n.lanPush(u, t, payload); } catch (e) { toast('发送失败'); }
+    });
+  }
+  function lanPull() {
+    const st = lanState();
+    const u = ($('#lanUrl') || {}).value || st.url || '';
+    const t = (($('#lanToken') || {}).value || '').trim();
+    if (!/^https?:\/\//.test(u)) { toast('地址要以 http:// 开头'); return; }
+    if (!/^\d{4,9}$/.test(t)) { toast('配对码是电脑上显示的 6 位数字'); return; }
+    st.url = u; st.token = t; saveState();
+    const n = nativeBridge();
+    if (!n || !n.lanPull) { toast('当前环境不支持'); return; }
+    toast('正在从电脑拉取…');
+    try { n.lanPull(u, t); } catch (e) { toast('拉取失败'); }
+  }
+  window.__dlLanResult = function (op, ok, data, err) {
+    if (!ok) { toast('局域网同步失败：' + (err || '网络问题')); return; }
+    if (op === 'push') { toast('已发送到电脑'); return; }
+    if (!data) { toast('电脑端还没有数据'); return; }
+    let obj = null;
+    try { obj = JSON.parse(data); } catch (e) { toast('电脑返回的数据无法解析'); return; }
+    mergeRemotePayload(obj, function () { toast('已从电脑合并数据'); });
+  };
+
+  /* ---------- 8.22 手机系统闹钟 ---------- */
+  function writeSystemAlarmData(title, start, wds, date) {
+    const n = nativeBridge();
+    if (!n || !n.setSystemAlarm) { toast('当前平台不支持写入系统闹钟'); return; }
+    const hm = String(start || '09:00').split(':');
+    const h = parseInt(hm[0], 10) || 9;
+    const mi = parseInt(hm[1], 10) || 0;
+    const days = (wds || []).map(function (d) { return Number(d) + 1; }).filter(function (d) { return d >= 1 && d <= 7; });
+    const label = title + (days.length ? '' : (date ? ' · ' + date : ''));
+    try { n.setSystemAlarm(h, mi, label, JSON.stringify(days)); }
+    catch (e) { toast('写入系统闹钟失败'); }
   }
 
   /* __DL11_MODULE_END__ */

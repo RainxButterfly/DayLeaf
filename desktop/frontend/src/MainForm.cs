@@ -31,6 +31,7 @@ namespace DayLeaf
         private bool _startupCheckDone;
 
         /* 后台提醒：窗口关闭后留在托盘，用 NotifyIcon 继续提醒 */
+        private LanSyncServer _lanServer;
         private NotifyIcon _tray;
         private System.Windows.Forms.Timer _reminderTimer;
         private System.Windows.Forms.Timer _catchUpTimer;
@@ -171,6 +172,10 @@ namespace DayLeaf
             sb.Append("updateWidget:function(j){post({cmd:'widget',arg:String(j||'{}')});},");
             sb.Append("saveBinary:function(n,b,m){post({cmd:'saveBinary',name:String(n||'dayleaf.bin'),base64:String(b==null?'':b),mime:String(m==null?'':m)});},");
             sb.Append("webdavSync:function(j){post({cmd:'webdav',arg:String(j||'{}')});},");
+            sb.Append("lanStart:function(t){post({cmd:'lanStart',arg:String(t||'')});},");
+            sb.Append("lanStop:function(){post({cmd:'lanStop'});},");
+            sb.Append("lanPublish:function(j){post({cmd:'lanPublish',arg:String(j||'{}')});},");
+            sb.Append("lanInfo:function(){post({cmd:'lanInfo'});},");
             sb.Append("isForeground:function(){return !document.hidden && document.hasFocus();},");
             sb.Append("getVersionName:function(){return '").Append(version).Append("';},");
             // 桌面端不提供 notify/ensureNotifyPermission（置 undefined），网页会回落到
@@ -241,6 +246,26 @@ namespace DayLeaf
             {
                 string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
                 BeginWebDavSync(json);
+            }
+            else if (cmd == "lanStart")
+            {
+                string token = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "";
+                StartLanSync(token);
+            }
+            else if (cmd == "lanStop")
+            {
+                StopLanSync();
+            }
+            else if (cmd == "lanPublish")
+            {
+                if (_lanServer != null && _lanServer.Running)
+                {
+                    _lanServer.Latest = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "";
+                }
+            }
+            else if (cmd == "lanInfo")
+            {
+                ReportLanInfo();
             }
         }
 
@@ -845,6 +870,7 @@ namespace DayLeaf
             try { if (_catchUpTimer != null) { _catchUpTimer.Stop(); _catchUpTimer.Dispose(); } } catch (Exception) { }
             try { if (_tray != null) { _tray.Visible = false; _tray.Dispose(); } } catch (Exception) { }
             try { if (_widget != null) _widget.CloseForExit(); } catch (Exception) { }
+            try { if (_lanServer != null) _lanServer.Dispose(); } catch (Exception) { }
             base.OnFormClosed(e);
         }
 
@@ -1169,6 +1195,71 @@ namespace DayLeaf
         }
 
         /// <summary>网页推送的「下一项」：缓存；小窗开着就顺手刷新（不动焦点）。</summary>
+        /* ---------------- 局域网同步 ---------------- */
+
+        private void StartLanSync(string token)
+        {
+            try
+            {
+                if (_lanServer == null) _lanServer = new LanSyncServer();
+                _lanServer.Incoming -= OnLanIncoming;
+                _lanServer.Incoming += OnLanIncoming;
+                int port;
+                string err;
+                if (_lanServer.Start(token, out port, out err))
+                {
+                    ReportLanInfo();
+                    InvokeWeb("window.__dlLanStatus && window.__dlLanStatus({running:true,port:" + port + "});");
+                }
+                else
+                {
+                    InvokeWeb("window.__dlLanStatus && window.__dlLanStatus({running:false,error:" +
+                        new JavaScriptSerializer().Serialize(err ?? "端口被占用") + "});");
+                }
+            }
+            catch (Exception ex)
+            {
+                InvokeWeb("window.__dlLanStatus && window.__dlLanStatus({running:false,error:" +
+                    new JavaScriptSerializer().Serialize(ex.Message) + "});");
+            }
+        }
+
+        private void StopLanSync()
+        {
+            try { if (_lanServer != null) _lanServer.Stop(); } catch (Exception) { }
+            InvokeWeb("window.__dlLanStatus && window.__dlLanStatus({running:false});");
+        }
+
+        private void ReportLanInfo()
+        {
+            bool running = _lanServer != null && _lanServer.Running;
+            int port = running ? _lanServer.Port : 0;
+            var ips = LanSyncServer.LocalIPv4();
+            var data = new Dictionary<string, object>();
+            data["running"] = running;
+            data["port"] = port;
+            data["token"] = _lanServer != null ? _lanServer.Token : "";
+            data["ips"] = ips;
+            string json = new JavaScriptSerializer().Serialize(data);
+            InvokeWeb("window.__dlLanInfo && window.__dlLanInfo(" + json + ");");
+        }
+
+        private void OnLanIncoming(string body)
+        {
+            InvokeWeb("window.__dlLanIncoming && window.__dlLanIncoming(" +
+                new JavaScriptSerializer().Serialize(body) + ");");
+        }
+
+        private void InvokeWeb(string js)
+        {
+            try
+            {
+                if (_web != null && _web.CoreWebView2 != null)
+                    _web.CoreWebView2.ExecuteScriptAsync(js);
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
         private void ApplyWidget(string json)
         {
             _widgetItems = NextUpForm.ParseItems(json);
