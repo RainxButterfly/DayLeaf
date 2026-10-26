@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 25,
-  "versionName": "1.1.6",
+  "versionCode": 26,
+  "versionName": "1.1.7",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.6/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.7/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.6/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.6/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.6/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.7/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.7/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.7/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 988043,
-  "sha256": "67417059bb3d9e10846ff5e3bb49c5957787e13c1dc7bd5d6033174fc18f9013",
-  "notes": "局域网同步改为优先显示电脑有线/Wi-Fi 网卡地址并列出备用地址，排除虚拟网卡；连接失败给出可操作的中文提示（同一 Wi-Fi、防火墙、校园网 AP 隔离）；手机设置双列输入改单列并统一输入框宽度；字体导入整块卡片可点击。",
+  "size": 989634,
+  "sha256": "4d7d448fc60ef63023a4df54fd461039693662b11dbbb30ec7e388f2dba15fa7",
+  "notes": "手机新增「快速新建」组件并重做下一项/今日日程组件（渐变卡片、预览、启动器可见），电脑小窗重做（可拖动、可钉住置顶、可隐藏）；局域网同步修复手机推送后被原样回显的问题，发送后自动拉取合并并显示条数，电脑端实时显示手机已连接；通知权限长文案不再截断。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
   "publishedAt": "2026-10-26"
 }

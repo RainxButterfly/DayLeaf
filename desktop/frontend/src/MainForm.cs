@@ -1215,6 +1215,8 @@ namespace DayLeaf
                 if (_lanServer == null) _lanServer = new LanSyncServer();
                 _lanServer.Incoming -= OnLanIncoming;
                 _lanServer.Incoming += OnLanIncoming;
+                _lanServer.Touched -= OnLanTouched;
+                _lanServer.Touched += OnLanTouched;
                 int port;
                 string err;
                 if (_lanServer.Start(token, out port, out err))
@@ -1253,6 +1255,12 @@ namespace DayLeaf
             data["ips"] = ips;
             string json = new JavaScriptSerializer().Serialize(data);
             InvokeWeb("window.__dlLanInfo && window.__dlLanInfo(" + json + ");");
+        }
+
+        private void OnLanTouched(string method)
+        {
+            InvokeWeb("window.__dlLanTouch && window.__dlLanTouch(" +
+                new JavaScriptSerializer().Serialize(method ?? "") + ");");
         }
 
         private void OnLanIncoming(string body)

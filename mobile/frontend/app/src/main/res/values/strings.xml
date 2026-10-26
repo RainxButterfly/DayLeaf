@@ -9,6 +9,13 @@
     <string name="widget_today_name">叶历 · 今日日程</string>
     <string name="widget_today_label">今日日程</string>
     <string name="widget_today_empty">今天还没有安排</string>
+    <string name="widget_today_desc">今天前 4 条日程，随应用自动更新</string>
+    <string name="widget_next_desc">最近一条日程与时间</string>
+    <string name="widget_next_hint">把要做的事记下来，叶历会提醒你</string>
+    <string name="widget_quick_name">叶历 · 快速新建</string>
+    <string name="widget_quick_title">快速新建</string>
+    <string name="widget_quick_sub">点一下，记一笔日程</string>
+    <string name="widget_quick_desc">一键打开快速录入</string>
 
     <!-- 提醒通知按钮 -->
     <string name="notif_action_done">完成</string>

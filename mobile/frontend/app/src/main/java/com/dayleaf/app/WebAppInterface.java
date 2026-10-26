@@ -279,6 +279,12 @@ public class WebAppInterface {
         pinWidget(TodayWidgetProvider.class);
     }
 
+    /** 请求把「快速新建」小组件钉到桌面 */
+    @JavascriptInterface
+    public void pinQuickWidget() {
+        pinWidget(QuickWidgetProvider.class);
+    }
+
     private void pinWidget(final Class<?> provider) {
         activity.runOnUiThread(new Runnable() {
             @Override public void run() {

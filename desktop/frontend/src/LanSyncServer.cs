@@ -38,6 +38,9 @@ namespace DayLeaf
         /// <summary>手机推来数据时触发（在后台线程），参数是完整 JSON 文本。</summary>
         public event Action<string> Incoming;
 
+        /// <summary>任何通过配对码的请求都会触发，用来在电脑端显示「手机已连接」。</summary>
+        public event Action<string> Touched;
+
         public bool Start(string token, out int port, out string error)
         {
             port = 0;
@@ -130,6 +133,8 @@ namespace DayLeaf
                         Write(ns, 401, "bad token");
                         return;
                     }
+                    Action<string> touch = Touched;
+                    if (touch != null) { try { touch(method); } catch (Exception) { /* ignore */ } }
 
                     int len = 0;
                     string cl = HeaderValue(lines, "Content-Length");
@@ -154,10 +159,12 @@ namespace DayLeaf
                             Write(ns, 400, "bad payload");
                             return;
                         }
-                        Latest = text;
+                        /* 不把手机推来的包直接当成电脑端最新数据：
+                           否则手机随后拉取会拿到自己刚发的副本，看起来“同步成功但没变化”。
+                           先交给网页合并，合并后再由 JS 调 lanPublish 回写。 */
                         Action<string> h = Incoming;
                         if (h != null) { try { h(text); } catch (Exception) { /* ignore */ } }
-                        Write(ns, 200, "ok");
+                        Write(ns, 200, "{\"ok\":true}");
                         return;
                     }
 

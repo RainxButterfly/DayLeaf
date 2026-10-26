@@ -14,6 +14,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import org.json.JSONArray;
@@ -48,43 +49,89 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         } catch (Exception e) { /* ignore */ }
     }
 
-    /** JS 传入 {today:[{time,title}]}；最多保留 4 行。 */
+    /** 存一份精简载荷：{today:[{time,title}],todayLabel:"10月26日 · 周一"} */
     public static void saveItems(Context context, String json) {
-        StringBuilder sb = new StringBuilder();
+        String compact = "";
         try {
             JSONObject o = new JSONObject(json == null ? "{}" : json);
             JSONArray arr = o.optJSONArray("today");
+            JSONObject out = new JSONObject();
+            JSONArray keep = new JSONArray();
             if (arr != null) {
-                for (int i = 0; i < arr.length() && i < MAX_LINES; i++) {
+                for (int i = 0; i < arr.length() && keep.length() < MAX_LINES; i++) {
                     JSONObject it = arr.optJSONObject(i);
                     if (it == null) continue;
                     String time = trim(it.optString("time", ""));
                     String title = trim(it.optString("title", ""));
                     if (time.length() == 0 && title.length() == 0) continue;
-                    if (sb.length() > 0) sb.append('\n');
-                    sb.append(time.length() == 0 ? title : (title.length() == 0 ? time : time + "  " + title));
+                    JSONObject one = new JSONObject();
+                    one.put("time", time);
+                    one.put("title", title);
+                    keep.put(one);
                 }
             }
+            out.put("today", keep);
+            out.put("todayLabel", trim(o.optString("todayLabel", "")));
+            compact = out.toString();
         } catch (Exception e) {
-            sb.setLength(0);
+            compact = "";
         }
         try {
             SharedPreferences sp = context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE);
-            sp.edit().putString(KEY_WIDGET_TODAY, sb.toString()).apply();
+            sp.edit().putString(KEY_WIDGET_TODAY, compact).apply();
         } catch (Exception e) { /* ignore */ }
     }
 
     private static RemoteViews build(Context context) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_today);
-        String lines = "";
+        int[] rowIds = { R.id.widget_today_row1, R.id.widget_today_row2, R.id.widget_today_row3, R.id.widget_today_row4 };
+        int[] timeIds = { R.id.widget_today_t1, R.id.widget_today_t2, R.id.widget_today_t3, R.id.widget_today_t4 };
+        int[] nameIds = { R.id.widget_today_n1, R.id.widget_today_n2, R.id.widget_today_n3, R.id.widget_today_n4 };
+
+        JSONArray arr = null;
+        String head = "";
         try {
             SharedPreferences sp = context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE);
-            lines = sp.getString(KEY_WIDGET_TODAY, "");
-        } catch (Exception e) { /* ignore */ }
-        if (lines == null) lines = "";
-        rv.setTextViewText(R.id.widget_today_line,
-                lines.length() == 0 ? context.getString(R.string.widget_today_empty) : lines);
+            String raw = sp.getString(KEY_WIDGET_TODAY, "");
+            if (raw != null && raw.length() > 0) {
+                if (raw.trim().startsWith("{")) {
+                    JSONObject o = new JSONObject(raw);
+                    arr = o.optJSONArray("today");
+                    head = trim(o.optString("todayLabel", ""));
+                } else {
+                    /* 兼容旧版按行存的字符串 */
+                    arr = new JSONArray();
+                    for (String line : raw.split("\\n")) {
+                        JSONObject one = new JSONObject();
+                        one.put("time", "");
+                        one.put("title", line);
+                        arr.put(one);
+                    }
+                }
+            }
+        } catch (Exception e) { arr = null; }
+
+        int n = arr == null ? 0 : arr.length();
         rv.setTextViewText(R.id.widget_today_label, context.getString(R.string.widget_today_label));
+        rv.setTextViewText(R.id.widget_today_head, head.length() == 0 ? "今天" : head);
+
+        for (int i = 0; i < MAX_LINES; i++) {
+            if (i < n) {
+                JSONObject one = arr.optJSONObject(i);
+                String time = one == null ? "" : trim(one.optString("time", ""));
+                String title = one == null ? "" : trim(one.optString("title", ""));
+                rv.setTextViewText(timeIds[i], time);
+                rv.setTextViewText(nameIds[i], title);
+                rv.setViewVisibility(rowIds[i], View.VISIBLE);
+            } else {
+                rv.setViewVisibility(rowIds[i], View.GONE);
+            }
+        }
+        if (n == 0) {
+            rv.setTextViewText(timeIds[0], "");
+            rv.setTextViewText(nameIds[0], context.getString(R.string.widget_today_empty));
+            rv.setViewVisibility(rowIds[0], View.VISIBLE);
+        }
 
         Intent open = new Intent(context, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);

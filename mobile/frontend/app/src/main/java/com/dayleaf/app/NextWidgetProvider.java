@@ -80,6 +80,7 @@ public class NextWidgetProvider extends AppWidgetProvider {
 
         String title = "";
         String time = "";
+        String body = "";
         try {
             SharedPreferences sp = context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE);
             String raw = sp.getString(KEY_WIDGET_NEXT, "");
@@ -87,17 +88,15 @@ public class NextWidgetProvider extends AppWidgetProvider {
                 JSONObject o = new JSONObject(raw);
                 title = trim(o.optString("title", ""));
                 time = trim(o.optString("time", ""));
+                body = trim(o.optString("body", ""));
             }
         } catch (Exception e) { /* 读不到就按空状态 */ }
 
-        String line;
-        if (title.length() == 0 && time.length() == 0) {
-            rv.setTextViewText(R.id.widget_next_line, context.getString(R.string.widget_next_empty));
-        } else {
-            line = time.length() == 0 ? title : (title.length() == 0 ? time : time + " " + title);
-            rv.setTextViewText(R.id.widget_next_line, line);
-        }
+        boolean empty = title.length() == 0 && time.length() == 0;
         rv.setTextViewText(R.id.widget_next_label, context.getString(R.string.widget_next_label));
+        rv.setTextViewText(R.id.widget_next_time, time);
+        rv.setTextViewText(R.id.widget_next_title, empty ? context.getString(R.string.widget_next_empty) : (title.length() == 0 ? time : title));
+        rv.setTextViewText(R.id.widget_next_body, empty ? context.getString(R.string.widget_next_hint) : body);
 
         Intent open = new Intent(context, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);

@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     private final Object shareLock = new Object();
     private String pendingSharedText = null;   // 系统分享进来、还没被 JS 取走的内容
     private volatile boolean pageLoaded = false;
+    private boolean pendingQuickAdd = false;   // 从「快速新建」小组件进入
 
     /** 分享图片进内存的上限：再大就放弃，避免 OOM */
     private static final int MAX_SHARE_BYTES = 8 * 1024 * 1024;
@@ -120,6 +121,10 @@ public class MainActivity extends Activity {
 
         // 从系统「分享到叶历」进来：先收下内容，等网页加载完再取
         handleShareIntent(getIntent());
+        try {
+            Intent it = getIntent();
+            pendingQuickAdd = it != null && it.getBooleanExtra("quick_add", false);
+        } catch (Exception e) { pendingQuickAdd = false; }
 
         webView = findViewById(R.id.webview);
         updateManager = new UpdateManager(this);
@@ -171,6 +176,14 @@ public class MainActivity extends Activity {
 
             @Override public void onPageFinished(WebView view, String url) {
                 pageLoaded = true;
+                if (pendingQuickAdd) {
+                    pendingQuickAdd = false;
+                    view.postDelayed(new Runnable() {
+                        @Override public void run() {
+                            runJs("window.__dlQuickAdd && window.__dlQuickAdd();");
+                        }
+                    }, 350);
+                }
             }
         });
         // 重写 onShowFileChooser：网页里的「选择图片 / 导入 JSON / 上传字体」
@@ -239,6 +252,20 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         if (intent == null) return;
         setIntent(intent);
+        try {
+            if (intent.getBooleanExtra("quick_add", false)) {
+                if (webView != null) {
+                    webView.postDelayed(new Runnable() {
+                        @Override public void run() {
+                            runJs("window.__dlQuickAdd && window.__dlQuickAdd();");
+                        }
+                    }, 250);
+                } else {
+                    pendingQuickAdd = true;
+                }
+                return;
+            }
+        } catch (Exception e) { /* ignore */ }
         boolean has = handleShareIntent(intent);
         if (!has) return;
 

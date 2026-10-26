@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:initialLayout="@layout/widget_today"
+    android:previewLayout="@layout/widget_today"
+    android:description="@string/widget_today_desc"
     android:minHeight="110dp"
     android:minResizeHeight="70dp"
-    android:minResizeWidth="180dp"
+    android:minResizeWidth="200dp"
     android:minWidth="250dp"
     android:resizeMode="horizontal|vertical"
     android:targetCellHeight="2"
