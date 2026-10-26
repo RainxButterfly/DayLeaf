@@ -28,6 +28,25 @@ namespace DayLeaf
         private bool _updatePreviewDone;
         private bool _startupCheckDone;
 
+        /* 后台提醒：窗口关闭后留在托盘，用 NotifyIcon 继续提醒 */
+        private NotifyIcon _tray;
+        private System.Windows.Forms.Timer _reminderTimer;
+        private bool _backgroundReminders;
+        private bool _exiting;
+        private bool _trayTipShown;
+        private List<ReminderItem> _reminders = new List<ReminderItem>();
+        private readonly HashSet<string> _firedReminders = new HashSet<string>();
+        private string ReminderFile { get { return Path.Combine(AppPaths.Root, "reminders.json"); } }
+
+        private sealed class ReminderItem
+        {
+            public string Id = "";
+            public long At;
+            public string Title = "日程提醒";
+            public string Body = "";
+            public string Kind = "rm";
+        }
+
         public MainForm()
         {
             AppPaths.Ensure();
@@ -63,6 +82,8 @@ namespace DayLeaf
             ResumeLayout(false);
 
             RestoreWindowBounds();
+            SetupTray();
+            LoadRemindersFromDisk();
 
             Load += OnLoadAsync;
             FormClosing += OnFormClosing;
@@ -131,6 +152,8 @@ namespace DayLeaf
             sb.Append("checkUpdate:function(){post({cmd:'checkUpdate'});},");
             sb.Append("setThemeMode:function(m){post({cmd:'theme',arg:String(m||'light')});},");
             sb.Append("saveTextFile:function(n,c){post({cmd:'save',name:String(n||'dayleaf.txt'),content:String(c==null?'':c)});},");
+            sb.Append("syncReminders:function(j){post({cmd:'reminders',arg:String(j||'{}')});},");
+            sb.Append("isForeground:function(){return !document.hidden && document.hasFocus();},");
             sb.Append("getVersionName:function(){return '").Append(version).Append("';},");
             // 桌面端不提供 notify/ensureNotifyPermission（置 undefined），网页会回落到
             // WebView2 自带的 Notification API；授权在 PermissionRequested 里统一放行。
@@ -173,6 +196,11 @@ namespace DayLeaf
                 string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "dayleaf.txt";
                 string content = msg.ContainsKey("content") ? Convert.ToString(msg["content"]) : "";
                 SaveTextFile(name, content);
+            }
+            else if (cmd == "reminders")
+            {
+                string json = msg.ContainsKey("arg") ? Convert.ToString(msg["arg"]) : "{}";
+                ApplyReminders(json);
             }
         }
 
@@ -638,6 +666,208 @@ namespace DayLeaf
                 File.WriteAllText(AppPaths.WindowFile, ser.Serialize(st));
             }
             catch (Exception) { /* 存不下就算了，不影响关闭 */ }
+
+            /* 开了后台提醒：点窗口 X 只是收进托盘，提醒继续 */
+            if (_backgroundReminders && !_exiting && e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Hide();
+                if (!_trayTipShown && _tray != null)
+                {
+                    _trayTipShown = true;
+                    try
+                    {
+                        _tray.ShowBalloonTip(6000, "叶历仍在后台运行",
+                            "日程提醒会继续；右键托盘图标可以重新打开或彻底退出。",
+                            ToolTipIcon.Info);
+                    }
+                    catch (Exception) { /* ignore */ }
+                }
+            }
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            try { if (_reminderTimer != null) { _reminderTimer.Stop(); _reminderTimer.Dispose(); } } catch (Exception) { }
+            try { if (_tray != null) { _tray.Visible = false; _tray.Dispose(); } } catch (Exception) { }
+            base.OnFormClosed(e);
+        }
+
+        /* ------------------------------------------------------------------
+         * 托盘与后台提醒
+         * ---------------------------------------------------------------- */
+
+        private void SetupTray()
+        {
+            try
+            {
+                Icon ico = null;
+                try { ico = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch (Exception) { }
+                _tray = new NotifyIcon
+                {
+                    Icon = ico ?? SystemIcons.Application,
+                    Text = "叶历 DayLeaf",
+                    Visible = true
+                };
+                var menu = new ContextMenuStrip();
+                var open = new ToolStripMenuItem("打开叶历");
+                open.Click += delegate { ShowFromTray(); };
+                menu.Items.Add(open);
+                menu.Items.Add(new ToolStripSeparator());
+                var exit = new ToolStripMenuItem("退出");
+                exit.Click += delegate { ExitFromTray(); };
+                menu.Items.Add(exit);
+                _tray.ContextMenuStrip = menu;
+                _tray.DoubleClick += delegate { ShowFromTray(); };
+                _tray.BalloonTipClicked += delegate { ShowFromTray(); };
+            }
+            catch (Exception) { /* 托盘失败不影响主界面 */ }
+        }
+
+        private void ShowFromTray()
+        {
+            try
+            {
+                ShowInTaskbar = true;
+                Show();
+                if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+                Activate();
+                BringToFront();
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        private void ExitFromTray()
+        {
+            _exiting = true;
+            try { _tray.Visible = false; } catch (Exception) { }
+            try
+            {
+                _backgroundReminders = false;
+                ApplyReminders("{\"enabled\":false,\"items\":[]}");
+            }
+            catch (Exception) { }
+            Close();
+        }
+
+        private void ApplyReminders(string json)
+        {
+            if (json == null || json.Length == 0) json = "{\"enabled\":false,\"items\":[]}";
+            try { File.WriteAllText(ReminderFile, json, new UTF8Encoding(false)); } catch (Exception) { }
+
+            bool enabled = false;
+            var items = new List<ReminderItem>();
+            try
+            {
+                var ser = new JavaScriptSerializer();
+                var dict = ser.Deserialize<Dictionary<string, object>>(json);
+                if (dict != null)
+                {
+                    object en;
+                    if (dict.TryGetValue("enabled", out en)) enabled = Convert.ToBoolean(en);
+                    object arrObj;
+                    if (dict.TryGetValue("items", out arrObj))
+                    {
+                        var arr = arrObj as object[];
+                        if (arr != null)
+                        {
+                            foreach (object o in arr)
+                            {
+                                var d = o as Dictionary<string, object>;
+                                if (d == null) continue;
+                                var it = new ReminderItem();
+                                it.Id = GetStr(d, "id", "");
+                                it.At = GetLong(d, "at", 0);
+                                it.Title = GetStr(d, "title", "日程提醒");
+                                it.Body = GetStr(d, "body", "");
+                                it.Kind = GetStr(d, "kind", "rm");
+                                if (it.At > 0) items.Add(it);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception) { enabled = false; }
+
+            _backgroundReminders = enabled;
+            _reminders = items;
+            if (enabled) StartReminderTimer();
+            else StopReminderTimer();
+        }
+
+        private void LoadRemindersFromDisk()
+        {
+            try
+            {
+                if (!File.Exists(ReminderFile)) return;
+                string json = File.ReadAllText(ReminderFile);
+                if (json == null || json.Length == 0) return;
+                ApplyReminders(json);
+            }
+            catch (Exception) { /* ignore */ }
+        }
+
+        private void StartReminderTimer()
+        {
+            if (_reminderTimer == null)
+            {
+                _reminderTimer = new System.Windows.Forms.Timer();
+                _reminderTimer.Interval = 15000;
+                _reminderTimer.Tick += delegate { CheckReminders(); };
+            }
+            _reminderTimer.Start();
+            CheckReminders();
+        }
+
+        private void StopReminderTimer()
+        {
+            try { if (_reminderTimer != null) _reminderTimer.Stop(); } catch (Exception) { }
+        }
+
+        private void CheckReminders()
+        {
+            if (!_backgroundReminders || _reminders == null || _tray == null) return;
+            long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            foreach (ReminderItem r in _reminders)
+            {
+                if (r.At > now || r.At < now - 120000) continue;
+                string key = r.Id + "|" + r.At;
+                if (_firedReminders.Contains(key)) continue;
+                _firedReminders.Add(key);
+                try
+                {
+                    _tray.Visible = true;
+                    _tray.ShowBalloonTip(8000, r.Title, r.Body,
+                        r.Kind == "al" ? ToolTipIcon.Warning : ToolTipIcon.Info);
+                    if (r.Kind == "al")
+                    {
+                        try { System.Media.SystemSounds.Exclamation.Play(); } catch (Exception) { }
+                    }
+                }
+                catch (Exception) { /* ignore */ }
+            }
+        }
+
+        private static string GetStr(Dictionary<string, object> d, string key, string fallback)
+        {
+            object v;
+            if (d.TryGetValue(key, out v) && v != null)
+            {
+                string s = Convert.ToString(v);
+                return string.IsNullOrEmpty(s) ? fallback : s;
+            }
+            return fallback;
+        }
+
+        private static long GetLong(Dictionary<string, object> d, string key, long fallback)
+        {
+            object v;
+            if (d.TryGetValue(key, out v) && v != null)
+            {
+                long n;
+                if (long.TryParse(Convert.ToString(v), out n)) return n;
+            }
+            return fallback;
         }
 
         /// <summary>另一个实例被启动时，把本窗口提到前面。</summary>

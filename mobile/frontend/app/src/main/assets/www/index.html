@@ -292,9 +292,7 @@ main{flex:1;min-height:0;position:relative}
   position:fixed; left:0; right:0; bottom:0; z-index:50;
   display:flex; gap:4px;
   padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
-  background:var(--surface-soft);
-  -webkit-backdrop-filter:blur(22px) saturate(1.7);
-  backdrop-filter:blur(22px) saturate(1.7);
+  background:rgba(var(--card-rgb),var(--nav-alpha,1));
   border-top:1px solid var(--line);
 }
 .tab{
@@ -329,9 +327,7 @@ main{flex:1;min-height:0;position:relative}
     width:var(--rail); flex:0 0 var(--rail);
     padding:22px 10px 20px;
     border-right:1px solid var(--line);
-    background:rgba(var(--card-rgb),.55);
-    -webkit-backdrop-filter:blur(20px) saturate(1.5);
-    backdrop-filter:blur(20px) saturate(1.5);
+    background:rgba(var(--card-rgb),var(--nav-alpha,1));
   }
   .tabbar{display:none}
   #view-home.active,#view-notes.active{padding:30px 30px 44px}
@@ -2827,8 +2823,9 @@ html.dark .evd-chip.imp{color:#F3C56A;background:#2C2414;border-color:#4A3A18}
 .type-auto.on{color:var(--accent);border-color:rgba(76,111,255,.35);background:rgba(76,111,255,.08)}
 .type-color{
   width:28px;height:28px;padding:0;border:1px solid var(--line2);border-radius:9px;
-  background:var(--surface);cursor:pointer;-webkit-appearance:none;appearance:none;
+  background:var(--c,var(--surface));cursor:pointer;-webkit-appearance:none;appearance:none;
 }
+.type-color-btn{box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .type-color::-webkit-color-swatch-wrapper{padding:3px}
 .type-color::-webkit-color-swatch{border:0;border-radius:6px}
 .type-line{display:flex;align-items:center;gap:10px;margin-top:8px}
@@ -2940,6 +2937,9 @@ html.bg-clear #bgImage{filter:none!important;opacity:1!important}
 html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-notes *{
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
 }
+html.bg-clear .rail, html.bg-clear .tabbar{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
 .bg-preview.is-clear .bg-prev-veil{display:none}
 .bg-preview.is-clear .bg-prev-img{opacity:1!important;filter:none!important}
 /* 记事模块透明度 */
@@ -3019,6 +3019,147 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
   .set-cats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .set-cat{padding:13px}
 }
+
+/* 应用内取色器 */
+.cp-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:97;display:none}
+.cp-root.open{display:block}
+.cp-scrim{position:absolute;top:0;right:0;bottom:0;left:0;background:var(--overlay);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.cp-panel{
+  position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow-y:auto;
+  background:var(--surface);border-radius:22px 22px 0 0;
+  padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -20px 60px -20px rgba(10,14,24,.5);
+  animation:sheetUp .26s cubic-bezier(.22,.9,.3,1);
+}
+.cp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cp-head h3{font-size:16px;font-weight:750}
+.cp-preview{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cp-swatch{
+  width:58px;height:58px;flex:0 0 auto;border-radius:15px;display:grid;place-items:center;
+  border:1px solid var(--line2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.cp-swatch b{font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.35)}
+.cp-hexwrap{
+  flex:1;display:flex;align-items:center;gap:4px;height:42px;padding:0 12px;
+  border-radius:12px;border:1px solid var(--line2);background:var(--surface-soft);
+  font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;
+}
+.cp-hexwrap input{flex:1;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:15px;color:var(--ink);letter-spacing:.5px}
+.cp-slider{display:flex;align-items:center;gap:9px;margin-top:11px}
+.cp-slider label{flex:0 0 46px;font-size:11px;color:var(--muted)}
+.cp-slider input[type=range]{flex:1;min-width:0;width:auto;height:26px}
+.cp-slider b{flex:0 0 42px;text-align:right;font-size:11px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.cp-presets{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:15px 0 8px}
+.cp-presets button{aspect-ratio:1;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line2);background:var(--c)}
+.cp-presets button:active{transform:scale(.92)}
+.cp-hint{font-size:10.5px;line-height:1.55;color:var(--muted);margin:0 0 12px}
+.cp-foot{display:flex;gap:10px}
+.cp-foot .btn{flex:1;height:42px;border-radius:12px}
+@media (min-width:960px){
+  .cp-panel{
+    left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);
+    width:380px;border-radius:20px;animation:pop .2s ease;
+    padding:18px 20px 16px;max-height:84vh;
+  }
+}
+
+/* 星期栏背景设置 */
+.gh-row{display:flex;align-items:center;gap:9px;margin:8px 0}
+.gh-row>span{flex:0 0 40px;font-size:11px;color:var(--muted)}
+.gh-row b{font-size:11px;color:var(--ink2);letter-spacing:.4px}
+.gh-preview{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:4px;
+  padding:7px 5px;margin:4px 0 8px;border-radius:11px;overflow:hidden;
+  border:1px solid var(--line2);background:var(--surface);
+  background-size:cover;background-position:50% 50%;
+}
+.gh-preview span{text-align:center;font-size:10px;color:var(--muted);padding:4px 0}
+
+/* 模块透明度实时预览 */
+.alpha-preview{
+  position:relative;height:118px;border-radius:13px;overflow:hidden;
+  border:1px solid var(--line2);margin:2px 0 6px;
+  background:linear-gradient(135deg,#4C6FFF,#8A5CFF);
+}
+.alpha-preview .ap-bg{
+  position:absolute;top:0;right:0;bottom:0;left:0;
+  background-size:cover;background-position:50% 50%;
+}
+.alpha-preview .ap-tag{
+  position:absolute;left:9px;top:8px;z-index:2;font-size:9px;padding:2px 6px;border-radius:5px;
+  background:rgba(10,14,24,.45);color:#fff;
+}
+.ap-card{
+  position:absolute;z-index:1;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;
+  padding:9px 11px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(var(--card-rgb),var(--ap-a,.78));
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:0 8px 18px -12px rgba(0,0,0,.5);
+}
+.ap-card b{font-size:11.5px;font-weight:700;color:var(--ink)}
+.ap-card small{font-size:9.5px;color:var(--ink2)}
+.alpha-preview .ap-cal{top:34px;--ap-a:var(--ap-cal,.78)}
+.alpha-preview .ap-ed{top:68px;--ap-a:var(--ap-ed,.92);left:34px}
+.alpha-preview.is-clear .ap-card{-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* 设置子页：按 sec-line 聚成卡片，减少长表单的杂乱感 */
+.set-group{
+  background:var(--surface-soft);border:1px solid var(--line);border-radius:16px;
+  padding:0 14px 10px;margin-bottom:12px;
+}
+.set-group>.sec-line{margin:12px 0 8px}
+.set-group>.sec-line:first-child{margin-top:12px}
+.set-group .field{padding:7px 0}
+.set-group .field:first-of-type{padding-top:2px}
+.set-group .hint{margin:0 0 6px}
+.set-group .alpha-preview,.set-group .type-preview,.set-group .gh-preview{margin-top:8px}
+.set-group .about{margin-top:8px}
+
+/* 关于卡片 */
+.about-card{
+  position:relative;overflow:hidden;border-radius:18px;padding:16px;
+  border:1px solid var(--line);background:var(--surface-soft);
+}
+.about-card::before{
+  content:"";position:absolute;right:-40px;top:-60px;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(76,111,255,.18),transparent 68%);pointer-events:none;
+}
+.ab-head{display:flex;align-items:center;gap:11px;position:relative}
+.ab-logo{
+  width:46px;height:46px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 10px 22px -12px rgba(76,111,255,.8);
+}
+.ab-logo svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ab-brand{flex:1;min-width:0}
+.ab-brand b{display:block;font-size:15px;font-weight:750;letter-spacing:-.2px;color:var(--ink)}
+.ab-brand small{display:block;margin-top:3px;font-size:10.5px;color:var(--muted)}
+.ab-ver{
+  flex:0 0 auto;font-size:10px;font-weight:700;color:var(--accent);
+  padding:4px 8px;border-radius:7px;background:rgba(76,111,255,.1);
+  border:1px solid rgba(76,111,255,.22);font-variant-numeric:tabular-nums;
+}
+.ab-rows{display:flex;flex-direction:column;gap:1px;margin:14px 0 10px;position:relative}
+.ab-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line2)}
+.ab-row:last-child{border-bottom:0}
+.ab-row span{flex:0 0 38px;font-size:10.5px;color:var(--muted);padding-top:1px}
+.ab-row b,.ab-row a{flex:1;min-width:0;font-size:11.5px;font-weight:600;color:var(--ink2);text-decoration:none;word-break:break-word}
+.ab-row a{color:var(--accent)}
+.ab-badges{display:flex;flex-wrap:wrap;gap:6px;position:relative}
+.ab-badges span{
+  font-size:9.5px;padding:3px 8px;border-radius:99px;
+  color:var(--ink2);background:var(--surface);border:1px solid var(--line2);
+}
+.ab-note{margin:10px 0 0;font-size:10px;line-height:1.6;color:var(--muted);position:relative}
+
+/* 语料库文字颜色 */
+.quote-card .q-text{color:var(--quote-ink,var(--ink2))}
+.quote-card .q-src{color:var(--quote-ink2,var(--muted))}
+.quote-card .q-act{color:var(--quote-muted,var(--accent))}
+.quote-card .q-mark{color:var(--quote-muted,rgba(76,111,255,.12))}
+.quote-card.has-bg .q-text{color:var(--quote-ink,#fff)}
+.quote-card.has-bg .q-src{color:var(--quote-ink2,rgba(255,255,255,.8))}
+.quote-card.has-bg .q-act{color:var(--quote-muted,#fff)}
 </style>
 </head>
 
@@ -3327,6 +3468,15 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
 <!-- 图片取景器（独立层级，避免与设置弹窗互相关闭） -->
 <div class="framer-root" id="framer"></div>
 
+<!-- 背景锐化滤镜：模糊滑杆的负值使用 -->
+<svg width="0" height="0" style="position:absolute;left:-9999px;top:0" aria-hidden="true">
+  <filter id="dlSharpen1" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.08 0 -0.08 1.32 -0.08 0 -0.08 0"/></filter>
+  <filter id="dlSharpen2" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.14 0 -0.14 1.56 -0.14 0 -0.14 0"/></filter>
+  <filter id="dlSharpen3" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.20 0 -0.20 1.80 -0.20 0 -0.20 0"/></filter>
+  <filter id="dlSharpen4" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.26 0 -0.26 2.04 -0.26 0 -0.26 0"/></filter>
+  <filter id="dlSharpen5" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.32 0 -0.32 2.28 -0.32 0 -0.32 0"/></filter>
+</svg>
+
 <script>
 /* ============================================================================
    7. 脚本
@@ -3342,7 +3492,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.0.14',
+    version: '1.0.15',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -3562,7 +3712,11 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     sleep: { on: false, from: '23:00', to: '07:00' },
     /** 记事页模块透明度：日历卡 / 编辑卡；gridHeadHide=隐藏表格顶部黑色日期栏 */
     notesAlpha: { cal: 0.78, editor: 0.92 },
-    gridHeadHide: false
+    gridHeadHide: false,
+    /** 侧边栏/底栏背景透明度 0–1（不做毛玻璃，文字和图标保持清晰） */
+    navAlpha: 1,
+    /** 星期栏背景：theme / none / color / image */
+    gridHead: { mode: 'theme', color: '#4C6FFF', image: '' }
   },
     /** 语录字体：内置 key 或自定义字体 id */
     quoteFont: { key: 'sys', custom: [] },
@@ -3596,13 +3750,13 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
      *   bgScale  背景图缩放 1–2
      *   bgFit    'cover' 铺满卡片（会裁掉边缘）| 'contain' 整张显示（自动适应，可能留边）
      */
-    quoteStyle: { fs: 1, pad: 1, padMode: 'mul', padPx: 120, bgScale: 1, bgX: 50, bgY: 50, bgFit: 'cover' },
+    quoteStyle: { fs: 1, pad: 1, padMode: 'mul', padPx: 120, bgScale: 1, bgX: 50, bgY: 50, bgFit: 'cover', color: '', color2: '', color3: '' },
     /**
      * 个性化背景。
      * fit = 'contain' 整张图完整显示（默认，周围用模糊铺底补边）
      *       'cover'   铺满整屏（会裁掉超出部分）
      */
-    bg: { data: '', opacity: 0.45, blur: 0, scale: 1, x: 50, y: 50, fit: 'contain', clear: false },
+    bg: { data: '', opacity: 0.45, blur: 0, veil: 1, scale: 1, x: 50, y: 50, fit: 'contain', clear: false },
     /**
      * 过期日程自动清理。
      * @type {{on:boolean, days:number, lastRun:string}}
@@ -3619,7 +3773,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
      *   sound  闹钟是否响铃（关掉只剩面板 + 震动）
      *   fired  已触发记录 { '事件id|日期|类型': 时间戳 }，防止重复打扰
      */
-    notify: { on: false, defMin: 10, sound: true, fired: {} }
+    notify: { on: false, defMin: 10, sound: true, background: false, fired: {} }
   };
 
   /* ---- 仅存在于本次会话的界面状态 ---- */
@@ -3722,6 +3876,10 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       state.quoteStyle.padMode = np.mode;
       state.quoteStyle.pad = np.mul;
       state.quoteStyle.padPx = np.px;
+      state.quoteStyle.fs = Math.max(0.8, Math.min(1.5, Number(state.quoteStyle.fs) || 1));
+      ['color', 'color2', 'color3'].forEach(function (k) {
+        if (!/^#[0-9a-f]{6}$/i.test(String(state.quoteStyle[k] || ''))) state.quoteStyle[k] = '';
+      });
       state.quotes = Object.assign(state.quotes, obj.quotes || {});
       state.quoteBg = Object.assign({ items: [] }, obj.quoteBg || {});
       state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
@@ -3743,6 +3901,9 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       };
       state.bg = Object.assign(state.bg, obj.bg || {});
       state.bg.clear = !!state.bg.clear;
+      state.bg.blur = Math.max(-8, Math.min(24, Number(state.bg.blur) || 0));
+      state.bg.veil = Math.max(0, Math.min(1, Number(state.bg.veil)));
+      if (!isFinite(Number(state.bg.veil))) state.bg.veil = 1;
       /* 取景方式只有两种，手改坏了就回退到默认 */
       if (state.bg.fit !== 'cover') state.bg.fit = 'contain';
       if (state.home.fit !== 'contain') state.home.fit = 'cover';
@@ -3757,6 +3918,12 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       na.editor = Math.max(0, Math.min(1, Number(na.editor)));
       state.ui.notesAlpha = na;
       state.ui.gridHeadHide = !!state.ui.gridHeadHide;
+      state.ui.navAlpha = Math.max(0, Math.min(1, Number(state.ui.navAlpha)));
+      if (!isFinite(Number(state.ui.navAlpha))) state.ui.navAlpha = 1;
+      const gh = Object.assign({ mode: 'theme', color: '#4C6FFF', image: '' }, state.ui.gridHead || {});
+      if (['theme', 'none', 'color', 'image'].indexOf(gh.mode) < 0) gh.mode = 'theme';
+      if (!/^#[0-9a-f]{6}$/i.test(String(gh.color || ''))) gh.color = '#4C6FFF';
+      state.ui.gridHead = gh;
       /* 微调步长夹到 1–120，手改坏了也不至于一步跳一天 */
       let st = Math.round(Number(state.ui.dtStep));
       if (!isFinite(st) || st < 1) st = 15;
@@ -3819,6 +3986,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         }
       }
     }, 120);
+    scheduleNativeReminderSync(false);
   }
 
   /* --------------------------------------------------------------------------
@@ -7767,11 +7935,64 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
   }
 
   let remindTimer = null;
+
+  /* ---- 后台提醒：把未来的提醒/闹钟交给原生系统调度 ---- */
+  let nativeRemLast = '';
+  let nativeRemTimer = null;
+
+  function buildNativeReminders() {
+    const enabled = !!(state.notify && state.notify.background && state.notify.on);
+    const items = [];
+    if (enabled) {
+      const now = Date.now();
+      state.events.forEach(function (ev) {
+        if (!remindOn(ev)) return;
+        const start = evStartTs(ev);
+        const base = ev.t + ' · ' + ev.s + (ev.p ? ' · ' + ev.p : '');
+        const rmAt = start - (Number(ev.rm) || 0) * 60000;
+        if (rmAt > now && items.length < 500) {
+          items.push({
+            id: ev.id + ':rm',
+            at: rmAt,
+            title: ev.t,
+            body: (Number(ev.rm) > 0 ? '还有 ' + ev.rm + ' 分钟开始' : '到点了') + ' · ' + base,
+            kind: 'rm'
+          });
+        }
+        if (ev.al && start > now && items.length < 500) {
+          items.push({
+            id: ev.id + ':al',
+            at: start,
+            title: ev.t,
+            body: '现在开始 · ' + base,
+            kind: 'al'
+          });
+        }
+      });
+    }
+    return { enabled: enabled, items: items };
+  }
+
+  function syncNativeReminders(force) {
+    const nb = nativeBridge();
+    if (!nb || !nb.syncReminders) return;
+    const payload = JSON.stringify(buildNativeReminders());
+    if (!force && payload === nativeRemLast) return;
+    nativeRemLast = payload;
+    try { nb.syncReminders(payload); } catch (e) { /* ignore */ }
+  }
+
+  function scheduleNativeReminderSync(force) {
+    clearTimeout(nativeRemTimer);
+    nativeRemTimer = setTimeout(function () { syncNativeReminders(!!force); }, force ? 0 : 700);
+  }
+
   /** 启动轮询（20 秒一次，够准又不费电；关掉总开关时直接不扫） */
   function startReminders() {
     if (remindTimer) return;
     remindTimer = setInterval(tickReminders, 20000);
     tickReminders();
+    scheduleNativeReminderSync(true);
   }
 
   function firedKey(ev, kind) { return ev.id + '|' + ev.d + '|' + kind; }
@@ -7785,6 +8006,11 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
 
   function tickReminders() {
     if (!state.notify || !state.notify.on) return;
+    /* 后台提醒开启且原生支持时，全部交给系统调度，避免前台重复 */
+    if (state.notify.background) {
+      const nb = nativeBridge();
+      if (nb && nb.syncReminders) return;
+    }
     const now = Date.now();
 
     state.events.forEach(function (ev) {
@@ -7978,6 +8204,30 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
   /* --------------------------------------------------------------------------
    * 7.9 个性化设置
    * ------------------------------------------------------------------------ */
+  /** 把每个分类子页按 sec-line 聚成卡片，提升层级感 */
+  function groupSettingsSections(root) {
+    $$('.set-pane', root).forEach(function (pane) {
+      const nodes = Array.prototype.slice.call(pane.childNodes);
+      let group = null;
+      nodes.forEach(function (node) {
+        if (node.nodeType !== 1) return;
+        if (node.classList.contains('sec-line')) {
+          group = document.createElement('div');
+          group.className = 'set-group';
+          pane.insertBefore(group, node);
+          group.appendChild(node);
+        } else {
+          if (!group) {
+            group = document.createElement('div');
+            group.className = 'set-group';
+            pane.insertBefore(group, node);
+          }
+          group.appendChild(node);
+        }
+      });
+    });
+  }
+
   function openSettings() {
     const bg = state.bg;
     const hm = state.home;
@@ -7985,6 +8235,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     const nt = state.notify;
     const slp = state.ui.sleep;
     const na = state.ui.notesAlpha || { cal: 0.78, editor: 0.92 };
+    const gh = state.ui.gridHead || { mode: 'theme', color: '#4C6FFF', image: '' };
     const pct = function (v) { return Math.round(v * 100); };
     const root = $('#modalRoot');
     const nat = nativeBridge();
@@ -8069,6 +8320,12 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         '</div>' +
         '<p class="hint">关闭模糊铺底和白色柔光罩，让背景图直接清晰显示。页面内卡片也会去掉毛玻璃，透明度可在下方单独调。</p></div>' +
 
+        '<div class="field"><label>导航栏透明度 <b id="vNavAlpha">' +
+          Math.round((state.ui.navAlpha == null ? 1 : state.ui.navAlpha) * 100) + '%</b></label>' +
+          '<input type="range" id="fNavAlpha" min="0" max="100" value="' +
+            Math.round((state.ui.navAlpha == null ? 1 : state.ui.navAlpha) * 100) + '">' +
+        '<p class="hint">侧边栏/底栏背景的透明度。这里不做毛玻璃，文字和图标始终清晰；调低会更多露出背景图。</p></div>' +
+
         '<div class="adv-section">' +
         /* 实时预览：与真实背景层用同一套 cover + position + scale + blur + opacity */
         '<div class="field"><label>效果预览</label>' +
@@ -8083,8 +8340,13 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         '<div class="field"><label>背景不透明度 <b id="vOp">' + Math.round(bg.opacity * 100) + '%</b></label>' +
           '<input type="range" id="fOp" min="0" max="100" value="' + Math.round(bg.opacity * 100) + '"></div>' +
 
-        '<div class="field"><label>模糊 <b id="vBl">' + bg.blur + 'px</b></label>' +
-          '<input type="range" id="fBl" min="0" max="24" value="' + bg.blur + '"></div>' +
+        '<div class="field"><label>柔光罩 <b id="vVeil">' + Math.round((bg.veil == null ? 1 : bg.veil) * 100) + '%</b></label>' +
+          '<input type="range" id="fVeil" min="0" max="100" value="' + Math.round((bg.veil == null ? 1 : bg.veil) * 100) + '"></div>' +
+        '<p class="hint">柔光罩是背景图上的白色雾层。想要图片更通透就调低；「背景清晰模式」会临时把它和模糊一起关掉。</p>' +
+
+        '<div class="field"><label>模糊 / 锐化 <b id="vBl">' + (bg.blur > 0 ? bg.blur + 'px' : bg.blur < 0 ? '锐化 ' + Math.abs(bg.blur) : '0') + '</b></label>' +
+          '<input type="range" id="fBl" min="-8" max="24" value="' + bg.blur + '"></div>' +
+        '<p class="hint">往左是锐化（负值），往右是模糊；锐化适合想让图片更清楚的壁纸。</p>' +
 
         '<div class="field"><label>缩放（裁切大小） <b id="vSc">' + Math.round(bg.scale * 100) + '%</b></label>' +
           '<input type="range" id="fSc" min="100" max="200" value="' + Math.round(bg.scale * 100) + '"></div>' +
@@ -8105,6 +8367,12 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         '<div class="field"><label>记事编辑卡 <b id="vNotesEd">' + pct(na.editor) + '%</b></label>' +
           '<input type="range" id="fNotesEd" min="0" max="100" value="' + pct(na.editor) + '"></div>' +
         '<p class="hint">越低越能透出背景图；0% 时卡片完全透明，只剩文字。</p>' +
+        '<div class="alpha-preview" id="alphaPreview">' +
+          '<div class="ap-bg" id="apBg"></div>' +
+          '<div class="ap-card ap-cal"><b>日历卡</b><small id="apCalVal">' + pct(na.cal) + '%</small></div>' +
+          '<div class="ap-card ap-ed"><b>编辑卡</b><small id="apEdVal">' + pct(na.editor) + '%</small></div>' +
+          '<span class="ap-tag">透明度预览</span>' +
+        '</div>' +
 
         '<div class="sec-line">文字外观</div>' +
         '<p class="hint">主页、表格、记事分别设置；主文字、次要文字、弱化文字都可单独取色，不确定就点「自动」。字号 80%–150%，上方是实时预览。</p>' +
@@ -8115,7 +8383,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
           '<p class="tp-body" id="tpBody">还有 2 小时 12 分开始。把今天过完，明天自然会来。</p>' +
         '</div>' +
         '<div class="chips type-mod-seg" id="typeModSeg">' +
-          [{ key: 'home', label: '主页' }, { key: 'grid', label: '表格' }, { key: 'notes', label: '记事' }].map(function (m, i) {
+          [{ key: 'home', label: '主页' }, { key: 'grid', label: '表格' }, { key: 'notes', label: '记事' }, { key: 'quote', label: '语料库' }].map(function (m, i) {
             return '<button data-typemod="' + m.key + '" class="' + (i === 0 ? 'on' : '') + '">' + m.label + '</button>';
           }).join('') +
         '</div>' +
@@ -8126,8 +8394,8 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
           const colorRow = function (slot, name) {
             const val = ts[slot] || '';
             return '<div class="type-color-row"><span>' + name + '</span>' +
-                '<input type="color" class="type-color" data-typecolor="' + k + '" data-slot="' + slot + '" value="' +
-                  (val || themeColorFor(slot)) + '" aria-label="' + label + name + '">' +
+                '<button type="button" class="type-color type-color-btn" data-typecolor="' + k + '" data-slot="' + slot + '" style="--c:' +
+                  (val || themeColorFor(slot)) + '" aria-label="' + label + name + '"></button>' +
                 '<button class="type-auto' + (val ? '' : ' on') + '" data-typecolor-reset="' + k + '" data-slot="' + slot + '">自动</button>' +
               '</div>';
           };
@@ -8147,6 +8415,27 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
               '</div>' +
             '</div>';
         }).join('') +
+        '<div class="type-mod-panel" data-typepanel="quote">' +
+          (function () {
+            const qs = state.quoteStyle;
+            const qpct = Math.round(Number(qs.fs) * 100);
+            const qrow = function (slot, name) {
+              const val = qs[slot] || '';
+              return '<div class="type-color-row"><span>' + name + '</span>' +
+                  '<button type="button" class="type-color type-color-btn" data-typecolor="quote" data-slot="' + slot + '" style="--c:' +
+                    (val || themeColorFor(slot)) + '" aria-label="语料库' + name + '"></button>' +
+                  '<button class="type-auto' + (val ? '' : ' on') + '" data-typecolor-reset="quote" data-slot="' + slot + '">自动</button>' +
+                '</div>';
+            };
+            return '<div class="type-line"><span>字号</span>' +
+                '<div class="type-slider"><input type="range" class="type-range" data-typeslider="quote" min="80" max="150" step="1" value="' + qpct + '"><b data-typesizeval="quote">' + qpct + '%</b></div></div>' +
+              '<div class="type-line"><span>字体</span>' +
+                '<select class="inp type-font" data-typefont="quote">' + fontOptionsHtml(state.quoteFont.key) + '</select></div>' +
+              '<div class="type-colors">' +
+                qrow('color', '语录正文') + qrow('color2', '来源') + qrow('color3', '换一条') +
+              '</div>';
+          })() +
+        '</div>' +
         '<div class="type-row type-boot">' +
           '<div class="type-head"><b>启动页语录</b><span class="type-sub">只影响开场动画</span></div>' +
           '<div class="type-line"><span>字体</span>' +
@@ -8220,7 +8509,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
                   '" id="qBootAnim" aria-label="启动开场动画"></button>' +
               '</div></div>' +
             '<div class="q-slide"><span>字号</span>' +
-              '<input type="range" id="fQFs" min="85" max="140" value="' + pct(qs.fs) + '">' +
+              '<input type="range" id="fQFs" min="80" max="150" value="' + pct(qs.fs) + '">' +
               '<b id="vQFs">' + pct(qs.fs) + '%</b></div>' +
             '<div class="q-slide"><span>卡片高度</span>' +
               '<input type="range" id="fQPad" min="60" max="1000" step="5" value="' + padSliderVal() + '">' +
@@ -8346,6 +8635,27 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         '</div>' +
         '<p class="hint" id="fSleepHint"></p>' +
 
+        '<div class="sec-line">星期栏</div>' +
+        '<div class="field"><label>背景</label>' +
+          '<div class="chips" id="ghMode">' +
+            [['theme', '跟随主题'], ['none', '透明'], ['color', '纯色'], ['image', '图片']].map(function (x) {
+              return '<button data-ghmode="' + x[0] + '" class="' + (gh.mode === x[0] ? 'on' : '') + '">' + x[1] + '</button>';
+            }).join('') +
+          '</div></div>' +
+        '<div class="gh-row" id="ghColorRow" style="display:' + (gh.mode === 'color' ? 'flex' : 'none') + '">' +
+          '<span>颜色</span>' +
+          '<button type="button" class="type-color type-color-btn" id="ghColorPick" style="--c:' + gh.color + '"></button>' +
+          '<b id="ghColorHex">' + gh.color.toUpperCase() + '</b>' +
+        '</div>' +
+        '<div class="gh-row" id="ghImageRow" style="display:' + (gh.mode === 'image' ? 'flex' : 'none') + '">' +
+          '<label class="btn ghost file">选择图片<input type="file" id="ghImageFile" accept="image/*"></label>' +
+          '<button class="btn ghost" id="ghImageClear">清除</button>' +
+        '</div>' +
+        '<div class="gh-preview" id="ghPreview" aria-hidden="true">' +
+          '<span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>' +
+        '</div>' +
+        '<p class="hint">星期栏可以保留主题、完全透明、纯色或图片；隐藏顶栏时这个设置仍保留。</p>' +
+
         '<div class="field"><div class="row-sw">' +
           '<span>隐藏表格顶栏</span>' +
           '<button class="sw' + (state.ui.gridHeadHide ? ' on' : '') + '" id="fGridChrome" aria-label="隐藏表格顶栏"></button>' +
@@ -8359,6 +8669,11 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
           '<span>开启提醒</span>' +
           '<button class="sw' + (nt.on ? ' on' : '') + '" id="ntOn" aria-label="开启提醒"></button>' +
         '</div></div>' +
+        '<div class="field"><div class="row-sw">' +
+          '<span>关闭应用后继续提醒</span>' +
+          '<button class="sw' + (nt.background ? ' on' : '') + '" id="ntBackground" aria-label="后台提醒"></button>' +
+        '</div>' +
+        '<p class="hint">开启后把提醒交给系统：手机退出应用也会通知（需允许通知与精确闹钟）；电脑关闭窗口后会留在托盘继续提醒。需要同时打开上面的「开启提醒」，从托盘「退出」后不再提醒。</p></div>' +
         '<div class="field"><label>系统通知权限</label>' +
           '<div class="data-pick">' +
             '<button class="btn ghost" id="ntAuth">' + notifyPermText() + '</button>' +
@@ -8412,19 +8727,34 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
               '<button class="btn ghost" id="fCheckUpdate">检查更新</button>' +
             '</div></div>'
           : '') +
-        '<div class="about"><b>' + APP.name + ' · ' + APP.cnName + '</b> v' + APP.version + (nat ? '' : '（UI 原型）') + '<br>' +
-          '作者 ' + APP.authorCn + '（' + APP.author + '）<br>' +
-          '维护邮箱 <a href="mailto:' + APP.email + '?subject=DayLeaf%20反馈">' + APP.email + '</a><br>' +
-          APP.license + ' License · 图片与字体只存在本机（IndexedDB），不会上传；导出备份不含这些文件</div>' +
+        '<div class="about-card">' +
+          '<div class="ab-head">' +
+            '<span class="ab-logo">' +
+              '<svg viewBox="0 0 24 24"><path d="M4.6 19.4c-.6-8.3 5.2-14.6 15.2-15.2.4 9.9-5.9 15.8-14.2 15.2"/><path d="M4.6 19.4 13.4 10.6"/></svg>' +
+            '</span>' +
+            '<div class="ab-brand"><b>' + APP.name + ' · ' + APP.cnName + '</b>' +
+              '<small>把每一天，过成一片叶子</small></div>' +
+            '<span class="ab-ver">v' + esc(natVer) + '</span>' +
+          '</div>' +
+          '<div class="ab-rows">' +
+            '<div class="ab-row"><span>作者</span><b>' + APP.authorCn + '（' + APP.author + '）</b></div>' +
+            '<div class="ab-row"><span>许可</span><b>' + APP.license + ' License</b></div>' +
+            '<div class="ab-row"><span>反馈</span><a href="mailto:' + APP.email + '?subject=DayLeaf%20反馈">' + APP.email + '</a></div>' +
+          '</div>' +
+          '<div class="ab-badges"><span>本地优先</span><span>无账号</span><span>无云同步</span></div>' +
+          '<p class="ab-note">图片与字体只存在本机（IndexedDB），不会上传；导出备份不含这些文件。</p>' +
+        '</div>' +
 
         '</div>' +
         '</div>' +
         '<div class="mb-foot"><button class="btn primary" data-close>完成</button></div>' +
       '</div>';
 
+    groupSettingsSections(root);
     openLayer(root);
     pushModal(closeModal);
     renderTypeFontLib();
+    applyModuleAlpha();
 
     /* ---- 设置首页 / 分类子页面 / 普通与简洁模式 ---- */
     (function () {
@@ -8533,10 +8863,26 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     });
 
     $('#fBgClear').addEventListener('click', function () {
+      const before = Object.assign({}, state.bg);
       state.bg.data = '';
+      state.bg.clear = false;
+      const clearBtn = $('#fBgClearMode');
+      if (clearBtn) clearBtn.classList.remove('on');
       AssetDB.del('bg');
       applyBg();
       saveState();
+      toast('已恢复默认背景', {
+        label: '撤销',
+        fn: function () {
+          state.bg = Object.assign({}, state.bg, before);
+          if (before.data) AssetDB.put('bg', before.data);
+          const cb = $('#fBgClearMode');
+          if (cb) cb.classList.toggle('on', !!state.bg.clear);
+          applyBg();
+          saveState();
+          toast('已恢复刚才的背景');
+        }
+      });
     });
 
     /* 背景清晰模式：去掉模糊铺底 / 柔光罩 / 页面毛玻璃 */
@@ -8548,6 +8894,17 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         applyBg();
         saveState();
       });
+    }
+
+    const navAlpha = $('#fNavAlpha');
+    if (navAlpha) {
+      navAlpha.addEventListener('input', function () {
+        state.ui.navAlpha = Number(navAlpha.value) / 100;
+        const val = $('#vNavAlpha');
+        if (val) val.textContent = navAlpha.value + '%';
+        applyModuleAlpha();
+      });
+      navAlpha.addEventListener('change', function () { saveState(); });
     }
 
     /* ---- 滑块：实时预览 ---- */
@@ -8565,7 +8922,10 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       el.addEventListener('change', function () { saveState(); });
     }
     bindRange('fOp', 'vOp', function (v) { return v + '%'; }, function (v) { state.bg.opacity = v / 100; });
-    bindRange('fBl', 'vBl', function (v) { return v + 'px'; }, function (v) { state.bg.blur = v; });
+    bindRange('fVeil', 'vVeil', function (v) { return v + '%'; }, function (v) { state.bg.veil = v / 100; });
+    bindRange('fBl', 'vBl', function (v) {
+      return v > 0 ? v + 'px' : v < 0 ? '锐化 ' + Math.abs(v) : '0';
+    }, function (v) { state.bg.blur = v; });
     bindRange('fSc', 'vSc', function (v) { return v + '%'; }, function (v) { state.bg.scale = v / 100; });
     bindRange('fX', 'vX', function (v) { return v + '%'; }, function (v) { state.bg.x = v; });
     bindRange('fY', 'vY', function (v) { return v + '%'; }, function (v) { state.bg.y = v; });
@@ -8848,6 +9208,7 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         saveState();
         renderFontPane();
         applyQuoteFont();
+        $$('[data-typefont="quote"]').forEach(function (s) { s.value = state.quoteFont.key; });
       }
     });
 
@@ -9021,6 +9382,77 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
 
     paintSleepTip();
 
+    /* ---- 星期栏背景 ---- */
+    const syncGhUI = function () {
+      const g = state.ui.gridHead || { mode: 'theme', color: '#4C6FFF' };
+      $$('#ghMode button', root).forEach(function (b) {
+        b.classList.toggle('on', b.dataset.ghmode === g.mode);
+      });
+      const cr = $('#ghColorRow'), ir = $('#ghImageRow');
+      if (cr) cr.style.display = g.mode === 'color' ? 'flex' : 'none';
+      if (ir) ir.style.display = g.mode === 'image' ? 'flex' : 'none';
+      const cb = $('#ghColorPick'), hx = $('#ghColorHex');
+      if (cb) cb.style.setProperty('--c', g.color || '#4C6FFF');
+      if (hx) hx.textContent = String(g.color || '#4C6FFF').toUpperCase();
+    };
+    const ghMode = $('#ghMode');
+    if (ghMode) {
+      ghMode.addEventListener('click', function (e) {
+        const b = e.target.closest('[data-ghmode]');
+        if (!b) return;
+        state.ui.gridHead.mode = b.dataset.ghmode;
+        syncGhUI();
+        applyGridHeadStyle();
+        saveState();
+      });
+    }
+    const ghColorPick = $('#ghColorPick');
+    if (ghColorPick) {
+      ghColorPick.addEventListener('click', function () {
+        const gh = state.ui.gridHead;
+        const was = { mode: gh.mode, color: gh.color };
+        openColorPicker(gh.color || '#4C6FFF', function (hex) {
+          gh.mode = 'color';
+          gh.color = hex;
+          syncGhUI();
+          applyGridHeadStyle();
+        }, function () {
+          gh.mode = was.mode;
+          gh.color = was.color;
+          syncGhUI();
+          applyGridHeadStyle();
+          saveState();
+        }, function () { saveState(); });
+      });
+    }
+    const ghImageFile = $('#ghImageFile');
+    if (ghImageFile) {
+      ghImageFile.addEventListener('change', function () {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        this.value = '';
+        readImageAsData(file, 1600, 0.82, function (data) {
+          state.ui.gridHead.mode = 'image';
+          state.ui.gridHead.image = data;
+          syncGhUI();
+          applyGridHeadStyle();
+          saveState();
+          toast('已设置星期栏背景图');
+        });
+      });
+    }
+    const ghImageClear = $('#ghImageClear');
+    if (ghImageClear) {
+      ghImageClear.addEventListener('click', function () {
+        state.ui.gridHead.image = '';
+        if (state.ui.gridHead.mode === 'image') state.ui.gridHead.mode = 'theme';
+        syncGhUI();
+        applyGridHeadStyle();
+        saveState();
+      });
+    }
+    syncGhUI();
+
     /* 隐藏表格顶栏：上方工具栏 + 星期栏，改用悬浮周切换 */
     const gridChrome = $('#fGridChrome');
     if (gridChrome) {
@@ -9059,6 +9491,29 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
           ntAuth.textContent = notifyPermText();
           toast(ok ? '通知权限已开启' : '还是没权限：浏览器可能禁用了通知，或需要把页面加到主屏幕');
         });
+      });
+    }
+
+    const ntBackground = $('#ntBackground');
+    if (ntBackground) {
+      ntBackground.addEventListener('click', function () {
+        state.notify.background = !state.notify.background;
+        ntBackground.classList.toggle('on', state.notify.background);
+        if (state.notify.background) {
+          if (!state.notify.on) toast('先把上面的「开启提醒」打开，后台提醒才会生效');
+          askNotifyPermission(function (ok) {
+            if (!ok) toast('没拿到通知权限，系统不会显示后台提醒');
+          });
+          const nb = nativeBridge();
+          if (nb && nb.ensureExactAlarmPermission) {
+            try { nb.ensureExactAlarmPermission(); } catch (e) { /* ignore */ }
+          }
+          syncNativeReminders(true);
+        } else {
+          syncNativeReminders(true);
+          toast('已关闭后台提醒');
+        }
+        saveState();
       });
     }
 
@@ -9222,6 +9677,10 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
           state.theme = obj.theme || 'system';
           state.home = Object.assign(state.home, obj.home || {});
           state.quoteStyle = Object.assign(state.quoteStyle, obj.quoteStyle || {});
+          state.quoteStyle.fs = Math.max(0.8, Math.min(1.5, Number(state.quoteStyle.fs) || 1));
+          ['color', 'color2', 'color3'].forEach(function (k) {
+            if (!/^#[0-9a-f]{6}$/i.test(String(state.quoteStyle[k] || ''))) state.quoteStyle[k] = '';
+          });
           state.quotes = Object.assign(state.quotes, obj.quotes || {});
           state.quoteBg = Object.assign({ items: [] }, obj.quoteBg || {});
           state.quoteFont = Object.assign({ key: 'sys', custom: [] }, obj.quoteFont || {});
@@ -9233,6 +9692,12 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
           state.ui = Object.assign(state.ui, obj.ui || {});
           state.ui.notesAlpha = Object.assign({ cal: 0.78, editor: 0.92 }, state.ui.notesAlpha || {});
           state.ui.gridHeadHide = !!state.ui.gridHeadHide;
+          state.ui.navAlpha = Math.max(0, Math.min(1, Number(state.ui.navAlpha)));
+          if (!isFinite(Number(state.ui.navAlpha))) state.ui.navAlpha = 1;
+          state.bg.clear = !!state.bg.clear;
+          state.bg.blur = Math.max(-8, Math.min(24, Number(state.bg.blur) || 0));
+          state.bg.veil = Math.max(0, Math.min(1, Number(state.bg.veil)));
+          if (!isFinite(Number(state.bg.veil))) state.bg.veil = 1;
           state.clean = Object.assign(state.clean, obj.clean || {});
           state.notify = Object.assign(state.notify, obj.notify || {});
       state.notify = Object.assign(state.notify, obj.notify || {});
@@ -9257,7 +9722,8 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     const TYPE_SAMPLES = {
       home: { tag: '主页', title: '今天有 3 件事在等你', meta: '14:00 项目评审 · 3F 会议室', body: '还有 2 小时 12 分开始。把今天过完，明天自然会来。' },
       grid: { tag: '表格', title: '项目评审', meta: '14:00 – 15:00 · 3F 会议室', body: '周一 · 10 月 26 日 · 待办' },
-      notes: { tag: '记事', title: '整理下周的方案', meta: '10 月 26 日 · 周一', body: '把三份稿子合并，重点核对时间线。' }
+      notes: { tag: '记事', title: '整理下周的方案', meta: '10 月 26 日 · 周一', body: '把三份稿子合并，重点核对时间线。' },
+      quote: { tag: '语料库', title: '把今天过完，明天自然会来。', meta: '叶历语录', body: '换一条' }
     };
     const typeSaveSoon = function () {
       clearTimeout(typeSaveTimer);
@@ -9266,7 +9732,10 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     const refreshTypePreview = function () {
       const pv = $('#typePreview', root);
       if (!pv) return;
-      const st = state.typeStyle[activeTypeMod] || {};
+      const quoteMode = activeTypeMod === 'quote';
+      const st = quoteMode
+        ? { color: state.quoteStyle.color, color2: state.quoteStyle.color2, color3: state.quoteStyle.color3, size: state.quoteStyle.fs, font: state.quoteFont.key }
+        : (state.typeStyle[activeTypeMod] || {});
       const sample = TYPE_SAMPLES[activeTypeMod] || TYPE_SAMPLES.home;
       const bg = themeBgHex();
       pv.style.fontFamily = fontStackForKey(st.font);
@@ -9281,12 +9750,30 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       if (body) body.textContent = sample.body;
     };
     const setTypeSlot = function (mod, slot, value) {
-      if (!state.typeStyle[mod]) return;
-      state.typeStyle[mod][slot] = value || '';
+      const bag = mod === 'quote' ? state.quoteStyle : state.typeStyle[mod];
+      if (!bag) return;
+      bag[slot] = value || '';
       const auto = $('[data-typecolor-reset="' + mod + '"][data-slot="' + slot + '"]', root);
       if (auto) auto.classList.toggle('on', !value);
-      applyTypeStyle(mod);
+      $$('[data-typecolor="' + mod + '"][data-slot="' + slot + '"]', root).forEach(function (b) {
+        b.style.setProperty('--c', value || themeColorFor(slot));
+      });
+      if (mod === 'quote') {
+        applyQuoteColors();
+        applyQuoteStyle();
+      } else {
+        applyTypeStyle(mod);
+      }
       refreshTypePreview();
+    };
+    const openTypeColor = function (mod, slot) {
+      const bag = mod === 'quote' ? state.quoteStyle : state.typeStyle[mod];
+      const was = bag[slot] || '';
+      const initial = was || themeColorFor(slot);
+      openColorPicker(initial,
+        function (hex) { setTypeSlot(mod, slot, hex); typeSaveSoon(); },
+        function () { setTypeSlot(mod, slot, was); saveState(); },
+        function () { saveState(); });
     };
 
     root.addEventListener('input', function (e) {
@@ -9294,32 +9781,39 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       if (range) {
         const mod = range.dataset.typeslider;
         const pct = Number(range.value);
-        state.typeStyle[mod].size = pct / 100;
+        if (mod === 'quote') {
+          state.quoteStyle.fs = pct / 100;
+          applyQuoteStyle();
+          const old = $('#fQFs', root), oldV = $('#vQFs', root);
+          if (old) old.value = pct;
+          if (oldV) oldV.textContent = pct + '%';
+        } else {
+          state.typeStyle[mod].size = pct / 100;
+          applyTypeStyle(mod);
+        }
         const val = $('[data-typesizeval="' + mod + '"]', root);
         if (val) val.textContent = pct + '%';
-        applyTypeStyle(mod);
         refreshTypePreview();
         typeSaveSoon();
         return;
-      }
-      const color = e.target.closest ? e.target.closest('[data-typecolor]') : null;
-      if (color) {
-        setTypeSlot(color.dataset.typecolor, color.dataset.slot, color.value);
-        typeSaveSoon();
       }
     });
 
     root.addEventListener('change', function (e) {
       const range = e.target.closest ? e.target.closest('[data-typeslider]') : null;
       if (range) { saveState(); return; }
-      const color = e.target.closest ? e.target.closest('[data-typecolor]') : null;
-      if (color) { setTypeSlot(color.dataset.typecolor, color.dataset.slot, color.value); saveState(); return; }
-
       const font = e.target.closest ? e.target.closest('[data-typefont]') : null;
       if (font) {
-        state.typeStyle[font.dataset.typefont].font = font.value;
-        saveState();
-        applyTypeStyle(font.dataset.typefont);
+        if (font.dataset.typefont === 'quote') {
+          state.quoteFont.key = font.value;
+          saveState();
+          applyQuoteFont();
+          if ($('#qbPaneFont', root)) renderFontPane();
+        } else {
+          state.typeStyle[font.dataset.typefont].font = font.value;
+          saveState();
+          applyTypeStyle(font.dataset.typefont);
+        }
         refreshTypePreview();
         return;
       }
@@ -9355,13 +9849,16 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         refreshTypePreview();
         return;
       }
+      const swatch = e.target.closest ? e.target.closest('[data-typecolor]') : null;
+      if (swatch) {
+        openTypeColor(swatch.dataset.typecolor, swatch.dataset.slot);
+        return;
+      }
       const auto = e.target.closest ? e.target.closest('[data-typecolor-reset]') : null;
       if (auto) {
         const mod = auto.dataset.typecolorReset;
         const slot = auto.dataset.slot || 'color';
         setTypeSlot(mod, slot, '');
-        const input = $('[data-typecolor="' + mod + '"][data-slot="' + slot + '"]', root);
-        if (input) input.value = themeColorFor(slot);
         saveState();
         return;
       }
@@ -9385,6 +9882,17 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
    * 写法与 applyBg 完全一致（cover + position + scale + blur + opacity），
    * 所以预览里看到的就是真实效果。
    */
+  /** 模糊值 → CSS filter：负值走 SVG 锐化 */
+  function bgFilterCss(v) {
+    const n = Number(v) || 0;
+    if (n > 0) return 'blur(' + n + 'px)';
+    if (n < 0) {
+      const level = Math.max(1, Math.min(5, Math.ceil(Math.abs(n) / 1.6)));
+      return 'url(#dlSharpen' + level + ')';
+    }
+    return 'none';
+  }
+
   function syncBgPreview() {
     const box = $('#bgPrev');
     const img = $('#bgPrevImg');
@@ -9403,8 +9911,10 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     img.style.backgroundSize = bg.fit === 'cover' ? 'cover' : 'contain';
     img.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
     img.style.transform = 'scale(' + bg.scale + ')';
-    img.style.filter = (!clear && bg.blur > 0) ? 'blur(' + bg.blur + 'px)' : 'none';
+    img.style.filter = clear ? 'none' : bgFilterCss(bg.blur);
     img.style.opacity = String(clear ? 1 : bg.opacity);
+    const veil = box.querySelector('.bg-prev-veil');
+    if (veil) veil.style.opacity = String(clear ? 0 : (bg.veil == null ? 1 : bg.veil));
   }
 
   /** 把 state.bg 应用到背景层 */
@@ -9430,11 +9940,13 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       layer.style.backgroundSize = bg.fit === 'cover' ? 'cover' : 'contain';
       layer.style.backgroundPosition = bg.x + '% ' + bg.y + '%';
       layer.style.transform = 'scale(' + bg.scale + ')';
-      layer.style.filter = (!clear && bg.blur > 0) ? 'blur(' + bg.blur + 'px)' : 'none';
+      layer.style.filter = clear ? 'none' : bgFilterCss(bg.blur);
       if (back) {
         back.style.display = clear ? 'none' : '';
         back.style.opacity = String(Math.min(1, bg.opacity * 0.9 + 0.15));
       }
+      const veil = $('#bgVeil');
+      if (veil) veil.style.opacity = String(clear ? 0 : (bg.veil == null ? 1 : bg.veil));
       document.body.classList.add('has-bg');
     } else {
       if (_lastBgSrc !== '') {
@@ -9443,6 +9955,8 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
         _lastBgSrc = '';
       }
       document.body.classList.remove('has-bg');
+      const veil = $('#bgVeil');
+      if (veil) veil.style.opacity = '0';
     }
     /* 预览与背景层永远同源，任何参数变化都走这里 */
     syncBgPreview();
@@ -9459,6 +9973,57 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     }
     const grid = $('#view-grid');
     if (grid) grid.classList.toggle('grid-chrome-hide', !!state.ui.gridHeadHide);
+    document.documentElement.style.setProperty('--nav-alpha', String(state.ui.navAlpha == null ? 1 : state.ui.navAlpha));
+    applyGridHeadStyle();
+    syncAlphaPreview();
+  }
+
+  /** 模块透明度 / 毛玻璃预览 */
+  function syncAlphaPreview() {
+    const box = $('#alphaPreview');
+    if (!box) return;
+    const na = state.ui.notesAlpha || { cal: 0.78, editor: 0.92 };
+    box.classList.toggle('is-clear', !!state.bg.clear);
+    const bg = $('#apBg');
+    if (bg) {
+      bg.style.backgroundImage = state.bg.data ? 'url("' + state.bg.data + '")' : '';
+    }
+    box.style.setProperty('--ap-cal', String(na.cal));
+    box.style.setProperty('--ap-ed', String(na.editor));
+    const c = $('#apCalVal'), e = $('#apEdVal');
+    if (c) c.textContent = Math.round(na.cal * 100) + '%';
+    if (e) e.textContent = Math.round(na.editor * 100) + '%';
+  }
+
+  /** 星期栏背景：主题 / 透明 / 纯色 / 图片 */
+  function applyGridHeadStyle() {
+    const gh = state.ui.gridHead || { mode: 'theme' };
+    const mode = gh.mode || 'theme';
+    const targets = [$('#gridHead'), $('#ghPreview')];
+    targets.forEach(function (el) {
+      if (!el) return;
+      el.style.backgroundImage = '';
+      el.style.backgroundSize = '';
+      el.style.backgroundPosition = '';
+      el.style.backgroundColor = '';
+      el.style.backdropFilter = '';
+      el.style.webkitBackdropFilter = '';
+      if (mode === 'none') {
+        el.style.backgroundColor = 'transparent';
+        el.style.backdropFilter = 'none';
+        el.style.webkitBackdropFilter = 'none';
+      } else if (mode === 'color') {
+        el.style.backgroundColor = gh.color || '#4C6FFF';
+        el.style.backdropFilter = 'none';
+        el.style.webkitBackdropFilter = 'none';
+      } else if (mode === 'image' && gh.image) {
+        el.style.backgroundImage = 'url("' + gh.image + '")';
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = '50% 50%';
+        el.style.backdropFilter = 'none';
+        el.style.webkitBackdropFilter = 'none';
+      }
+    });
   }
 
   /**
@@ -10829,6 +11394,161 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
       b: ca.b + (cb.b - ca.b) * t
     });
   }
+  /* ---------------- 应用内取色器：色相/饱和度/亮度 + 十六进制输入 ---------------- */
+
+  function normalizeHexColor(v) {
+    let h = String(v || '').trim().replace(/^#/, '');
+    if (/^[0-9a-f]{3}$/i.test(h)) h = h.split('').map(function (x) { return x + x; }).join('');
+    return /^[0-9a-f]{6}$/i.test(h) ? '#' + h.toLowerCase() : '';
+  }
+  function hexToHsl(hex) {
+    const c = normalizeHexColor(hex) || '#4c6fff';
+    const r = parseInt(c.slice(1, 3), 16) / 255;
+    const g = parseInt(c.slice(3, 5), 16) / 255;
+    const b = parseInt(c.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+  function hslToHex(h, s, l) {
+    h = ((Number(h) % 360) + 360) % 360 / 360;
+    s = Math.max(0, Math.min(100, Number(s))) / 100;
+    l = Math.max(0, Math.min(100, Number(l))) / 100;
+    const hue = function (p, q, t) {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    let r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue(p, q, h + 1 / 3);
+      g = hue(p, q, h);
+      b = hue(p, q, h - 1 / 3);
+    }
+    const hex = function (x) { const v = Math.round(x * 255); return (v < 16 ? '0' : '') + v.toString(16); };
+    return '#' + hex(r) + hex(g) + hex(b);
+  }
+
+  /**
+   * 应用内取色器：不调用系统 input[type=color]（手机上那个面板又大又难用）。
+   * onLive(hex) 实时预览；取消时调 onCancel 让调用方恢复原值；确定时 onDone。
+   */
+  function openColorPicker(initial, onLive, onCancel, onDone) {
+    const start = normalizeHexColor(initial) || '#4c6fff';
+    let current = start;
+    let hsl = hexToHsl(start);
+    const root = document.createElement('div');
+    root.className = 'cp-root';
+    root.id = 'colorPickerRoot';
+    root.innerHTML =
+      '<div class="cp-scrim" data-cp-cancel></div>' +
+      '<div class="cp-panel" role="dialog" aria-modal="true" aria-label="选择颜色">' +
+        '<div class="cp-head"><h3>选择颜色</h3>' +
+          '<button class="icon-btn sm" data-cp-cancel aria-label="关闭">✕</button></div>' +
+        '<div class="cp-preview"><span class="cp-swatch" id="cpSwatch"><b>Aa</b></span>' +
+          '<div class="cp-hexwrap"><span>#</span><input id="cpHex" maxlength="6" spellcheck="false" autocomplete="off" value="' + start.slice(1) + '"></div></div>' +
+        '<div class="cp-slider"><label>色相</label><input type="range" id="cpH" min="0" max="360" value="' + hsl.h + '"><b id="cpHv">' + hsl.h + '°</b></div>' +
+        '<div class="cp-slider"><label>饱和度</label><input type="range" id="cpS" min="0" max="100" value="' + hsl.s + '"><b id="cpSv">' + hsl.s + '%</b></div>' +
+        '<div class="cp-slider"><label>亮度</label><input type="range" id="cpL" min="0" max="100" value="' + hsl.l + '"><b id="cpLv">' + hsl.l + '%</b></div>' +
+        '<div class="cp-presets" id="cpPresets">' +
+          ['#11141C','#E8EBF3','#FFFFFF','#4C6FFF','#7C5CFF','#8A5CFF','#16A34A','#F59E0B','#F43F5E','#06B6D4','#EC4899','#64748B'].map(function (c) {
+            return '<button type="button" data-cp-preset="' + c + '" style="--c:' + c + '" aria-label="颜色 ' + c + '"></button>';
+          }).join('') +
+        '</div>' +
+        '<p class="cp-hint">也可以直接输入 #RRGGBB；拖动上面的滑块实时预览。</p>' +
+        '<div class="cp-foot"><button class="btn ghost" data-cp-cancel>取消</button><button class="btn primary" id="cpOk">确定</button></div>' +
+      '</div>';
+    document.body.appendChild(root);
+    openLayer(root);
+    requestAnimationFrame(function () { root.classList.add('open'); });
+
+    const swatch = $('#cpSwatch', root);
+    const hexInput = $('#cpHex', root);
+    const hEl = $('#cpH', root), sEl = $('#cpS', root), lEl = $('#cpL', root);
+    const hV = $('#cpHv', root), sV = $('#cpSv', root), lV = $('#cpLv', root);
+
+    function paintTracks() {
+      if (hEl) hEl.style.background = 'linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)';
+      if (sEl) sEl.style.background = 'linear-gradient(90deg,' + hslToHex(hsl.h, 0, hsl.l) + ',' + hslToHex(hsl.h, 100, hsl.l) + ')';
+      if (lEl) lEl.style.background = 'linear-gradient(90deg,#000,' + hslToHex(hsl.h, hsl.s, 50) + ',#fff)';
+    }
+    function paint(live) {
+      current = hslToHex(hsl.h, hsl.s, hsl.l);
+      if (swatch) swatch.style.background = current;
+      if (hexInput && document.activeElement !== hexInput) hexInput.value = current.slice(1);
+      if (hV) hV.textContent = hsl.h + '°';
+      if (sV) sV.textContent = hsl.s + '%';
+      if (lV) lV.textContent = hsl.l + '%';
+      paintTracks();
+      if (live && onLive) onLive(current);
+    }
+    function setFromHex(v, live) {
+      const n = normalizeHexColor(v);
+      if (!n) return false;
+      hsl = hexToHsl(n);
+      if (hEl) hEl.value = hsl.h;
+      if (sEl) sEl.value = hsl.s;
+      if (lEl) lEl.value = hsl.l;
+      paint(live);
+      return true;
+    }
+    function close(cancel) {
+      try { popModal(close); } catch (e) { /* ignore */ }
+      root.classList.remove('open');
+      setTimeout(function () { if (root.parentNode) root.remove(); }, 180);
+      if (cancel) { if (onCancel) onCancel(); }
+      else if (onDone) onDone();
+    }
+
+    [hEl, sEl, lEl].forEach(function (el) {
+      if (!el) return;
+      el.addEventListener('input', function () {
+        hsl.h = Number(hEl.value); hsl.s = Number(sEl.value); hsl.l = Number(lEl.value);
+        paint(true);
+      });
+    });
+    if (hexInput) {
+      hexInput.addEventListener('input', function () {
+        const v = normalizeHexColor(this.value);
+        if (v) setFromHex(v, true);
+      });
+      hexInput.addEventListener('blur', function () {
+        const v = normalizeHexColor(this.value);
+        if (v) setFromHex(v, false); else this.value = current.slice(1);
+      });
+    }
+    $$('[data-cp-preset]', root).forEach(function (b) {
+      b.addEventListener('click', function () { setFromHex(b.dataset.cpPreset, true); });
+    });
+    $$('[data-cp-cancel]', root).forEach(function (el) {
+      el.addEventListener('click', function () { close(true); });
+    });
+    $('#cpOk', root).addEventListener('click', function () { close(false); });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', esc);
+        close(true);
+      }
+    });
+    pushModal(function () { close(true); });
+    paint(false);
+    return { close: close };
+  }
+
   /** 文字颜色「自动」时的主题色：主/次/弱 */
   function themeColorFor(slot) {
     const dark = isDarkTheme();
@@ -11126,15 +11846,34 @@ html.bg-clear #view-home *, html.bg-clear #view-grid *, html.bg-clear #view-note
     });
   }
 
+  /** 语料库文字颜色 */
+  function applyQuoteColors() {
+    const card = $('#quoteCard');
+    if (!card) return;
+    const st = state.quoteStyle || {};
+    const map = { color: '--quote-ink', color2: '--quote-ink2', color3: '--quote-muted' };
+    Object.keys(map).forEach(function (k) {
+      if (/^#[0-9a-f]{6}$/i.test(String(st[k] || ''))) card.style.setProperty(map[k], st[k]);
+      else card.style.removeProperty(map[k]);
+    });
+  }
+
   /** 语录卡的尺寸与背景变换（字号 / 高度 / 缩放 / 位置） */
   function applyQuoteStyle() {
     const st = state.quoteStyle || {};
     const card = $('#quoteCard');
     if (!card) return;
+    applyQuoteColors();
 
     const p = normPad(st);
     /* px 模式把倍率归零、px 模式把倍率关掉，两者相加就是最终内边距 */
     card.style.setProperty('--q-fs', String(st.fs));
+    const qsSlider = document.querySelector('[data-typeslider="quote"]');
+    if (qsSlider && document.activeElement !== qsSlider) {
+      qsSlider.value = Math.round(Number(st.fs) * 100);
+      const qv = document.querySelector('[data-typesizeval="quote"]');
+      if (qv) qv.textContent = Math.round(Number(st.fs) * 100) + '%';
+    }
     card.style.setProperty('--q-pad', p.mode === 'px' ? '0' : String(p.mul));
     card.style.setProperty('--q-padpx', p.mode === 'px' ? (p.px + 'px') : '0px');
     /* 单边内边距 ≥120px（约 800% 起）切到「海报式」居中排版 */

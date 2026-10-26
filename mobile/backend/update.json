@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 15,
-  "versionName": "1.0.14",
+  "versionCode": 16,
+  "versionName": "1.0.15",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.14/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.15/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.14/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.14/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.14/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.15/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.0.15/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.0.15/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 491137,
-  "sha256": "0b1d18995e08eae6a63a208875b1ef44bbf43904c4450cfc55605e05e5369e44",
-  "notes": "设置重做为分类首页与子页，新增普通/简洁模式；修复设置里点击某些区域和简洁模式按钮会误开文件选择；文字外观支持每个页面独立调整字号滑杆、字体和主/次/弱三种颜色，并提供实时预览；新增背景清晰模式（去掉模糊铺底、柔光罩和页面毛玻璃）、记事日历卡与编辑卡透明度、表格顶栏隐藏和悬浮周导航。",
+  "size": 502606,
+  "sha256": "d9a2dfa8e0940f10851e1616d1b87a804d5be6da3a9f9fa8849b294ae07068fc",
+  "notes": "新增后台提醒：打开后手机端交给系统闹钟、桌面端驻留托盘，退出应用也能收到通知；文字外观新增语料库字号/字体/主次弱三色，并全面改用应用内调色盘（支持十六进制输入）；背景支持清晰模式与轻度锐化，恢复默认可撤销；记事日历卡与编辑卡、侧边栏透明度可调，侧边栏去除模糊保持文字图标清晰；表格周导航顶栏可隐藏并可自定义主题/纯色/图片；设置改为分类首页与独立子页并重新分组，关于页重新设计。",
   "publishedAt": "2026-10-26"
 }

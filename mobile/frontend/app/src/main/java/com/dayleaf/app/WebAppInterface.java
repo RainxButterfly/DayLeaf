@@ -7,6 +7,7 @@
 package com.dayleaf.app;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -17,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.webkit.JavascriptInterface;
 
 public class WebAppInterface {
@@ -51,6 +53,34 @@ public class WebAppInterface {
     @JavascriptInterface
     public void notify(final String title, final String body, final String tag) {
         activity.runOnUiThread(() -> postNotification(title, body, tag));
+    }
+
+    /** 网页把未来的提醒/闹钟排给系统；关闭应用后仍会触发 */
+    @JavascriptInterface
+    public void syncReminders(final String json) {
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try { ReminderScheduler.apply(activity, json); } catch (Exception e) { /* ignore */ }
+            }
+        });
+    }
+
+    /** Android 12+ 精确闹钟特殊权限：没有时给出系统设置入口 */
+    @JavascriptInterface
+    public void ensureExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT < 31) return;
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try {
+                    AlarmManager am = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
+                    if (am != null && !am.canScheduleExactAlarms()) {
+                        Intent i = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                android.net.Uri.parse("package:" + activity.getPackageName()));
+                        activity.startActivity(i);
+                    }
+                } catch (Exception e) { /* ignore */ }
+            }
+        });
     }
 
     @JavascriptInterface
