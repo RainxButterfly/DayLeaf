@@ -1,17 +1,17 @@
 {
   "channel": "android",
-  "versionCode": 28,
-  "versionName": "1.1.9",
+  "versionCode": 29,
+  "versionName": "1.1.10",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/mobile/backend/DayLeaf-android.apk",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/mobile/backend/DayLeaf-android.apk",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/mobile/backend/DayLeaf-android.apk",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/mobile/backend/DayLeaf-android.apk",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.9/mobile/backend/DayLeaf-android.apk"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/mobile/backend/DayLeaf-android.apk",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/mobile/backend/DayLeaf-android.apk",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.10/mobile/backend/DayLeaf-android.apk"
   ],
-  "size": 925927,
-  "sha256": "6964d5a4a5c39bd26d4f9b514a5b484def9c8b8d9171107ad12205a1ec2fb218",
-  "notes": "重做更新弹窗：版本胶囊、顶部光晕、底部 SHA-256 提示；修复高 DPI/远程桌面下二次缩放导致的控件重叠；键盘只响应 Esc/Enter，其它按键不会打乱排版。",
-  "publishedAt": "2026-10-26"
+  "size": 927188,
+  "sha256": "86b050c0651cfa01f0139f6fff3b44f3c8d1db7a53f4c6c97cf33f7c16883656",
+  "notes": "快捷录入支持中文数字、时间区间与过去日期补录（如“明天下午两点到六点上JAVA课 提前三十分钟提醒”“上上周三”）；局域网发送会先提示电脑确认收到，再显示电脑合并回传结果；组件更新后请移除旧组件重新添加以看到新样式。",
+  "publishedAt": "2026-10-27"
 }

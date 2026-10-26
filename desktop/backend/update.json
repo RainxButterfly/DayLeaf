@@ -1,18 +1,18 @@
 {
   "channel": "windows",
-  "versionCode": 28,
-  "versionName": "1.1.9",
+  "versionCode": 29,
+  "versionName": "1.1.10",
   "minVersionCode": 1,
   "force": false,
-  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/desktop/backend/DayLeaf-Setup.bin",
+  "url": "https://cdn.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/desktop/backend/DayLeaf-Setup.bin",
   "urls": [
-    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/desktop/backend/DayLeaf-Setup.bin",
-    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.9/desktop/backend/DayLeaf-Setup.bin",
-    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.9/desktop/backend/DayLeaf-Setup.bin"
+    "https://fastly.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/desktop/backend/DayLeaf-Setup.bin",
+    "https://gcore.jsdelivr.net/gh/RainxButterfly/DayLeaf@v1.1.10/desktop/backend/DayLeaf-Setup.bin",
+    "https://raw.githubusercontent.com/RainxButterfly/DayLeaf/v1.1.10/desktop/backend/DayLeaf-Setup.bin"
   ],
-  "size": 990306,
-  "sha256": "600e7cb526e62f5de58a8bc14ac5cd0a67f62ec4ec5583403024474349714b0f",
-  "notes": "重做更新弹窗：版本胶囊、顶部光晕、底部 SHA-256 提示；修复高 DPI/远程桌面下二次缩放导致的控件重叠；键盘只响应 Esc/Enter，其它按键不会打乱排版。",
+  "size": 991408,
+  "sha256": "43d5de39b808a0756d40b26ce6d045dd33d70d36b631bd8334cc4522a97b2749",
+  "notes": "快捷录入支持中文数字、时间区间与过去日期补录（如“明天下午两点到六点上JAVA课 提前三十分钟提醒”“上上周三”）；局域网发送会先提示电脑确认收到，再显示电脑合并回传结果；组件更新后请移除旧组件重新添加以看到新样式。",
   "releasePage": "https://github.com/RainxButterfly/DayLeaf/releases",
-  "publishedAt": "2026-10-26"
+  "publishedAt": "2026-10-27"
 }

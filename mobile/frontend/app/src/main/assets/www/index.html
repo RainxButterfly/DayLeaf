@@ -3795,7 +3795,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   <div class="search-panel dl-sheet-sm" role="dialog" aria-modal="true" aria-label="快速添加">
     <div class="search-bar">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      <input id="quickInput" type="text" placeholder="明天下午3点 开会 1小时 在3F会议室 提前10分钟" autocomplete="off">
+      <input id="quickInput" type="text" placeholder="明天下午两点到六点上JAVA课 提前三十分钟提醒" autocomplete="off">
       <button class="search-esc" id="quickEsc">Esc</button>
     </div>
     <div class="dl-quick-preview" id="quickPreview"></div>
@@ -3888,7 +3888,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   const APP = Object.freeze({
     name: 'DayLeaf',
     cnName: '叶历',
-    version: '1.1.9',
+    version: '1.1.10',
     author: 'StarLeaf·Roxy',
     /** 中文署名，界面上的「关于」用这一个 */
     authorCn: '星河一叶Roxy',
@@ -14625,7 +14625,28 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     let rest = text;
     const today = new Date();
 
-    /* 日期 */
+    const qnum = function (t) {
+      const n = cnNum(t);
+      return isFinite(n) ? n : NaN;
+    };
+    const qmin = function (tok) {
+      if (!tok) return 0;
+      if (tok === '半') return 30;
+      if (tok === '一刻') return 15;
+      if (tok === '三刻') return 45;
+      const m = String(tok).match(/([0-9]+|[一二两三四五六七八九十]+)/);
+      const n = m ? qnum(m[1]) : 0;
+      return isFinite(n) ? n : 0;
+    };
+    const qhour = function (hstr, period, pmHint) {
+      let h = qnum(hstr);
+      if (!isFinite(h)) return NaN;
+      const pm = /下午|傍晚|晚上|夜里|晚|中午/.test(period || '') || (!period && pmHint);
+      if (pm && h < 12) h += 12;
+      return h;
+    };
+
+    /* ---------- 日期（支持补录：昨天/上周/上上周） ---------- */
     const dt = (function () {
       let m = rest.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
       if (m) { rest = rest.replace(m[0], ' '); return new Date(+m[1], +m[2] - 1, +m[3]); }
@@ -14636,19 +14657,28 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
         if (d < addDays(today, -180)) d.setFullYear(d.getFullYear() + 1);
         return d;
       }
-      m = rest.match(/(下周|下下周|这周|本周)?\s*(周|星期|礼拜)([一二三四五六日天])/);
+      /* 前缀是「上上/上/下下/下/这/本」+ 周，不是「上周」+ 三 */
+      m = rest.match(/(上上|上|下下|下|这|本)?\s*(周|星期|礼拜)([一二三四五六日天])/);
       if (m) {
         rest = rest.replace(m[0], ' ');
         const map = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 0, 天: 0 };
         const target = map[m[3]];
         const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        let delta = (target - base.getDay() + 7) % 7;
-        if (delta === 0) delta = 7;
-        if (m[1] === '下周' || m[1] === '下下周') delta += 7;
-        if (m[1] === '下下周') delta += 7;
+        const prefix = m[1] || '';
+        let delta;
+        if (prefix === '这' || prefix === '本') {
+          delta = target - base.getDay();
+        } else {
+          delta = (target - base.getDay() + 7) % 7;
+          if (prefix === '下') delta += 7;
+          else if (prefix === '下下') delta += 14;
+          else if (prefix === '上') delta -= 7;
+          else if (prefix === '上上') delta -= 14;
+        }
         return addDays(base, delta);
       }
-      const rel = [['大后天', 3], ['后天', 2], ['明天', 1], ['今天', 0], ['今晚', 0], ['明晚', 1]];
+      const rel = [['大前天', -3], ['上上周', -14], ['前天', -2], ['上周', -7], ['昨天', -1],
+        ['大后天', 3], ['后天', 2], ['明天', 1], ['今晚', 0], ['明晚', 1], ['昨晚', -1], ['今天', 0]];
       for (let i = 0; i < rel.length; i++) {
         if (rest.indexOf(rel[i][0]) >= 0) {
           rest = rest.replace(rel[i][0], ' ');
@@ -14660,55 +14690,98 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     })();
     if (dt) out.d = toYMD(dt);
 
-    /* 时间：14:30 / 下午3点半 / 晚上8点 / 早上8点20 */
-    const tm = rest.match(/(上午|早上|早晨|中午|下午|傍晚|晚上|夜里)?\s*(\d{1,2})\s*[点:：]\s*(\d{1,2})?\s*(半|一刻|三刻)?/);
-    if (tm) {
-      rest = rest.replace(tm[0], ' ');
-      let h = parseInt(tm[2], 10);
-      let mi = 0;
-      if (tm[3]) mi = parseInt(tm[3], 10);
-      else if (tm[4] === '半') mi = 30;
-      else if (tm[4] === '一刻') mi = 15;
-      else if (tm[4] === '三刻') mi = 45;
-      const pm = tm[1] && /下午|傍晚|晚上|夜里|中午/.test(tm[1]);
-      if (pm && h < 12) h += 12;
-      if (!pm && out.pmHint && h < 12) h += 12;
-      if (h >= 24) h = h % 24;
-      out.s = toHM(h * 60 + mi);
-    } else {
-      const bare = rest.match(/(?:^|\s)(\d{1,2})点(半)?/);
-      if (bare) {
-        rest = rest.replace(bare[0], ' ');
-        let h = parseInt(bare[1], 10);
-        if (out.pmHint && h < 12) h += 12;
-        out.s = toHM(h * 60 + (bare[2] ? 30 : 0));
+    /* ---------- 提醒：先剥离，避免“提前30分钟”被当成时长 ---------- */
+    const rm = rest.match(/提前\s*(半|[0-9一二两三四五六七八九十]+)\s*个?\s*(分钟|分|小时|钟头)?(?:提醒)?/);
+    if (rm) {
+      const n = rm[1] === '半' ? 0.5 : qnum(rm[1]);
+      if (isFinite(n)) {
+        out.rm = /小时|钟头/.test(rm[2] || '') ? Math.round(n * 60) : Math.round(n);
+        rest = rest.replace(rm[0], ' ');
       }
     }
 
-    /* 时长 */
-    let durMin = 0;
-    const dm = rest.match(/(\d+(?:\.\d+)?)\s*个?\s*半?\s*小时/);
-    if (dm) { durMin = Math.round(parseFloat(dm[1]) * 60) + (dm[0].indexOf('半') >= 0 ? 30 : 0); rest = rest.replace(dm[0], ' '); }
-    const mm2 = rest.match(/(\d+)\s*分钟/);
-    if (!durMin && mm2) { durMin = parseInt(mm2[1], 10); rest = rest.replace(mm2[0], ' '); }
-    if (!durMin) durMin = 60;
-
-    /* 提醒 */
-    const rm = rest.match(/提前\s*(\d+)\s*(分钟|小时)/);
-    if (rm) {
-      out.rm = rm[2] === '小时' ? parseInt(rm[1], 10) * 60 : parseInt(rm[1], 10);
-      rest = rest.replace(rm[0], ' ');
+    /* ---------- 时间区间：14:00-16:00 / 下午两点到六点 / 晚上8点到10点 ---------- */
+    let rangeDone = false;
+    const r1 = rest.match(/(\d{1,2})[:：](\d{2})\s*(?:到|至|[-~—])\s*(\d{1,2})[:：](\d{2})/);
+    if (r1) {
+      rest = rest.replace(r1[0], ' ');
+      out.s = toHM((+r1[1]) * 60 + (+r1[2]));
+      out.e = toHM((+r1[3]) * 60 + (+r1[4]));
+      rangeDone = true;
+    } else {
+      const r2 = rest.match(/(上午|早上|早晨|中午|下午|傍晚|晚上|夜里|晚)?\s*([0-9一二两三四五六七八九十]+)\s*[点时]\s*([0-9一二两三四五六七八九十]{0,3}|半|一刻|三刻)?\s*(?:到|至|[-~—])\s*(上午|早上|早晨|中午|下午|傍晚|晚上|夜里|晚)?\s*([0-9一二两三四五六七八九十]+)\s*[点时]?\s*([0-9一二两三四五六七八九十]{0,3}|半|一刻|三刻)?/);
+      if (r2) {
+        const startPeriod = r2[1] || '';
+        const endPeriod = r2[4] || startPeriod;
+        let sh = qhour(r2[2], startPeriod, out.pmHint);
+        let eh = qhour(r2[5], endPeriod, out.pmHint);
+        const sm = qmin(r2[3]);
+        const em = qmin(r2[6]);
+        if (isFinite(sh) && isFinite(eh)) {
+          /* “下午两点到六点”：结束没写下午，按开始时段补到 18 点 */
+          if (!r2[4] && /下午|傍晚|晚上|夜里|晚/.test(startPeriod) && eh < sh && eh < 12) eh += 12;
+          out.s = toHM(sh * 60 + sm);
+          out.e = toHM(eh * 60 + em);
+          rest = rest.replace(r2[0], ' ');
+          rangeDone = true;
+        }
+      }
     }
 
-    /* 地点：在XXX / @XXX */
+    /* ---------- 时长（区间已给出时忽略） ---------- */
+    let durMin = 0;
+    if (!rangeDone) {
+      const dh = rest.match(/(半|[0-9]+(?:\.[0-9]+)?|[一二两三四五六七八九十]+)\s*个?\s*半?\s*(小时|钟头)/);
+      if (dh) {
+        const n = dh[1] === '半' ? 0.5 : (dh[1].indexOf('.') >= 0 ? parseFloat(dh[1]) : qnum(dh[1]));
+        if (isFinite(n)) {
+          durMin = Math.round(n * 60) + (dh[0].indexOf('半') > 1 ? 30 : 0);
+          rest = rest.replace(dh[0], ' ');
+        }
+      }
+      if (!durMin) {
+        const dm = rest.match(/([0-9]+|[一二两三四五六七八九十]+)\s*分钟/);
+        if (dm) {
+          const n = qnum(dm[1]);
+          if (isFinite(n)) { durMin = n; rest = rest.replace(dm[0], ' '); }
+        }
+      }
+    }
+
+    /* ---------- 单个时间：14:30 / 下午三点半 / 晚上8点 / 8点20 ---------- */
+    if (!rangeDone && !out.s) {
+      let tm = rest.match(/(上午|早上|早晨|中午|下午|傍晚|晚上|夜里|晚)?\s*(\d{1,2})[:：](\d{2})/);
+      if (tm) {
+        rest = rest.replace(tm[0], ' ');
+        let h = qhour(tm[2], tm[1], out.pmHint);
+        out.s = toHM(h * 60 + (+tm[3]));
+      } else {
+        tm = rest.match(/(上午|早上|早晨|中午|下午|傍晚|晚上|夜里|晚)?\s*([0-9一二两三四五六七八九十]+)\s*[点时]\s*([0-9一二两三四五六七八九十]{0,3}|半|一刻|三刻)?/);
+        if (tm) {
+          let h = qhour(tm[2], tm[1], out.pmHint);
+          const mi = qmin(tm[3]);
+          if (isFinite(h)) {
+            out.s = toHM(h * 60 + mi);
+            rest = rest.replace(tm[0], ' ');
+          }
+        }
+      }
+    }
+
+    /* ---------- 地点 ---------- */
     const pl = rest.match(/(?:在|@)\s*([^\s，,。;；]{2,20})/);
-    if (pl) { out.p = pl[1]; rest = rest.replace(pl[0], ' '); }
+    if (pl && rest.indexOf('在上') !== 0) { out.p = pl[1]; rest = rest.replace(pl[0], ' '); }
 
     out.title = rest.replace(/\s+/g, ' ').replace(/^[，,。;；:\-]+|[，,。;；:\-]+$/g, '').trim();
+    out.title = out.title.replace(/^上(?=[A-Za-z])/, '');
     if (!out.title) out.title = '新日程';
     out.title = out.title.slice(0, 40);
     if (!out.s) out.s = '09:00';
-    out.e = toHM(Math.min(23 * 60 + 59, toMin(out.s) + durMin));
+    if (out.e) {
+      if (toMin(out.e) <= toMin(out.s)) out.e = toHM(Math.min(23 * 60 + 59, toMin(out.s) + 60));
+    } else {
+      out.e = toHM(Math.min(23 * 60 + 59, toMin(out.s) + (durMin || 60)));
+    }
     return out;
   }
 
@@ -14738,7 +14811,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!text) {
       box.innerHTML = '<span class="k">示例</span>明天下午3点 开会 1小时 在3F会议室 提前10分钟' +
         '<div class="dl-quick-chips">' +
-        ['今天 20:00 复习英语', '明天 9点 交作业 提前30分钟', '下周三 14:00 项目评审 在B2-102'].map(function (t) {
+        ['今天 20:00 复习英语', '明天 9点 交作业 提前30分钟', '下周三 14:00 项目评审 在B2-102', '昨天 10点 补录会议'].map(function (t) {
           return '<button data-quick-tpl="' + esc(t) + '">' + esc(t) + '</button>';
         }).join('') + '</div>';
       return;
@@ -15951,7 +16024,20 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
   /* ---------- 8.18 更新日志 ---------- */
   var CHANGELOG = [
     {
-      v: '1.1.9', date: '2026-10-26', latest: true,
+      v: '1.1.10', date: '2026-10-27', latest: true,
+      add: [
+        '快捷录入支持中文数字与时间区间：例如「明天下午两点到六点上JAVA课 提前三十分钟提醒」可直接识别为 14:00–18:00、提前 30 分钟。',
+        '快捷录入支持补录：昨天 / 前天 / 上周三 / 上上周三 等过去日期也能直接创建日程。'
+      ],
+      fix: [
+        '局域网「发送到电脑」现在会先显示电脑确认收到，再显示电脑合并后回传的结果，不再让人误以为是手机自己获取。'
+      ],
+      opt: [
+        '快速新建组件与快捷录入提示同步更新；更新后请移除旧组件再重新添加，才能看到新样式。'
+      ]
+    },
+    {
+      v: '1.1.9', date: '2026-10-26', latest: false,
       opt: [
         '重做更新弹窗：版本号做成胶囊、顶部主题光晕、底部增加 SHA-256 校验提示，按钮与错误卡片重新留白。'
       ],
@@ -16612,9 +16698,9 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!ok) { toast('局域网同步失败：' + (err || '网络问题')); return; }
     if (op === 'push') {
       const n = window.__lanPushCount || 0;
-      toast('已发送到电脑（' + n + ' 条日程），正在拉取电脑数据…');
+      toast('发送成功：电脑已确认收到 ' + n + ' 条日程');
       /* 给电脑端一点时间合并，再把合并后的数据拉回来，保证两边一致 */
-      setTimeout(function () { lanPull(); }, 1200);
+      setTimeout(function () { lanPull(); }, 1400);
       return;
     }
     if (!data) { toast('电脑端还没有数据，先在电脑上确认已开启并等待同步'); return; }
@@ -16624,7 +16710,7 @@ html.dark .dl-month .dm-cell{background:rgba(255,255,255,.04)}
     if (!n) { toast('电脑端还没有日程数据'); return; }
     mergeRemotePayload(obj, function (ok2, stats) {
       const add = stats ? stats.added : 0;
-      toast('已从电脑收到 ' + n + ' 条，合并新增 ' + add + ' 条');
+      toast('电脑合并完成：返回 ' + n + ' 条，本机新增 ' + add + ' 条');
     });
   };
 

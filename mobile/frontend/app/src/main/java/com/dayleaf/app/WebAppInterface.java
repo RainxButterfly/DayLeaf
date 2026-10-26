@@ -386,7 +386,9 @@ public class WebAppInterface {
                             os.close();
                             int code = conn.getResponseCode();
                             ok = code >= 200 && code < 300;
-                            if (!ok) err = lanError(code);
+                            if (ok) {
+                                try { data = readLimited(conn.getInputStream()); } catch (Exception ignore) { data = ""; }
+                            } else err = lanError(code);
                         } else {
                             conn.setRequestMethod("GET");
                             int code = conn.getResponseCode();
